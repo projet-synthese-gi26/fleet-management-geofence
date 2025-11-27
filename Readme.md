@@ -139,3 +139,12 @@ resilience4j:
 - [ ] Les DTOs (Infrastructure) sont séparés des Objets du Domaine (Domain).
 - [ ] Aucune annotation Spring (`@Service`, `@Component`) dans le package `domain`.
 - [ ] Les tests unitaires couvrent la couche Application.
+
+## 📚 Documentation de l'API (Swagger UI)
+
+Le projet intègre **OpenAPI 3** (via Springdoc) pour documenter et tester les endpoints automatiquement.
+
+Une fois l'application lancée, la documentation est accessible ici :
+
+- **Interface Visuelle (Swagger UI)** : [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+- **Définition JSON (OpenAPI)** : [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
