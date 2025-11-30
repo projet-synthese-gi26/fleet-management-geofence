@@ -15,7 +15,7 @@ FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 
 # Création d'un utilisateur non-root pour la sécurité
-RUN addgroup yowyob && adduser yowyob -G yowyob
+RUN addgroup yowyob && adduser yowyob --ingroup yowyob
 USER yowyob:yowyob
 
 # Copie du JAR depuis l'étape de build
