@@ -1,7 +1,7 @@
 ### 📋 Roadmap Macro : API Fleet & Geofence
 
 #### Jalon 1 : Initialisation, Structure & Persistence (Fondations)
-- [ ] **Tâche 1.1 :** Nettoyage et Refactoring du template (Renommage packages, suppression de la logique "Product").
+- [x] **Tâche 1.1 :** Nettoyage et Refactoring du template (Renommage packages, suppression de la logique "Product").
 - [ ] **Tâche 1.2 :** Implémentation du Schéma de données (Traduction du contrat v1.0 en SQL pour PostgreSQL).
 - [ ] **Tâche 1.3 :** Mise en place du mécanisme de **Seeding** (Génération automatique de données de test au démarrage).
 - [ ] **Tâche 1.4 :** **Validation Postman** : Vérification de l'état de la base de données via un endpoint de santé (Health Check).
