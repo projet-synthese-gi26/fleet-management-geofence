@@ -7,10 +7,11 @@
 - [ ] **Tâche 1.4 :** **Validation Postman** : Vérification de l'état de la base de données via un endpoint de santé (Health Check).
 
 #### Jalon 2 : Authentification & Accès (CU1)
-- [ ] **Tâche 2.1 :** Configuration de la Sécurité Réactive (Spring Security).
+- [x] **Tâche 2.1 :** Configuration de la Sécurité Réactive (Spring Security).
 - [ ] **Tâche 2.2 :** Intégration du Service d'Authentification externe (Adaptateur WebClient).
 - [ ] **Tâche 2.3 :** Implémentation du **Mode Dégradé (Fake Auth)** pour le développement local.
 - [ ] **Tâche 2.4 :** **Validation Postman** : Tests de login, génération de token et accès restreint par rôles (RBAC).
+- [ ] **Tâche 2.5 :** Intégration des routes "mot de passe oublié" et autres via l'API d'authentification externe.
 
 #### Jalon 3 : Gestion de la Flotte (CU17, CU18, CU19)
 - [ ] **Tâche 3.1 :** Use-Case : Créer / Modifier / Supprimer une Flotte (Fleets).
