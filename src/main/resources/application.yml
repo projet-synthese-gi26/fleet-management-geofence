@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: reactive-hexagonal
+    name: fleet-management
     
   docker:
     compose:
@@ -32,6 +32,7 @@ spring:
   kafka:
     bootstrap-servers: 168.119.122.86:9092
     consumer:
+      group-id: fleet-management-group
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer

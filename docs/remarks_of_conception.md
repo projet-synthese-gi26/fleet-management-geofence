@@ -65,5 +65,5 @@ Je remarque la factorisation qui est regroupage elegant des cas d'utilisation da
 
 - Il y'a egalement un probleme de coherence linguistique,depuis le debut tous les diagrammes sont en anglais,mais celui ci est en francais.il nous faut une seule langue.
 
-- est ce que le token est un message ou une variable? je crois aussi qu'ici c'est une fontion que l'api d'auth utilise pour envoyer le token et le role...aussi le role
+- est ce que le token est un message ou une variable? je crois aussi qu'ici c'est une fontion que l'api d'auth utilise pour envoyer le token et le role...aussi le role 
 ---

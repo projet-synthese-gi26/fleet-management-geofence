@@ -14,8 +14,8 @@
     <groupId>com.yowyob</groupId>
     <artifactId>reactive-hexagonal</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>reactive-hexagonal</name>
-    <description>Template Hexagonal Reactive pour com.yowyob</description>
+    <name>fleet-management</name>
+    <description>API Fleet Management and Geofencing - TraEnSys Project</description>
     
     <properties>
         <java.version>21</java.version>
