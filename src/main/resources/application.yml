@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: fleet-management
+
+  # THE "TOGGLE": Change 'local' to 'remote' to switch databases
+  profiles:
+    active: local 
     
   docker:
     compose:
@@ -59,3 +63,31 @@ resilience4j:
         failureRateThreshold: 50
         waitDurationInOpenState: 5s
         slidingWindowSize: 5
+
+---
+# LOCAL CONFIGURATION
+spring:
+  config:
+    activate:
+      on-profile: local
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/yowyob_db
+    username: fleet_admin
+    password: fleet_password
+  sql:
+    init:
+      mode: never
+
+---
+# REMOTE CONFIGURATION (Server)
+spring:
+  config:
+    activate:
+      on-profile: remote
+  r2dbc:
+    url: r2dbc:postgresql://168.119.122.86:5432/yowyob
+    username: master
+    password: Azerty1234*
+  sql:
+    init:
+      mode: never # SAFETY: Never run the destructive schema.sql on the remote server
