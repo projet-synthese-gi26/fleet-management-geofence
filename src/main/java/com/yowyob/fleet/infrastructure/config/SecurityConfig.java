@@ -35,7 +35,8 @@ public class SecurityConfig {
                                 "/swagger-ui.html", 
                                 "/webjars/**",
                                 "/api/v1/health/**",
-                                "/api/v1/fleets/**"
+                                "/api/v1/fleets/**",
+                                "/api/v1/vehicles/**"
                         ).permitAll()
                         
                         // All other exchanges require authentication
