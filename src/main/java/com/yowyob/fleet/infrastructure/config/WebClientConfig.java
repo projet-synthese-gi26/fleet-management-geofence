@@ -7,6 +7,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.support.WebClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
+import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.AuthApiClient;
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.StockApiClient;
 
 @Configuration
@@ -22,4 +23,14 @@ public class WebClientConfig {
         
         return factory.createClient(StockApiClient.class);
     }
+
+    @Bean
+    public AuthApiClient authApiClient(WebClient.Builder builder, 
+                                   @Value("${application.auth.url}") String url) {
+    WebClient webClient = builder.baseUrl(url).build();
+    return HttpServiceProxyFactory
+            .builderFor(WebClientAdapter.create(webClient))
+            .build()
+            .createClient(AuthApiClient.class);
+}
 }

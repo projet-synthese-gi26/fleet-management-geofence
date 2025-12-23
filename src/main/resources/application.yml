@@ -55,6 +55,10 @@ application:
     topics:
       product-events: test-topic
 
+  auth:
+    mode: remote # Mettez 'remote' pour tester le vrai service TraMaSys et 'fake' pour la fausse authentification en test
+    url: https://auth-service.pynfi.com # URL de la doc TraMaSys
+
 # RESILIENCE4J 
 resilience4j:
   circuitbreaker:

@@ -3,38 +3,59 @@ server:
 
 spring:
   application:
-    name: reactive-hexagonal
-  
+    name: fleet-management
+
+  # THE "TOGGLE": Change 'local' to 'remote' to switch databases
+  profiles:
+    active: local 
+    
+  docker:
+    compose:
+      enabled: false
+
+  # POSTGRESQL (R2DBC)
   r2dbc:
-    url: r2dbc:postgresql://localhost:5432/reactivedb
-    username: user
-    password: password
-  
+    url: r2dbc:postgresql://168.119.122.86:5432/yowyob
+    username: master
+    password: Azerty1234*
+
   sql:
     init:
-      mode: always # start the scheme
+      mode: always
 
+  # REDIS CLUSTER 
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: 168.119.122.86
+      port: 7000
+      password: Azerty1234*
+      cluster:
+        enabled: false 
 
+  # KAFKA 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: 168.119.122.86:9092
     consumer:
+      group-id: fleet-management-group
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
-# Custom Config 
+# CUSTOM CONFIG 
 application:
   external:
-    stock-service-url: http://localhost:8081 # Wiremock
+    stock-service-url: http://168.119.122.86:8081
 
-# Resilience4j Config
+  kafka:
+    topics:
+      product-events: test-topic
+
+# RESILIENCE4J 
 resilience4j:
   circuitbreaker:
     instances:
@@ -42,3 +63,31 @@ resilience4j:
         failureRateThreshold: 50
         waitDurationInOpenState: 5s
         slidingWindowSize: 5
+
+---
+# LOCAL CONFIGURATION
+spring:
+  config:
+    activate:
+      on-profile: local
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/yowyob_db
+    username: fleet_admin
+    password: fleet_password
+  sql:
+    init:
+      mode: never
+
+---
+# REMOTE CONFIGURATION (Server)
+spring:
+  config:
+    activate:
+      on-profile: remote
+  r2dbc:
+    url: r2dbc:postgresql://168.119.122.86:5432/yowyob
+    username: master
+    password: Azerty1234*
+  sql:
+    init:
+      mode: never # SAFETY: Never run the destructive schema.sql on the remote server
