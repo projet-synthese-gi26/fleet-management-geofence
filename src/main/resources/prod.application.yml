@@ -48,6 +48,7 @@ spring:
 application:
   external:
     stock-service-url: http://${EXTERNAL_HOST:localhost}:8081
+    vehicle-service-url: https://fare-calculator-service.pynfi.com
 
   kafka:
     topics:
