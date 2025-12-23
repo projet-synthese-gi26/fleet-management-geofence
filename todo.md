@@ -5,7 +5,7 @@
 - [x] **Tâche 1.2 :** Implémentation du Schéma de données (Traduction du contrat v1.0 en SQL pour PostgreSQL).
 - [x] **Tâche 1.3 :** Mise en place du mécanisme de **Seeding** (Génération automatique de données de test au démarrage).
 - [x] **Tâche 1.4 :** **Validation swagger** : Vérification de l'état de la base de données via un endpoint de santé (Health Check).
-- [ ] **Tâche 1.5:** *Guide*: Elaboration d'un guide pour que les collaborateurs puissent initialiser la bd sans probleme et la seed en mode local.(le plus facilement possible) 
+- [x] **Tâche 1.5:** *Guide*: Elaboration d'un guide pour que les collaborateurs puissent initialiser la bd sans probleme et la seed en mode local.(le plus facilement possible) 
 
 #### Jalon 2 : Authentification & Accès (CU1)
 - [x] **Tâche 2.1 :** Configuration de la Sécurité Réactive (Spring Security).
