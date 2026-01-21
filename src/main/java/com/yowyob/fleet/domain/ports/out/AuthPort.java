@@ -1,40 +1,29 @@
 package com.yowyob.fleet.domain.ports.out;
 
+import com.yowyob.fleet.domain.ports.in.AuthUseCase;
 import reactor.core.publisher.Mono;
-
 import java.util.List;
 import java.util.UUID;
 
-// import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.AuthApiClient.UserDetailResponse;
-
 public interface AuthPort {
-    Mono<AuthResponse> login(String email, String password);
-    
-    Mono<Void> forgotPassword(String email);
-
-    Mono<AuthResponse> register(
-        String username, 
-        String password, 
-        String email, 
-        String phone, 
-        String firstName, 
-        String lastName,
-        List<String> roles);
-
-     // Nouvelles méthodes
-    Mono<UserDetail> me(String accessToken);
-
+    // Auth pure
+    Mono<AuthResponse> login(String identifier, String password);
     Mono<AuthResponse> refresh(String refreshToken);
 
-    Mono<Void> logout(UUID userId, String accessToken);
+    // Gestion Utilisateur Distant
+    Mono<AuthResponse> registerInRemote(AuthUseCase.RegisterCommand command);
+    Mono<UserDetail> getUserProfile(String token);
+    Mono<UserDetail> updateUserProfile(UUID userId, String token, AuthUseCase.UpdateProfileCommand command);
+    Mono<Void> changePassword(UUID userId, String token, String currentPwd, String newPwd);
+    Mono<Void> deleteRemoteAccount(UUID userId, String token);
+    Mono<Void> updateProfilePicture(UUID userId, String token, AuthUseCase.FileContent file); // NEW
     
-    record AuthResponse(
-        String accessToken, 
-        String refreshToken, 
-        UserDetail user
-    ) {}
+    // Gestion Rôles Distants
+    Mono<Boolean> roleExists(String roleName);
+    Mono<Void> createRole(String roleName);
 
-
+    // Objets de réponse (Outputs)
+    record AuthResponse(String accessToken, String refreshToken, UserDetail user) {}
 
     record UserDetail(
         UUID id, 
@@ -45,6 +34,10 @@ public interface AuthPort {
         String lastName,
         String service,
         List<String> roles, 
-        List<String> permissions
+        List<String> permissions,
+        String photoUrl,
+        String companyName,
+        String licenceNumber,
+        String vehicleId
     ) {}
-}   
+}

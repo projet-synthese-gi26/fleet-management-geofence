@@ -1,5 +1,6 @@
 package com.yowyob.fleet.infrastructure.adapters.outbound.external;
 
+import com.yowyob.fleet.domain.ports.in.AuthUseCase;
 import com.yowyob.fleet.domain.ports.out.AuthPort;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
@@ -17,18 +18,25 @@ public class FakeAuthAdapter implements AuthPort {
     }
 
     @Override
-    public Mono<AuthResponse> register(String username, String password, String email, String phone, String firstName, String lastName, List<String> roles) {
-        log.info("🛠 MODE FAKE AUTH : Inscription pour {}", username);
+    public Mono<AuthResponse> registerInRemote(AuthUseCase.RegisterCommand command) {
+        log.info("🛠 MODE FAKE AUTH : Inscription pour {}", command.username());
         UserDetail newUser = new UserDetail(
-            UUID.fromString("8a1f5e2c-3d4b-4c6a-9f8e-123456789abc"), username, email, phone, 
-            firstName, lastName, "FLEET_MANAGEMENT", 
-            roles, List.of("*")
+            UUID.randomUUID(), 
+            command.username(), 
+            command.email(), 
+            command.phone(), 
+            command.firstName(), 
+            command.lastName(), 
+            "FLEET_MANAGEMENT", 
+            command.roles(), 
+            List.of("*"),
+            null, null, null, null // Champs enrichis nuls par défaut
         );
         return Mono.just(new AuthResponse("fake-access-token", "fake-refresh-token", newUser));
     }
 
     @Override
-    public Mono<UserDetail> me(String accessToken) {
+    public Mono<UserDetail> getUserProfile(String token) {
         log.info("🛠 MODE FAKE AUTH : Récupération du profil (me)");
         return Mono.just(createFakeUser("fake_admin", "admin@yowyob.com"));
     }
@@ -41,20 +49,39 @@ public class FakeAuthAdapter implements AuthPort {
     }
 
     @Override
-    public Mono<Void> logout(UUID userId, String accessToken) {
-        log.info("🛠 MODE FAKE AUTH : Logout effectué pour le token {}", userId);
-        return Mono.empty();
+    public Mono<Boolean> roleExists(String roleName) {
+        return Mono.just(true);
     }
 
     @Override
-    public Mono<Void> forgotPassword(String email) {
-        log.info("🛠 MODE FAKE AUTH : Demande de réinitialisation pour {}", email);
+    public Mono<Void> createRole(String roleName) {
         return Mono.empty();
     }
 
-    /**
-     * Helper pour créer un utilisateur de domaine factice cohérent.
-     */
+    @Override 
+    public Mono<UserDetail> updateUserProfile(UUID userId, String token, AuthUseCase.UpdateProfileCommand command) { 
+        log.info("🛠 MODE FAKE AUTH : Update profil pour {}", userId);
+        return Mono.just(createFakeUser("fake_admin", command.email()));
+    }
+    
+    @Override 
+    public Mono<Void> changePassword(UUID userId, String token, String currentPwd, String newPwd) { 
+        log.info("🛠 MODE FAKE AUTH : Changement mot de passe pour {}", userId);
+        return Mono.empty(); 
+    }
+    
+    @Override 
+    public Mono<Void> deleteRemoteAccount(UUID userId, String token) { 
+        log.info("🛠 MODE FAKE AUTH : Suppression compte pour {}", userId);
+        return Mono.empty(); 
+    }
+
+    @Override
+    public Mono<Void> updateProfilePicture(UUID userId, String token, AuthUseCase.FileContent file) {
+        log.info("🛠 MODE FAKE AUTH : Upload photo pour {} (Fichier: {})", userId, file.filename());
+        return Mono.empty();
+    }
+
     private UserDetail createFakeUser(String username, String email) {
         return new UserDetail(
             UUID.fromString("8a1f5e2c-3d4b-4c6a-9f8e-123456789abc"),
@@ -64,8 +91,9 @@ public class FakeAuthAdapter implements AuthPort {
             "Fake",
             "User",
             "FLEET_MANAGEMENT",
-            List.of("ADMIN", "FLEET_MANAGER"),
-            List.of("fleet:read", "fleet:write", "vehicle:all")
+            List.of("FLEET_MANAGER"),
+            List.of("fleet:read", "fleet:write"),
+            null, null, null, null
         );
     }
 }

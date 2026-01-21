@@ -19,7 +19,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/fleets")
 @RequiredArgsConstructor
-@Tag(name = "Fleets", description = "Fleet Management Operations")
+@Tag(name = "07. Fleets", description = "Gestion des flottes")
 public class FleetController {
 
     private final ManageFleetUseCase fleetUseCase;

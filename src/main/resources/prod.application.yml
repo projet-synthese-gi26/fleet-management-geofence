@@ -20,17 +20,17 @@ spring:
       max-size: 20
       validation-query: SELECT 1
 
-  # 2. JDBC (Migration - Bloquant pour Liquibase)
+  # 2. JDBC (Migration - Bloquant pour Liquibase) - INDISPENSABLE POUR QUE ÇA MARCHE
   datasource:
     url: jdbc:postgresql://${DB_HOST:168.119.122.86}:${DB_PORT:5432}/${DB_NAME:yowyob}
     username: ${DB_USERNAME:master}
     password: ${DB_PASSWORD:Azerty1234*}
     driver-class-name: org.postgresql.Driver
 
-  # 3. LIQUIBASE
+  # 3. LIQUIBASE (Configuration corrigée)
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
-    default-schema: fleet
+    default-schema: fleet # En prod, on peut essayer de viser fleet direct si le user a les droits, sinon public
     liquibase-schema: public
     enabled: true
     contexts: prod # Important : empêche le chargement du mock public
@@ -69,7 +69,7 @@ spring:
 # CONFIG METIER
 application:
   external:
-    vehicle-service-url: https://fare-calculator-service.pynfi.com
+    vehicle-service-url: https://fare-calculator-service.pynfi.com # Vérifier si c'est la bonne URL de prod
   auth:
     mode: remote 
     url: https://auth-service.pynfi.com

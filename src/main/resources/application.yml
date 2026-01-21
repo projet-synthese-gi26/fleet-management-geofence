@@ -30,7 +30,7 @@ spring:
   # LIQUIBASE
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
-    default-schema: fleet
+    default-schema: public
     liquibase-schema: public
     enabled: true
     contexts: local

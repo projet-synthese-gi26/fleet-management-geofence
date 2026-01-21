@@ -20,7 +20,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/drivers")
 @RequiredArgsConstructor
-@Tag(name = "Drivers", description = "Operations for Driver Management")
+@Tag(name = "05. Drivers", description = "Gestion des chauffeurs")
 public class DriverController {
 
     private final ManageDriverUseCase driverUseCase;

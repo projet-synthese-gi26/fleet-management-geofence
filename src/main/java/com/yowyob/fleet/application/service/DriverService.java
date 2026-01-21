@@ -1,6 +1,7 @@
 package com.yowyob.fleet.application.service;
 
 import com.yowyob.fleet.domain.model.Driver;
+import com.yowyob.fleet.domain.ports.in.AuthUseCase;
 import com.yowyob.fleet.domain.ports.in.ManageDriverUseCase;
 import com.yowyob.fleet.domain.ports.out.AuthPort;
 import com.yowyob.fleet.domain.ports.out.DriverPersistencePort;
@@ -26,24 +27,34 @@ public class DriverService implements ManageDriverUseCase {
     public Mono<Driver> registerDriver(DriverRegistrationRequest request) {
         log.info("Enrôlement chauffeur : Appel Auth Service pour {}", request.username());
         
-        return authPort.register(
-            request.username(), request.password(), request.email(),
-            request.phone(), request.firstName(), request.lastName(),
-            List.of("FLEET_DRIVER")
-        ).flatMap(authRes -> {
-            log.info("Compte crée (ID: {}), création du profil local dans la flotte {}", authRes.user().id(), request.fleetId());
-            
-            Driver driverToSave = new Driver(
-                authRes.user().id(),
-                request.fleetId(),
-                request.licenceNumber(),
-                true,
-                null,
-                request.photoUrl()
-            );
-            
-            return driverPersistencePort.save(driverToSave);
-        });
+        // 1. Préparation de la commande avec le rôle spécifique
+        AuthUseCase.RegisterCommand command = new AuthUseCase.RegisterCommand(
+            request.username(),
+            request.password(),
+            request.email(),
+            request.phone(),
+            request.firstName(),
+            request.lastName(),
+            List.of("FLEET_DRIVER"), // On utilise le rôle standardisé
+            null // Pas de photo via cet endpoint spécifique
+        );
+
+        // 2. Appel au service d'authentification distant
+        return authPort.registerInRemote(command)
+            .flatMap(authRes -> {
+                log.info("Étape 2 : Création du profil chauffeur local pour UUID {}", authRes.user().id());
+                
+                // 3. Création du modèle de domaine Driver
+                Driver localDriver = new Driver(
+                    authRes.user().id(), // UUID TraMaSys
+                    request.licenceNumber(),
+                    true, // Actif par défaut
+                    null  // Aucun véhicule au départ
+                );
+                
+                // 4. Sauvegarde en base de données locale
+                return driverPersistencePort.save(localDriver);
+            });
     }
 
     @Override

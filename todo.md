@@ -34,10 +34,10 @@
 
 #### Jalon 5 : Auth & User Management Avancé (Proxy Auth) `Gabriel`
 *Objectif : Le microservice Fleet doit exposer les fonctionnalités de l'Auth Service de manière transparente.*
-- [ ] **Tâche 5.1 :** Refactoring `AuthApiClient` : Supporter le `MultipartFile` pour l'upload de photo de profil au `register`.
-- [ ] **Tâche 5.2 :** Logique "Auto-Role" : Vérifier/Créer les rôles (`FLEET_MANAGER`, `DRIVER`) sur l'Auth Service avant inscription.
-- [ ] **Tâche 5.3 :** Fixer le `register` : Synchro création Auth Service -> Création données locales (`fleet.drivers`).
-- [ ] **Tâche 5.4 :** Endpoint `User` : Créer un `UserController` local (Proxy vers Auth Service : Profil, Password).
+- [x] **Tâche 5.1 :** Refactoring `AuthApiClient` : Supporter le `MultipartFile` pour l'upload de photo de profil au `register`.
+- [x] **Tâche 5.2 :** Logique "Auto-Role" : Vérifier/Créer les rôles (`FLEET_MANAGER`, `DRIVER`) sur l'Auth Service avant inscription.
+- [x] **Tâche 5.3 :** Fixer le `register` : Synchro création Auth Service -> Création données locales (`fleet.drivers`).
+- [x] **Tâche 5.4 :** Endpoint `User` : Créer un `UserController` local (Proxy vers Auth Service : Profil, Password).
 
 #### Jalon 6 : Gestion des Acteurs (Managers & Drivers) `Gabriel`
 - [ ] **Tâche 6.1 :** Implémenter la gestion des **Fleet Managers**.

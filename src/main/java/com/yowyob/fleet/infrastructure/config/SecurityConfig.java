@@ -1,66 +1,69 @@
 package com.yowyob.fleet.infrastructure.config;
 
+import com.yowyob.fleet.infrastructure.config.security.BearerTokenServerAuthenticationConverter;
+import com.yowyob.fleet.infrastructure.config.security.JwtAuthenticationManager;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
-import org.springframework.security.core.userdetails.MapReactiveUserDetailsService;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.authentication.AuthenticationWebFilter;
+import reactor.core.publisher.Mono;
 
 @Configuration
 @EnableWebFluxSecurity
+@EnableReactiveMethodSecurity // Permet d'utiliser @PreAuthorize dans les controllers
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-    /**
-     * Configures the security filter chain for WebFlux.
-     */
+    private final JwtAuthenticationManager authenticationManager;
+    private final BearerTokenServerAuthenticationConverter authenticationConverter;
+
     @Bean
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
-        System.out.println("🛡️ REACTIVE SECURITY CONFIGURATION LOADED");
+        
+        // Configuration du filtre manuel JWT
+        AuthenticationWebFilter jwtFilter = new AuthenticationWebFilter(authenticationManager);
+        jwtFilter.setServerAuthenticationConverter(authenticationConverter);
 
         return http
-                // Disable CSRF as we are building a stateless REST API
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
+                .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 
+                // Gestion explicite des erreurs 401/403
+                .exceptionHandling(handling -> handling
+                    .authenticationEntryPoint((exchange, e) -> 
+                        Mono.fromRunnable(() -> exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED)))
+                    .accessDeniedHandler((exchange, e) -> 
+                        Mono.fromRunnable(() -> exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN)))
+                )
+
                 .authorizeExchange(exchanges -> exchanges
-                        // Allow access to health checks and monitoring
-                        .pathMatchers("/actuator/**").permitAll()
-                        
-                        // Allow access to Swagger UI and API Documentation (v3)
+                        // 1. Swagger & Monitoring (Public)
                         .pathMatchers(
-                                "/v3/api-docs/**", 
-                                "/swagger-ui/**", 
-                                "/swagger-ui.html", 
-                                "/webjars/**",
-                                "/api/v1/health/**",
-                                "/api/v1/fleets/**",
-                                "/api/v1/vehicles/**",
-                                "/api/v1/drivers/**",
-                                "/api/v1/auth/**" 
+                            "/v3/api-docs/**", 
+                            "/swagger-ui/**", 
+                            "/swagger-ui.html", 
+                            "/webjars/**",
+                            "/actuator/**",
+                            "/api/v1/health/**"
                         ).permitAll()
                         
-                        // All other exchanges require authentication
+                        // 2. Auth Endpoints (Public)
+                        .pathMatchers("/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/auth/refresh").permitAll()
+                        
+                        // 3. Tout le reste nécessite un Token
                         .anyExchange().authenticated()
                 )
                 
-                // Disable default login forms and basic auth
-                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
-                .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
+                // Ajout du filtre JWT dans la chaîne
+                .addFilterAt(jwtFilter, SecurityWebFiltersOrder.AUTHENTICATION)
+                
                 .build();
-    }
-
-    /**
-     * Provides a dummy technical user to satisfy Spring Security's requirements
-     * and disable the auto-generated password in the logs.
-     */
-    @Bean
-    public MapReactiveUserDetailsService userDetailsService() {
-        UserDetails dummyUser = User.withUsername("technical_user")
-                .password("{noop}dummy_password") // {noop} means no encoding
-                .roles("SYSTEM")
-                .build();
-        return new MapReactiveUserDetailsService(dummyUser);
     }
 }

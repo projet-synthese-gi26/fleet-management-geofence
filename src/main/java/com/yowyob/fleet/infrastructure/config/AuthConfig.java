@@ -7,6 +7,7 @@ import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.AuthApi
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.reactive.function.client.WebClient;
 
 @Configuration
 public class AuthConfig {
@@ -19,8 +20,8 @@ public class AuthConfig {
 
     @Bean
     @ConditionalOnProperty(name = "application.auth.mode", havingValue = "remote", matchIfMissing = true)
-    public AuthPort remoteAuthPort(AuthApiClient authApiClient, com.fasterxml.jackson.databind.ObjectMapper objectMapper) {
-        // Maintenant, le constructeur de RemoteAuthAdapter accepte bien l'interface
-        return new RemoteAuthAdapter(authApiClient);
+    public AuthPort remoteAuthPort(AuthApiClient authApiClient, WebClient.Builder webClientBuilder) {
+        // Correction : On passe le builder nécessaire pour le Multipart
+        return new RemoteAuthAdapter(authApiClient, webClientBuilder);
     }
 }

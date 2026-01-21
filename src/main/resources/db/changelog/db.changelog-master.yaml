@@ -3,7 +3,5 @@ databaseChangeLog:
       file: db/changelog/changes/001-init-schemas.sql
   - include:
       file: db/changelog/changes/002-fleet-tables.sql
-  # Seeding du schéma public (Mock) uniquement en profil local
   - include:
       file: db/changelog/data/001-local-public-mock.sql
-      context: local
