@@ -1,5 +1,4 @@
 package com.yowyob.fleet.infrastructure.adapters.outbound.persistence;
-
 import com.yowyob.fleet.domain.model.Driver;
 import com.yowyob.fleet.domain.ports.out.DriverPersistencePort;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.DriverEntity;
@@ -43,35 +42,30 @@ public class DriverPersistenceAdapter implements DriverPersistencePort {
                 .switchIfEmpty(Mono.defer(() -> {
                     // C'est une création
                     DriverEntity newEntity = mapper.toEntity(driver);
-                    newEntity.setNew(true); // Setter lombok généré ou méthode manuelle
+                    newEntity.setNewRecord(true); // Setter lombok généré ou méthode manuelle
                     return Mono.just(newEntity);
                 }))
                 .flatMap(repository::save)
                 .map(mapper::toDomain);
     }
+    @Override
+public Mono<Void> updateVehicleAssignment(UUID userId, UUID vehicleId) {
+    return repository.findById(userId)
+            .flatMap(entity -> {
+                entity.setAssignedVehicleId(vehicleId);
+                entity.setNewRecord(false); // Ce n'est pas un nouvel enregistrement
+                return repository.save(entity);
+            }).then();
+}
 
     @Override
     public Mono<Driver> findById(UUID userId) {
-        return repository.findById(userId)
-                .map(mapper::toDomain);
+        return repository.findById(userId).map(mapper::toDomain);
     }
 
     @Override
-    public Flux<Driver> findAll(Boolean status) {
-        if (status != null) {
-            return repository.findByStatus(status).map(mapper::toDomain);
-        }
-        return repository.findAll().map(mapper::toDomain);
+    public Flux<Driver> findAllByFleetId(UUID fleetId) {
+        return repository.findByFleetId(fleetId).map(mapper::toDomain);
     }
 
-    @Override
-    public Mono<Void> updateVehicleAssignment(UUID userId, UUID vehicleId) {
-        return repository.findById(userId)
-                .flatMap(entity -> {
-                    entity.setAssignedVehicleId(vehicleId);
-                    return repository.save(entity);
-                })
-                .switchIfEmpty(Mono.error(new RuntimeException("Chauffeur non trouvé")))
-                .then();
-    }
 }

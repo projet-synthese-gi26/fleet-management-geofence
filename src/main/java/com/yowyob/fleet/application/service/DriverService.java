@@ -25,7 +25,7 @@ public class DriverService implements ManageDriverUseCase {
 
     @Override
     public Mono<Driver> registerDriver(DriverRegistrationRequest request) {
-        log.info("Étape 1 : Création du compte utilisateur distant pour {}", request.username());
+        log.info("Enrôlement chauffeur : Appel Auth Service pour {}", request.username());
         
         // 1. Préparation de la commande avec le rôle spécifique
         AuthUseCase.RegisterCommand command = new AuthUseCase.RegisterCommand(
@@ -47,9 +47,11 @@ public class DriverService implements ManageDriverUseCase {
                 // 3. Création du modèle de domaine Driver
                 Driver localDriver = new Driver(
                     authRes.user().id(), // UUID TraMaSys
+                    null, // fleetId à définir plus tard
                     request.licenceNumber(),
-                    true, // Actif par défaut
-                    null  // Aucun véhicule au départ
+                    "ACTIVE", // Actif par défaut
+                    null,  // Aucun véhicule au départ
+                    ""
                 );
                 
                 // 4. Sauvegarde en base de données locale
@@ -57,8 +59,24 @@ public class DriverService implements ManageDriverUseCase {
             });
     }
 
-    @Override public Mono<Driver> getDriverById(UUID userId) { return driverPersistencePort.findById(userId); }
-    @Override public Flux<Driver> getAllDrivers(Boolean status) { return driverPersistencePort.findAll(status); }
-    @Override public Mono<Void> assignVehicle(UUID userId, UUID vehicleId) { return driverPersistencePort.updateVehicleAssignment(userId, vehicleId); }
-    @Override public Mono<Void> unassignVehicle(UUID userId) { return driverPersistencePort.updateVehicleAssignment(userId, null); }
+    @Override
+    public Mono<Driver> getDriverById(UUID userId) {
+        return driverPersistencePort.findById(userId);
+    }
+
+    @Override
+    public Flux<Driver> getDriversByFleet(UUID fleetId) {
+        return driverPersistencePort.findAllByFleetId(fleetId);
+    }
+
+    @Override
+    public Mono<Void> assignVehicle(UUID userId, UUID vehicleId) {
+        // Optionnel : Ajouter une logique de vérification (ex: véhicule libre ?)
+        return driverPersistencePort.updateVehicleAssignment(userId, vehicleId);
+    }
+
+    @Override
+    public Mono<Void> unassignVehicle(UUID userId) {
+        return driverPersistencePort.updateVehicleAssignment(userId, null);
+    }
 }

@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -26,31 +27,32 @@ public class DriverController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Register a new Driver (Remote Auth + Local Profile)")
-    public Mono<Driver> register(@RequestBody DriverRegistrationRequest request) {
+    @Operation(summary = "Register a new Driver", description = "Creates a remote Auth account and a local Fleet profile")
+    public Mono<Driver> register(@Valid @RequestBody DriverRegistrationRequest request) {
         return driverUseCase.registerDriver(request);
     }
 
     @GetMapping
-    @Operation(summary = "List all drivers", description = "Retrieve all drivers with optional status filtering")
-    public Flux<Driver> list(
+    @Operation(summary = "List drivers by fleet", description = "Retrieve all drivers belonging to a specific fleet")
+    public Flux<Driver> listByFleet(
         @Parameter(
-            name = "status", 
-            description = "Filter by active (true) or inactive (false) status", 
+            name = "fleetId", 
+            description = "UUID of the fleet", 
+            required = true,
             in = ParameterIn.QUERY, 
-            schema = @Schema(type = "boolean")
+            schema = @Schema(type = "string", format = "uuid")
         ) 
-        @RequestParam(required = false) Boolean status
+        @RequestParam UUID fleetId
     ) {
-        return driverUseCase.getAllDrivers(status);
+        return driverUseCase.getDriversByFleet(fleetId);
     }
 
     @GetMapping("/{userId}")
-    @Operation(summary = "Get driver by ID")
+    @Operation(summary = "Get driver details", description = "Retrieve local profile and vehicle assignment")
     public Mono<Driver> get(
         @Parameter(
             name = "userId",
-            description = "Unique identifier of the driver",
+            description = "Unique identifier (UUID) of the user/driver",
             in = ParameterIn.PATH,
             schema = @Schema(type = "string", format = "uuid")
         )
@@ -60,16 +62,23 @@ public class DriverController {
     }
 
     @PostMapping("/{userId}/assign-vehicle")
-    @Operation(summary = "Assign a vehicle to a driver")
-    public Mono<Void> assign(@PathVariable UUID userId, @RequestBody VehicleAssignRequest req) {
+    @Operation(summary = "Assign vehicle", description = "Link a vehicle to a driver")
+    public Mono<Void> assign(@PathVariable UUID userId, @Valid @RequestBody VehicleAssignRequest req) {
         return driverUseCase.assignVehicle(userId, req.vehicleId());
     }
 
     @PostMapping("/{userId}/unassign-vehicle")
-    @Operation(summary = "Remove vehicle assignment from driver")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Unassign vehicle", description = "Remove current vehicle link from driver")
     public Mono<Void> unassign(@PathVariable UUID userId) {
         return driverUseCase.unassignVehicle(userId);
     }
 
-    public record VehicleAssignRequest(UUID vehicleId) {}
+    /**
+     * DTO interne pour l'assignation de véhicule.
+     */
+    public record VehicleAssignRequest(
+        @io.swagger.v3.oas.annotations.media.Schema(description = "UUID of the vehicle to assign", required = true)
+        UUID vehicleId
+    ) {}
 }
