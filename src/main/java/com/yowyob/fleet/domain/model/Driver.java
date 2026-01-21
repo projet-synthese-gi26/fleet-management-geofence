@@ -4,7 +4,9 @@ import java.util.UUID;
 
 public record Driver(
     UUID userId,
+    UUID fleetId, // Ajouté
     String licenceNumber,
     Boolean status,
-    UUID assignedVehicleId
+    UUID assignedVehicleId,
+    String photoUrl // Ajouté
 ) {}

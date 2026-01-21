@@ -21,13 +21,13 @@ public class HealthCheckController {
      */
     @GetMapping("/users-count")
     public Mono<Map<String, Object>> getUserCount() {
-        return databaseClient.sql("SELECT COUNT(*) FROM users")
+        // On ajoute "public." devant "users"
+        return databaseClient.sql("SELECT COUNT(*) FROM public.users")
                 .map((row, metadata) -> row.get(0, Long.class))
                 .first()
                 .map(count -> Map.of(
                         "status", "UP",
                         "database", "CONNECTED",
-                        "users_in_db", count
-                ));
+                        "users_in_db", count));
     }
 }

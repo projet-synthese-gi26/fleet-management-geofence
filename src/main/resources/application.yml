@@ -17,6 +17,8 @@ spring:
       enabled: true
       initial-size: 2
       max-size: 10
+      validation-query: "SELECT 1" # Vérifie que la connexion est vivante avant usage
+      max-idle-time: 10m   
 
   # JDBC (Liquibase Migration)
   datasource:
@@ -63,7 +65,7 @@ application:
   external:
     vehicle-service-url: https://vehicule-service.pynfi.com
   auth:
-    mode: remote 
+    mode: fake
     url: https://auth-service.pynfi.com
 
   # Kafka topics

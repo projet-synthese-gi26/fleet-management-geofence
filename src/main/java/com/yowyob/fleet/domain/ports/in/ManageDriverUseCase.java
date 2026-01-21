@@ -7,11 +7,9 @@ import reactor.core.publisher.Mono;
 import java.util.UUID;
 
 public interface ManageDriverUseCase {
-    // Changement de signature pour inclure les infos de création d'utilisateur
     Mono<Driver> registerDriver(DriverRegistrationRequest request);
-    
     Mono<Driver> getDriverById(UUID userId);
-    Flux<Driver> getAllDrivers(Boolean status);
+    Flux<Driver> getDriversByFleet(UUID fleetId);
     Mono<Void> assignVehicle(UUID userId, UUID vehicleId);
     Mono<Void> unassignVehicle(UUID userId);
 }

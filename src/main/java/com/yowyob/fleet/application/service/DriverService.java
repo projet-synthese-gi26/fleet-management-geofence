@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -23,31 +24,46 @@ public class DriverService implements ManageDriverUseCase {
 
     @Override
     public Mono<Driver> registerDriver(DriverRegistrationRequest request) {
-        log.info("Étape 1 : Création du compte utilisateur distant pour {}", request.username());
+        log.info("Enrôlement chauffeur : Appel Auth Service pour {}", request.username());
         
-        // 1. Appel au service d'authentification distant
         return authPort.register(
             request.username(), request.password(), request.email(),
             request.phone(), request.firstName(), request.lastName(),
-            List.of("DRIVER") // On impose le rôle DRIVER
+            List.of("FLEET_DRIVER")
         ).flatMap(authRes -> {
-            log.info("Étape 2 : Création du profil chauffeur local pour UUID {}", authRes.user().id());
+            log.info("Compte crée (ID: {}), création du profil local dans la flotte {}", authRes.user().id(), request.fleetId());
             
-            // 2. Création du modèle de domaine Driver avec l'UUID reçu
-            Driver localDriver = new Driver(
-                authRes.user().id(), // UUID TraMaSys
+            Driver driverToSave = new Driver(
+                authRes.user().id(),
+                request.fleetId(),
                 request.licenceNumber(),
-                true, // Actif par défaut
-                null  // Aucun véhicule au départ
+                true,
+                null,
+                request.photoUrl()
             );
             
-            // 3. Sauvegarde en base de données locale
-            return driverPersistencePort.save(localDriver);
+            return driverPersistencePort.save(driverToSave);
         });
     }
 
-    @Override public Mono<Driver> getDriverById(UUID userId) { return driverPersistencePort.findById(userId); }
-    @Override public Flux<Driver> getAllDrivers(Boolean status) { return driverPersistencePort.findAll(status); }
-    @Override public Mono<Void> assignVehicle(UUID userId, UUID vehicleId) { return driverPersistencePort.updateVehicleAssignment(userId, vehicleId); }
-    @Override public Mono<Void> unassignVehicle(UUID userId) { return driverPersistencePort.updateVehicleAssignment(userId, null); }
+    @Override
+    public Mono<Driver> getDriverById(UUID userId) {
+        return driverPersistencePort.findById(userId);
+    }
+
+    @Override
+    public Flux<Driver> getDriversByFleet(UUID fleetId) {
+        return driverPersistencePort.findAllByFleetId(fleetId);
+    }
+
+    @Override
+    public Mono<Void> assignVehicle(UUID userId, UUID vehicleId) {
+        // Optionnel : Ajouter une logique de vérification (ex: véhicule libre ?)
+        return driverPersistencePort.updateVehicleAssignment(userId, vehicleId);
+    }
+
+    @Override
+    public Mono<Void> unassignVehicle(UUID userId) {
+        return driverPersistencePort.updateVehicleAssignment(userId, null);
+    }
 }

@@ -9,5 +9,15 @@ import java.util.UUID;
 
 @Repository
 public interface DriverR2dbcRepository extends ReactiveCrudRepository<DriverEntity, UUID> {
-    Flux<DriverEntity> findByStatus(Boolean status);
+
+    /**
+     * Recherche tous les chauffeurs appartenant à une flotte spécifique.
+     * Spring Data génère automatiquement le SQL basé sur le nom du champ 'fleetId' dans DriverEntity.
+     */
+    Flux<DriverEntity> findByFleetId(UUID fleetId);
+
+    /**
+     * Recherche par statut (actif/inactif).
+     */
+    Flux<DriverEntity> findByStatus(String status);
 }
