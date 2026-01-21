@@ -47,9 +47,11 @@ public class DriverService implements ManageDriverUseCase {
                 // 3. Création du modèle de domaine Driver
                 Driver localDriver = new Driver(
                     authRes.user().id(), // UUID TraMaSys
+                    null, // fleetId à définir plus tard
                     request.licenceNumber(),
-                    true, // Actif par défaut
-                    null  // Aucun véhicule au départ
+                    "ACTIVE", // Actif par défaut
+                    null,  // Aucun véhicule au départ
+                    ""
                 );
                 
                 // 4. Sauvegarde en base de données locale

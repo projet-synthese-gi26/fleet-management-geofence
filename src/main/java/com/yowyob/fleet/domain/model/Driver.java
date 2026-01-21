@@ -6,7 +6,7 @@ public record Driver(
     UUID userId,
     UUID fleetId, // Ajouté
     String licenceNumber,
-    Boolean status,
+    String status,
     UUID assignedVehicleId,
     String photoUrl // Ajouté
 ) {}

@@ -30,11 +30,18 @@ public class DriverEntity implements Persistable<UUID> {
     @Column("assigned_vehicle_id")
     private UUID assignedVehicleId;
 
+    @Column("photo_url")
+    private String photoUrl;
+
+    @Transient
+    private boolean isNewRecord = false; // Renommé ici
+
+    public void setNewRecord(boolean isNew) { this.isNewRecord = isNew; }
     @Transient
     private boolean isNew = false;
 
     // Constructeur pour création
-    public DriverEntity(UUID userId, String licenceNumber, Boolean status, UUID assignedVehicleId) {
+    public DriverEntity(UUID userId, String licenceNumber, String status, UUID assignedVehicleId) {
         this.userId = userId;
         this.licenceNumber = licenceNumber;
         this.status = status;

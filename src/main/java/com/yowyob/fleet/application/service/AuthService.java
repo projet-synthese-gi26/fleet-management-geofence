@@ -97,7 +97,7 @@ public class AuthService implements AuthUseCase {
             return managerPort.createProfile(user.id(), null);
         } else if (user.roles().contains("FLEET_DRIVER")) {
             String tempPermit = "PENDING-" + user.id().toString().substring(0, 8);
-            Driver driver = new Driver(user.id(), tempPermit, true, null);
+            Driver driver = new Driver(user.id(), null, tempPermit, "ACTIVE", null, "");
             return driverPort.save(driver).then();
         }
         return Mono.empty();
