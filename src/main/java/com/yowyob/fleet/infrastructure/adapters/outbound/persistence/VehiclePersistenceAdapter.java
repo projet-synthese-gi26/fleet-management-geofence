@@ -4,12 +4,14 @@ import com.yowyob.fleet.domain.model.Vehicle;
 import com.yowyob.fleet.domain.ports.out.VehiclePersistencePort;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.FinancialParameterEntity;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.MaintenanceParameterEntity;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.VehicleLocalEntity;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.FinancialParameterR2dbcRepository;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.MaintenanceParameterR2dbcRepository;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.VehicleLocalR2dbcRepository;
 import com.yowyob.fleet.infrastructure.mappers.VehicleLocalMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
@@ -24,31 +26,42 @@ public class VehiclePersistenceAdapter implements VehiclePersistencePort {
     private final VehicleLocalMapper mapper;
 
     @Override
+    @Transactional
     public Mono<Vehicle> saveLocalData(Vehicle vehicle) {
-        // 1. Save the main vehicle pivot first
-        return vehicleRepo.save(mapper.toVehicleEntity(vehicle))
-                .flatMap(savedVehicle -> {
-                    // 2. Map parameters to entities
-                    var financialEntity = mapper.toFinancialEntity(vehicle);
-                    var maintenanceEntity = mapper.toMaintenanceEntity(vehicle);
-                    
-                    // Ensure the foreign key is set
-                    financialEntity.setVehicleId(savedVehicle.getId());
-                    maintenanceEntity.setVehicleId(savedVehicle.getId());
-
-                    // 3. Save parameters in parallel using zip
-                    return Mono.zip(
-                            financialRepo.save(financialEntity),
-                            maintenanceRepo.save(maintenanceEntity)
-                    ).thenReturn(savedVehicle);
+        // Préparation de l'entité pivot
+        VehicleLocalEntity vEntity = mapper.toVehicleEntity(vehicle);
+        
+        // On vérifie si c'est une création pour mettre le flag isNew
+        return vehicleRepo.findById(vehicle.id())
+                .map(existing -> {
+                    vEntity.setNew(false);
+                    return existing;
                 })
-                // 4. Return the domain object (we can fetch again or map directly)
+                .switchIfEmpty(Mono.defer(() -> {
+                    vEntity.setNew(true);
+                    return Mono.empty();
+                }))
+                .then(vehicleRepo.save(vEntity))
+                .flatMap(savedV -> {
+                    // Initialisation forcée des 1:1 si non existants
+                    FinancialParameterEntity fin = mapper.toFinancialEntity(vehicle);
+                    fin.setId(fin.getId() == null ? UUID.randomUUID() : fin.getId());
+                    fin.setVehicleId(savedV.getId());
+
+                    MaintenanceParameterEntity maint = mapper.toMaintenanceEntity(vehicle);
+                    maint.setId(maint.getId() == null ? UUID.randomUUID() : maint.getId());
+                    maint.setVehicleId(savedV.getId());
+
+                    return Mono.zip(
+                            financialRepo.save(fin),
+                            maintenanceRepo.save(maint)
+                    ).thenReturn(savedV);
+                })
                 .map(v -> mapper.toDomain(v, null, null));
     }
 
     @Override
     public Mono<Vehicle> getLocalDataById(UUID id) {
-        // Zip: fetch all 3 local tables in parallel
         return Mono.zip(
                 vehicleRepo.findById(id),
                 financialRepo.findByVehicleId(id).defaultIfEmpty(new FinancialParameterEntity()),
@@ -58,7 +71,6 @@ public class VehiclePersistenceAdapter implements VehiclePersistencePort {
 
     @Override
     public Mono<Void> deleteLocalData(UUID id) {
-        // Delete pivot - the CASCADE in SQL will handle the parameters
         return vehicleRepo.deleteById(id);
     }
 }

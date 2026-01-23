@@ -1,12 +1,13 @@
 package com.yowyob.fleet.domain.model;
 
-import java.time.LocalDate;
+import java.time.Instant;
 import java.util.UUID;
 
 public record Fleet(
     UUID id,
+    UUID managerId,
     String name,
-    LocalDate creationDate,
-    UUID managerUserId,
+    String phoneNumber,
+    Instant createdAt,
     Integer vehicleCount
 ) {}
