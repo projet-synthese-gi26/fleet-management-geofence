@@ -65,7 +65,7 @@ application:
   external:
     vehicle-service-url: https://vehicule-service.pynfi.com
   auth:
-    mode: fake
+    mode: remote
     url: https://auth-service.pynfi.com
 
   # Kafka topics
