@@ -4,5 +4,11 @@ import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 public record VehicleRegistrationRequest(
-    @NotNull UUID vehicleId
+    @NotNull(message = "L'ID technique du véhicule est obligatoire") 
+    UUID vehicleId,
+    
+    @NotNull(message = "Le type de véhicule est obligatoire") 
+    UUID vehicleTypeId,
+    
+    String photoUrl
 ) {}

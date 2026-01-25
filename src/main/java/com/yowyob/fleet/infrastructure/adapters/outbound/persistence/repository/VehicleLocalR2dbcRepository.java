@@ -8,15 +8,8 @@ import java.util.UUID;
 
 @Repository
 public interface VehicleLocalR2dbcRepository extends ReactiveCrudRepository<VehicleLocalEntity, UUID> {
-    
-    /**
-     * Finds all vehicle IDs associated with a specific fleet.
-     */
-    Flux<VehicleLocalEntity> findByFleetId(UUID fleetId);
 
-    /**
-     * Finds all vehicles assigned to a specific driver.
-     * CORRECTION : Renommé de findByDriverId à findByCurrentDriverId
-     */
+    Flux<VehicleLocalEntity> findByFleetId(UUID fleetId);
+    Flux<VehicleLocalEntity> findByStatus(String status);
     Flux<VehicleLocalEntity> findByCurrentDriverId(UUID currentDriverId);
 }
