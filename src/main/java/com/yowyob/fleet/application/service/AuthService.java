@@ -49,16 +49,10 @@ public class AuthService implements AuthUseCase {
 
     @Override
     public Mono<AuthPort.UserDetail> updateProfile(UUID userId, String token, UpdateProfileCommand command) {
+        // Nettoyage : On ne touche plus qu'au service distant ici.
+        // La mise à jour des données métier (Company, Licence) se fait via des endpoints dédiés.
         return authPort.updateUserProfile(userId, token, command)
-                .flatMap(updatedUser -> {
-                    Mono<Void> localUpdate = Mono.empty();
-                    if (updatedUser.roles().contains("FLEET_MANAGER") && command.companyName() != null) {
-                        localUpdate = managerPort.updateCompany(userId, command.companyName());
-                    } 
-                    // Pour le driver, on pourrait update le permis ici si nécessaire
-                    
-                    return localUpdate.then(enrichWithLocalData(updatedUser));
-                });
+                .flatMap(this::enrichWithLocalData);
     }
 
     @Override
@@ -73,12 +67,12 @@ public class AuthService implements AuthUseCase {
 
     @Override
     public Mono<Void> deleteAccount(UUID userId, String token) {
-        // 1. Supprimer côté Auth distant
+        // STRICT CONSISTENCY : On supprime d'abord distant. Si ça échoue, on ne touche pas au local.
+        // Si distant OK -> On supprime local.
         return authPort.deleteRemoteAccount(userId, token)
             .then(Mono.defer(() -> {
-                // 2. Supprimer localement (Cascade DB fera le reste si FK configurées, 
-                // mais on peut expliciter pour plus de sûreté ou pour les fichiers liés)
-                // Ici on assume que le ON DELETE CASCADE de la DB fait le job sur drivers/fleet_managers
+                // TODO: Implémenter la suppression explicite locale si le CASCADE DB n'est pas suffisant
+                // Pour l'instant, on suppose que la FK DB gère le nettoyage ou que c'est géré par l'AdminController
                 return Mono.empty();
             }));
     }

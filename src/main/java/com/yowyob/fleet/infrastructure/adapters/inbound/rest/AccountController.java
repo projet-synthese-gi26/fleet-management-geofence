@@ -21,8 +21,8 @@ import reactor.core.publisher.Mono;
 @RestController
 @RequestMapping("/api/v1/account")
 @RequiredArgsConstructor
-@Tag(name = "03. Account", description = "Gestion du profil personnel")
-@SecurityRequirement(name = "bearerAuth") // Utilise le schéma global
+@Tag(name = "03. Account", description = "Gestion du profil personnel (Identité)")
+@SecurityRequirement(name = "bearerAuth")
 public class AccountController {
 
     private final AuthUseCase authUseCase;
@@ -36,7 +36,7 @@ public class AccountController {
     }
 
     @PutMapping
-    @Operation(summary = "Mettre à jour mon profil", description = "Modifie nom, prénom, téléphone et infos métier.")
+    @Operation(summary = "Mettre à jour mon identité", description = "Modifie nom, prénom, téléphone et email. (Infos métier exclues)")
     public Mono<AuthPort.UserDetail> updateProfile(
             @Parameter(hidden = true) @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @Valid @RequestBody UpdateProfileRequest request
@@ -44,8 +44,7 @@ public class AccountController {
         return authUseCase.me(token)
                 .flatMap(user -> {
                     AuthUseCase.UpdateProfileCommand cmd = new AuthUseCase.UpdateProfileCommand(
-                            request.firstName(), request.lastName(), request.phone(), request.email(),
-                            request.companyName(), request.licenceNumber()
+                            request.firstName(), request.lastName(), request.phone(), request.email()
                     );
                     return authUseCase.updateProfile(user.id(), token, cmd);
                 });

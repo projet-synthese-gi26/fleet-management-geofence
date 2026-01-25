@@ -7,9 +7,20 @@ import reactor.core.publisher.Mono;
 import java.util.UUID;
 
 public interface ManageDriverUseCase {
-    Mono<Driver> registerDriver(DriverRegistrationRequest request);
+    // Création complète (Manager)
+    Mono<Driver> registerDriver(DriverRegistrationRequest request, UUID managerId);
+    
+    // Recrutement existant (Manager)
+    Mono<Void> recruitDriver(UUID fleetId, String identifier, UUID managerId, String token);
+    
+    // Lecture
     Mono<Driver> getDriverById(UUID userId);
-    Flux<Driver> getDriversByFleet(UUID fleetId);
-    Mono<Void> assignVehicle(UUID userId, UUID vehicleId);
-    Mono<Void> unassignVehicle(UUID userId);
+    Flux<Driver> getDrivers(UUID fleetId, UUID requesterId, boolean isAdmin);
+    
+    // Gestion Véhicule
+    Mono<Void> assignVehicle(UUID userId, UUID vehicleId, UUID requesterId);
+    Mono<Void> unassignVehicle(UUID userId, UUID requesterId);
+    
+    // Retrait de la flotte (Manager)
+    Mono<Void> removeDriverFromFleet(UUID fleetId, UUID driverId, UUID requesterId);
 }

@@ -6,8 +6,6 @@ import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import java.util.UUID;
-
 @Mapper(componentModel = "spring")
 public abstract class VehicleLocalMapper {
 
@@ -17,14 +15,11 @@ public abstract class VehicleLocalMapper {
     @Mapping(target = "fleetId", source = "fleetId")
     @Mapping(target = "currentDriverId", source = "currentDriverId")
     @Mapping(target = "vehicleTypeId", source = "vehicleTypeId")
-    @Mapping(target = "licensePlate", source = "licensePlate")
-    @Mapping(target = "brand", source = "brand")
-    @Mapping(target = "model", source = "model")
-    @Mapping(target = "manufacturingYear", source = "manufacturingYear")
-    @Mapping(target = "color", source = "color")
+    // SUPPRESSION DES MAPPINGS INEXISTANTS (licensePlate, brand, model, color, year)
+    // Ces données ne sont pas stockées dans VehicleLocalEntity
     @Mapping(target = "status", source = "status")
     @Mapping(target = "photoUrl", source = "photoUrl")
-    @Mapping(target = "new", ignore = true) // Géré manuellement dans l'adapter
+    @Mapping(target = "new", ignore = true) 
     public abstract VehicleLocalEntity toVehicleEntity(Vehicle domain);
 
     // --- Vers ENTITY (Paramètres Financiers) ---
@@ -51,7 +46,7 @@ public abstract class VehicleLocalMapper {
     public abstract MaintenanceParameterEntity toMaintenanceEntity(Vehicle domain);
 
 
-    // --- Vers DOMAINE (Assemblage manuel des 3 sources de données locales) ---
+    // --- Vers DOMAINE ---
 
     public Vehicle toDomain(VehicleLocalEntity v, FinancialParameterEntity f, MaintenanceParameterEntity m) {
         if (v == null) return null;
@@ -61,17 +56,17 @@ public abstract class VehicleLocalMapper {
             v.getFleetId(),
             v.getCurrentDriverId(),
             v.getVehicleTypeId(),
-            v.getLicensePlate(),
-            v.getBrand(),
-            v.getModel(),
-            v.getManufacturingYear(),
-            null, // Le 'type' (label String) est fourni par l'API externe ou un service de dictionnaire
-            v.getColor(),
+            null, // licensePlate (Vient du Distant)
+            null, // brand (Vient du Distant)
+            null, // model (Vient du Distant)
+            null, // manufacturingYear (Vient du Distant)
+            null, // type label (Vient du Distant)
+            null, // color (Vient du Distant)
             v.getStatus(),
             v.getPhotoUrl(),
             mapFinancialToDomain(f),
             mapMaintenanceToDomain(m),
-            null  // OperationalParameters gérés séparément (temps réel)
+            null  // OperationalParameters
         );
     }
 
@@ -93,7 +88,8 @@ public abstract class VehicleLocalMapper {
             m.getLastMaintenanceAt(),
             m.getNextMaintenanceAt(),
             m.getEngineStatus(),
-            m.getBatteryHealth(),
+            // Conversion Safe String -> Integer pour batteryHealth si nécessaire
+            m.getBatteryHealth() != null ? Integer.parseInt(m.getBatteryHealth()) : null,
             m.getMaintenanceStatus()
         );
     }

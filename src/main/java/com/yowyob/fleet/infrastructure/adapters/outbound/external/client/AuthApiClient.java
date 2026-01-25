@@ -9,11 +9,12 @@ import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PostExchange;
 import org.springframework.web.service.annotation.PutExchange;
 
+import reactor.core.publisher.Flux; 
 import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.UUID;
 
-@HttpExchange("/api") // Base path changé pour inclure /auth et /users
+@HttpExchange("/api")
 public interface AuthApiClient {
     
     // --- AUTH ---
@@ -30,20 +31,25 @@ public interface AuthApiClient {
     Mono<TraMaSysResponse> refreshToken(@RequestBody RefreshRequest request);
 
     // --- USERS ---
+    
+    @GetExchange("/users/{id}")
+    Mono<UserDetailResponse> getUserById(@PathVariable UUID id, @RequestHeader("Authorization") String bearerToken);
+
+    // NOUVEAU : Récupérer les users par service (Retourne un Flux/List)
+    @GetExchange("/users/service/{service}")
+    Flux<UserDetailResponse> getUsersByService(@PathVariable String service, @RequestHeader("Authorization") String bearerToken);
+
     @PutExchange("/users/{id}")
     Mono<UserDetailResponse> updateUser(@PathVariable UUID id, @RequestBody UpdateUserRequest request);
 
     @PutExchange("/users/{id}/password")
     Mono<Void> changePassword(@PathVariable UUID id, @RequestBody ChangePasswordRequest request);
 
-    // Le delete n'était pas clair sur le screen, j'assume standard REST sur /users/{id}
-    // ou logout/{id} comme vu précédemment, mais pour un "delete account", c'est souvent différent.
-    // Je mets le standard REST, on ajustera si erreur 404.
     @DeleteExchange("/users/{id}") 
-    Mono<Void> deleteUser(@PathVariable UUID id);
+    Mono<Void> deleteUser(@PathVariable UUID id, @RequestHeader("Authorization") String bearerToken);
 
 
-    // DTOs
+    // DTOs (Inchangés)
     record LoginRequest(String identifier, String password) {}
     record RefreshRequest(String refreshToken) {}
     
@@ -52,14 +58,8 @@ public interface AuthApiClient {
         String firstName, String lastName, String service, List<String> roles
     ) {}
 
-    record UpdateUserRequest(
-        String firstName, String lastName, String phone, String email
-    ) {}
-
-    record ChangePasswordRequest(
-        String currentPassword, String newPassword
-    ) {}
-
+    record UpdateUserRequest(String firstName, String lastName, String phone, String email) {}
+    record ChangePasswordRequest(String currentPassword, String newPassword) {}
     record TraMaSysResponse(String accessToken, String refreshToken, UserDetailResponse user) {}
     
     record UserDetailResponse(

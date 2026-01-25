@@ -2,14 +2,19 @@ package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
 
 import com.yowyob.fleet.domain.model.Fleet;
 import com.yowyob.fleet.domain.ports.in.ManageFleetUseCase;
+import com.yowyob.fleet.domain.ports.out.AuthPort;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.FleetRequest;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.FleetResponse;
 import com.yowyob.fleet.infrastructure.mappers.FleetMapper;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -19,52 +24,65 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/fleets")
 @RequiredArgsConstructor
-@Tag(name = "07. Fleets", description = "Gestion des flottes")
+@Tag(name = "07. Fleets", description = "Gestion des flottes (Sécurisé par Propriétaire)")
+@SecurityRequirement(name = "bearerAuth")
 public class FleetController {
 
     private final ManageFleetUseCase fleetUseCase;
     private final FleetMapper mapper;
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Create a new fleet")
-    public Mono<FleetResponse> create(@Valid @RequestBody FleetRequest request) {
-        return fleetUseCase.createFleet(mapper.toDomain(request))
-                .map(mapper::toResponse);
+    // Helper pour extraire l'utilisateur du token
+    private AuthPort.UserDetail getUser(Authentication auth) {
+        return (AuthPort.UserDetail) auth.getPrincipal();
     }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Get fleet details by ID")
-    public Mono<FleetResponse> getById(@PathVariable UUID id) {
-        return fleetUseCase.getFleetById(id)
+    private boolean isAdmin(Authentication auth) {
+        return auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_FLEET_ADMIN"));
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('FLEET_MANAGER')") // Seul un manager crée sa flotte
+    @Operation(summary = "Créer une flotte", description = "La flotte sera automatiquement liée au manager connecté.")
+    public Mono<FleetResponse> create(
+            @Valid @RequestBody FleetRequest request,
+            Authentication auth
+    ) {
+        Fleet domainObj = mapper.toDomain(request);
+        return fleetUseCase.createFleet(domainObj, getUser(auth).id())
                 .map(mapper::toResponse);
     }
 
     @GetMapping
-    @Operation(summary = "List all fleets")
-    public Flux<FleetResponse> getAll() {
-        return fleetUseCase.getAllFleets()
+    @Operation(summary = "Lister les flottes", description = "Admin : Tout voir / Manager : Voir ses flottes uniquement.")
+    public Flux<FleetResponse> getAll(Authentication auth) {
+        return fleetUseCase.getFleets(getUser(auth).id(), isAdmin(auth))
+                .map(mapper::toResponse);
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Détails d'une flotte")
+    public Mono<FleetResponse> getById(@PathVariable UUID id, Authentication auth) {
+        return fleetUseCase.getFleetById(id, getUser(auth).id(), isAdmin(auth))
                 .map(mapper::toResponse);
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Full update of a fleet")
-    public Mono<FleetResponse> update(@PathVariable UUID id, @Valid @RequestBody FleetRequest request) {
-        return fleetUseCase.updateFleet(id, mapper.toDomain(request))
-                .map(mapper::toResponse);
-    }
-
-    @PatchMapping("/{id}")
-    @Operation(summary = "Partial update of a fleet")
-    public Mono<FleetResponse> patch(@PathVariable UUID id, @RequestBody FleetRequest request) {
-        return fleetUseCase.patchFleet(id, mapper.toDomain(request))
+    @Operation(summary = "Mettre à jour une flotte")
+    public Mono<FleetResponse> update(
+            @PathVariable UUID id, 
+            @Valid @RequestBody FleetRequest request, 
+            Authentication auth
+    ) {
+        return fleetUseCase.updateFleet(id, mapper.toDomain(request), getUser(auth).id(), isAdmin(auth))
                 .map(mapper::toResponse);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Delete a fleet")
-    public Mono<Void> delete(@PathVariable UUID id) {
-        return fleetUseCase.deleteFleet(id);
+    @Operation(summary = "Supprimer une flotte")
+    public Mono<Void> delete(@PathVariable UUID id, Authentication auth) {
+        return fleetUseCase.deleteFleet(id, getUser(auth).id(), isAdmin(auth));
     }
 }

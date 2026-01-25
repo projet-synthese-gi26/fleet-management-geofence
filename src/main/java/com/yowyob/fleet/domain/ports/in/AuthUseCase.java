@@ -23,8 +23,7 @@ public interface AuthUseCase {
     ) {}
 
     record UpdateProfileCommand(
-        String firstName, String lastName, String phone, String email,
-        String companyName, String licenceNumber
+        String firstName, String lastName, String phone, String email
     ) {}
 
     record FileContent(String filename, String contentType, byte[] data) {}

@@ -43,7 +43,7 @@
 - [ ] **Tâche 6.1 :** Implémenter la gestion des **Fleet Managers**.
 - [ ] **Tâche 6.2 :** Refondre la gestion des **Drivers** (User Auth + Permis Local + Assignation Véhicule).
 
-#### Jalon 7 : Flottes & Véhicules (Le Cœur) `Hassana`
+#### Jalon 7 : Flottes & Véhicules (Le Cœur) `Gabriel`
 - [ ] **Tâche 7.1 :** CRUD **Flottes** (Lien avec le Fleet Manager connecté).
 - [ ] **Tâche 7.2 :** CRUD **Véhicules** (Agrégation Données Locales + API Véhicule Distante).
 
@@ -55,13 +55,13 @@
 ## 🚀 PHASE 3 : FONCTIONNALITÉS AVANCÉES (À venir)
 
 #### Jalon 9 : Moteur de Geofencing & Alertes (CU10-CU13) `Hassana`
-- [x] **Tâche 9.1 :** Use-Case : Définir et gérer les zones (Geofence Zones).
-- [x] **Tâche 9.2 :** Moteur de détection réactif (Intersection position / zone).
-- [x] **Tâche 9.3 :** Publication des alertes dans Kafka.
-- [x] **Tâche 9.iç4 :** Validation Postman : Alertes géographiques.
+- [ ] **Tâche 9.1 :** Use-Case : Définir et gérer les zones (Geofence Zones).
+- [ ] **Tâche 9.2 :** Moteur de détection réactif (Intersection position / zone).
+- [ ] **Tâche 9.3 :** Publication des alertes dans Kafka.
+- [ ] **Tâche 9.4 :** Validation Postman : Alertes géographiques.
 
 #### Jalon 10 : Intégrations Services Périphériques `Gabriel`
 - [ ] **Tâche 10.1 :** Adaptateurs pour Fare Calculator & Payment (avec mode Fake data).
 - [ ] **Tâche 10.2 :** Adaptateur pour l'API Media (Gestion des images).
-- [ ] **Tâche 10.3 :** Intégration finale du service de Notification.git
+- [ ] **Tâche 10.3 :** Intégration finale du service de Notification.
 - [ ] **Tâche 10.4 :** Tests de bout en bout (E2E).

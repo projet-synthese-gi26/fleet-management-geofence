@@ -14,34 +14,36 @@ import java.time.ZoneOffset;
 @Mapper(componentModel = "spring")
 public interface FleetMapper {
 
-    @Mapping(target = "fleetManagerId", source = "managerUserId")
-    @Mapping(target = "createdAt", source = "creationDate")
-    @Mapping(target = "phoneNumber", ignore = true) 
+    // Domain -> Entity
+    // Les champs id, name, managerId sont mappés automatiquement car mêmes noms
+    @Mapping(target = "phoneNumber", source = "phoneNumber") 
     FleetEntity toEntity(Fleet domain);
     
-    @Mapping(target = "managerUserId", source = "fleetManagerId")
-    @Mapping(target = "creationDate", source = "createdAt")
-    @Mapping(target = "vehicleCount", ignore = true)
+    // Entity -> Domain
+    @Mapping(target = "vehicleCount", ignore = true) // Ce champ est calculé, pas dans l'entité
     Fleet toDomain(FleetEntity entity);
 
+    // Request -> Domain
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "creationDate", ignore = true)
+    @Mapping(target = "createdAt", ignore = true) // C'était "creationDate" avant, erreur ici
     @Mapping(target = "vehicleCount", ignore = true)
     Fleet toDomain(FleetRequest request);
 
+    // Domain -> Response
+    // On mappe createdAt (Instant) vers creationDate (LocalDate) pour la réponse JSON
+    @Mapping(target = "creationDate", source = "createdAt")
+    @Mapping(target = "managerUserId", source = "managerId")
     FleetResponse toResponse(Fleet domain);
 
     /**
-     * Custom mapping: LocalDate to Instant (Domain to Entity)
-     * Sets the time to the start of the day in UTC.
+     * Custom mapping: LocalDate to Instant
      */
     default Instant map(LocalDate date) {
         return date == null ? null : date.atStartOfDay(ZoneOffset.UTC).toInstant();
     }
 
     /**
-     * Custom mapping: Instant to LocalDate (Entity to Domain)
-     * Extracts the date part from the UTC instant.
+     * Custom mapping: Instant to LocalDate
      */
     default LocalDate map(Instant instant) {
         return instant == null ? null : LocalDate.ofInstant(instant, ZoneOffset.UTC);

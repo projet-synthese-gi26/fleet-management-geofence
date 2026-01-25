@@ -28,11 +28,11 @@ public class SecurityConfig {
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
         
         // --- 1. CONFIGURATION DU FILTRE JWT ---
+        // On instancie le filtre avec le manager explicite
         AuthenticationWebFilter jwtFilter = new AuthenticationWebFilter(authenticationManager);
         jwtFilter.setServerAuthenticationConverter(authenticationConverter);
 
         // CORRECTION ROBUSTE : Le filtre ne s'active QUE sur les routes protégées.
-        // Il ignorera totalement les headers sur /auth/*, évitant le crash 500.
         jwtFilter.setRequiresAuthenticationMatcher(
             ServerWebExchangeMatchers.pathMatchers(
                 "/api/v1/account/**",
@@ -50,6 +50,9 @@ public class SecurityConfig {
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 
+                // IMPORTANT : On déclare notre manager comme le manager par défaut pour éviter le "No provider found"
+                .authenticationManager(authenticationManager) 
+                
                 // Gestion explicite des erreurs 401/403
                 .exceptionHandling(handling -> handling
                     .authenticationEntryPoint((exchange, e) -> 
@@ -59,7 +62,7 @@ public class SecurityConfig {
                 )
 
                 .authorizeExchange(exchanges -> exchanges
-                        // Routes Publiques (Redondant mais sécurité double couche)
+                        // Routes Publiques
                         .pathMatchers(
                             "/v3/api-docs/**", 
                             "/swagger-ui/**", 
@@ -67,7 +70,7 @@ public class SecurityConfig {
                             "/webjars/**",
                             "/actuator/**",
                             "/api/v1/health/**",
-                            "/api/v1/auth/**" // Login, Register, Refresh
+                            "/api/v1/auth/**"
                         ).permitAll()
                         
                         // Tout le reste nécessite un Token

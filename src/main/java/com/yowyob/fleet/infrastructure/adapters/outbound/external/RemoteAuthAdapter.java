@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
@@ -41,7 +43,6 @@ public class RemoteAuthAdapter implements AuthPort {
             SERVICE_NAME, command.roles()
         );
         
-        // CORRECTION ICI : "user" -> "data" pour matcher le Swagger distant
         builder.part("data", registerRequest);
 
         if (command.photo() != null && command.photo().data() != null) {
@@ -67,6 +68,13 @@ public class RemoteAuthAdapter implements AuthPort {
                 .map(this::mapToDomainUserDetail);
     }
 
+    
+    @Override
+    public Mono<UserDetail> getUserById(UUID userId, String token) {
+        return authApiClient.getUserById(userId, ensureBearer(token))
+                .map(this::mapToDomainUserDetail);
+    }
+
     @Override
     public Mono<UserDetail> updateUserProfile(UUID userId, String token, AuthUseCase.UpdateProfileCommand command) {
         AuthApiClient.UpdateUserRequest req = new AuthApiClient.UpdateUserRequest(
@@ -81,6 +89,17 @@ public class RemoteAuthAdapter implements AuthPort {
                 .retrieve()
                 .bodyToMono(AuthApiClient.UserDetailResponse.class)
                 .map(this::mapToDomainUserDetail);
+    }
+
+   
+    @Override
+    public Flux<UserDetail> getUsersByService(String serviceName, String token) {
+        return authApiClient.getUsersByService(serviceName, ensureBearer(token))
+                .map(this::mapToDomainUserDetail)
+                .onErrorResume(e -> {
+                    log.error("Erreur lors de la récupération des utilisateurs distants : {}", e.getMessage());
+                    return Flux.empty();
+                });
     }
 
     @Override
@@ -115,12 +134,9 @@ public class RemoteAuthAdapter implements AuthPort {
 
     @Override
     public Mono<Void> deleteRemoteAccount(UUID userId, String token) {
-        return webClientBuilder.build()
-                .delete()
-                .uri(authServiceUrl + "/api/users/" + userId)
-                .header("Authorization", ensureBearer(token))
-                .retrieve()
-                .bodyToMono(Void.class);
+        // Mise à jour pour utiliser l'interface client si possible, ou le builder
+        // Ici on utilise directement le client généré s'il expose delete
+        return authApiClient.deleteUser(userId, ensureBearer(token));
     }
 
     @Override

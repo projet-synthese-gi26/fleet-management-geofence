@@ -2,83 +2,108 @@ package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
 
 import com.yowyob.fleet.domain.model.Driver;
 import com.yowyob.fleet.domain.ports.in.ManageDriverUseCase;
+import com.yowyob.fleet.domain.ports.out.AuthPort;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.DriverRegistrationRequest;
+import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.RecruitDriverRequest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/drivers")
+@RequestMapping("/api/v1")
 @RequiredArgsConstructor
-@Tag(name = "05. Drivers", description = "Gestion des chauffeurs")
+@Tag(name = "05. Drivers", description = "Gestion des chauffeurs (Création & Recrutement)")
+@SecurityRequirement(name = "bearerAuth")
 public class DriverController {
 
     private final ManageDriverUseCase driverUseCase;
 
-    @PostMapping
+    // Helper Auth
+    private AuthPort.UserDetail getUser(Authentication auth) {
+        return (AuthPort.UserDetail) auth.getPrincipal();
+    }
+    private boolean isAdmin(Authentication auth) {
+        return auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_FLEET_ADMIN"));
+    }
+    private String getToken(String header) { return header.substring(7); }
+
+    // 1. CRÉATION DIRECTE (Manager)
+    @PostMapping("/drivers")
     @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Register a new Driver", description = "Creates a remote Auth account and a local Fleet profile")
-    public Mono<Driver> register(@Valid @RequestBody DriverRegistrationRequest request) {
-        return driverUseCase.registerDriver(request);
+    @PreAuthorize("hasRole('FLEET_MANAGER')")
+    @Operation(summary = "Créer un nouveau Chauffeur", description = "Crée le compte Auth + Profil local + Lien Flotte.")
+    public Mono<Driver> register(
+            @Valid @RequestBody DriverRegistrationRequest request,
+            Authentication auth
+    ) {
+        return driverUseCase.registerDriver(request, getUser(auth).id());
     }
 
-    @GetMapping
-    @Operation(summary = "List drivers by fleet", description = "Retrieve all drivers belonging to a specific fleet")
-    public Flux<Driver> listByFleet(
-        @Parameter(
-            name = "fleetId", 
-            description = "UUID of the fleet", 
-            required = true,
-            in = ParameterIn.QUERY, 
-            schema = @Schema(type = "string", format = "uuid")
-        ) 
-        @RequestParam UUID fleetId
+    // 2. RECRUTEMENT (Manager)
+    @PostMapping("/fleets/{fleetId}/drivers")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('FLEET_MANAGER')")
+    @Operation(summary = "Recruter un Chauffeur existant", description = "Recherche par email/username/tel et ajoute à la flotte.")
+    public Mono<Void> recruit(
+            @PathVariable UUID fleetId,
+            @Valid @RequestBody RecruitDriverRequest request,
+            Authentication auth,
+            @Parameter(hidden = true) @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader
     ) {
-        return driverUseCase.getDriversByFleet(fleetId);
+        return driverUseCase.recruitDriver(fleetId, request.identifier(), getUser(auth).id(), getToken(authHeader));
     }
 
-    @GetMapping("/{userId}")
-    @Operation(summary = "Get driver details", description = "Retrieve local profile and vehicle assignment")
-    public Mono<Driver> get(
-        @Parameter(
-            name = "userId",
-            description = "Unique identifier (UUID) of the user/driver",
-            in = ParameterIn.PATH,
-            schema = @Schema(type = "string", format = "uuid")
-        )
-        @PathVariable UUID userId
+    // 3. LISTING (Admin/Manager)
+    @GetMapping("/drivers")
+    @Operation(summary = "Lister les chauffeurs", description = "Admin: Tout. Manager: Requis param 'fleetId'.")
+    public Flux<Driver> list(
+            @RequestParam(required = false) UUID fleetId,
+            Authentication auth
     ) {
+        return driverUseCase.getDrivers(fleetId, getUser(auth).id(), isAdmin(auth));
+    }
+
+    // 4. RETRAIT (Manager)
+    @DeleteMapping("/fleets/{fleetId}/drivers/{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('FLEET_MANAGER')")
+    @Operation(summary = "Renvoyer un chauffeur", description = "Retire le chauffeur de la flotte (ne supprime pas le compte).")
+    public Mono<Void> remove(
+            @PathVariable UUID fleetId,
+            @PathVariable UUID userId,
+            Authentication auth
+    ) {
+        return driverUseCase.removeDriverFromFleet(fleetId, userId, getUser(auth).id());
+    }
+
+    // 5. DÉTAIL
+    @GetMapping("/drivers/{userId}")
+    public Mono<Driver> get(@PathVariable UUID userId) {
         return driverUseCase.getDriverById(userId);
     }
 
-    @PostMapping("/{userId}/assign-vehicle")
-    @Operation(summary = "Assign vehicle", description = "Link a vehicle to a driver")
-    public Mono<Void> assign(@PathVariable UUID userId, @Valid @RequestBody VehicleAssignRequest req) {
-        return driverUseCase.assignVehicle(userId, req.vehicleId());
+    // 6. ASSIGNATION VÉHICULE
+    @PostMapping("/drivers/{userId}/assign-vehicle")
+    public Mono<Void> assign(@PathVariable UUID userId, @RequestBody VehicleAssignRequest req, Authentication auth) {
+        return driverUseCase.assignVehicle(userId, req.vehicleId(), getUser(auth).id());
     }
 
-    @PostMapping("/{userId}/unassign-vehicle")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Unassign vehicle", description = "Remove current vehicle link from driver")
-    public Mono<Void> unassign(@PathVariable UUID userId) {
-        return driverUseCase.unassignVehicle(userId);
+    @PostMapping("/drivers/{userId}/unassign-vehicle")
+    public Mono<Void> unassign(@PathVariable UUID userId, Authentication auth) {
+        return driverUseCase.unassignVehicle(userId, getUser(auth).id());
     }
 
-    /**
-     * DTO interne pour l'assignation de véhicule.
-     */
-    public record VehicleAssignRequest(
-        @io.swagger.v3.oas.annotations.media.Schema(description = "UUID of the vehicle to assign", required = true)
-        UUID vehicleId
-    ) {}
+    public record VehicleAssignRequest(UUID vehicleId) {}
 }
