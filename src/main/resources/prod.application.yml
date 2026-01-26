@@ -95,7 +95,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: ["health","info","prometheus"]
+        include: ["health", "info", "prometheus", "liveness", "readiness"]
   endpoint:
     health:
       show-details: "always"
