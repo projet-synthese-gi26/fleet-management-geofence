@@ -3,6 +3,7 @@ package com.yowyob.fleet.infrastructure.config.security;
 import com.yowyob.fleet.domain.ports.out.AuthPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.BadCredentialsException; // Import ajouté
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -28,12 +29,10 @@ public class JwtAuthenticationManager implements ReactiveAuthenticationManager {
                 .map(userDetail -> {
                     log.debug("Token validé pour user: {}", userDetail.username());
                     
-                    // Conversion des rôles
                     var authorities = userDetail.roles().stream()
                             .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                             .collect(Collectors.toList());
 
-                    // FIX : On type explicitement en 'Authentication' pour satisfaire le compilateur
                     Authentication auth = new UsernamePasswordAuthenticationToken(
                             userDetail, 
                             token, 
@@ -42,9 +41,10 @@ public class JwtAuthenticationManager implements ReactiveAuthenticationManager {
                     
                     return auth;
                 })
+                // CORRECTION : On ne retourne plus Mono.empty() mais une erreur explicite
                 .onErrorResume(e -> {
-                    log.warn("Token invalide ou service auth indisponible: {}", e.getMessage());
-                    return Mono.empty();
+                    log.warn("Authentification échouée : {}", e.getMessage());
+                    return Mono.error(new BadCredentialsException("Token invalide ou expiré"));
                 });
     }
 }

@@ -1,5 +1,7 @@
 server:
   port: 8080
+  # INDISPENSABLE EN PROD : Permet à Spring de gérer correctement les redirections HTTPS derrière Nginx
+  forward-headers-strategy: framework 
 
 spring:
   application:
@@ -20,27 +22,26 @@ spring:
       max-size: 20
       validation-query: SELECT 1
 
-  # 2. JDBC (Migration - Bloquant pour Liquibase) - INDISPENSABLE POUR QUE ÇA MARCHE
+  # 2. JDBC (Migration - Bloquant pour Liquibase)
   datasource:
     url: jdbc:postgresql://${DB_HOST:168.119.122.86}:${DB_PORT:5432}/${DB_NAME:yowyob}
     username: ${DB_USERNAME:master}
     password: ${DB_PASSWORD:Azerty1234*}
     driver-class-name: org.postgresql.Driver
 
-  # 3. LIQUIBASE (Configuration corrigée)
+  # 3. LIQUIBASE
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
-    default-schema: fleet # En prod, on peut essayer de viser fleet direct si le user a les droits, sinon public
+    default-schema: fleet 
     liquibase-schema: public
     enabled: true
-    contexts: prod # Important : empêche le chargement du mock public
+    contexts: prod 
 
-  # Désactivation de l'ancien init SQL
   sql:
     init:
       mode: never
 
-  # REDIS CLUSTER (Spécifique Prod)
+  # REDIS CLUSTER 
   data:
     redis:
       password: ${REDIS_PASSWORD:Azerty1234*}
@@ -66,10 +67,21 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
+# SWAGGER / OPENAPI (Configuration Explicite Prod)
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operationsSorter: method
+    tagsSorter: alpha
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+
 # CONFIG METIER
 application:
   external:
-    vehicle-service-url: https://fare-calculator-service.pynfi.com # Vérifier si c'est la bonne URL de prod
+    vehicle-service-url: https://vehicule-service.pynfi.com
   auth:
     mode: remote 
     url: https://auth-service.pynfi.com

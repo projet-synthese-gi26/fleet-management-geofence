@@ -1,5 +1,5 @@
 # Contexte du Projet : Fleet & Geofence API
-Généré le : Sun 25 Jan 2026 05:59:59 PM WAT
+Généré le : Sun 25 Jan 2026 08:38:38 PM WAT
 Framework : Spring Boot WebFlux (Reactive)
 
 ## 1. Arborescence du Projet
@@ -106,7 +106,9 @@ Framework : Spring Boot WebFlux (Reactive)
 │   │   │                   │   │       │   ├── FleetResponse.java
 │   │   │                   │   │       │   ├── LoginRequest.java
 │   │   │                   │   │       │   ├── MaintenanceUpdateRequest.java
+│   │   │                   │   │       │   ├── RecruitDriverRequest.java
 │   │   │                   │   │       │   ├── RegisterRequest.java
+│   │   │                   │   │       │   ├── UpdateManagerRequest.java
 │   │   │                   │   │       │   ├── UpdateProfileRequest.java
 │   │   │                   │   │       │   └── VehicleRegistrationRequest.java
 │   │   │                   │   │       ├── FleetController.java
@@ -192,7 +194,7 @@ Framework : Spring Boot WebFlux (Reactive)
 ├── test_profile.jpg
 └── todo.md
 
-46 directories, 140 files
+46 directories, 142 files
 ```
 ## 2. Contenu des Fichiers
 
@@ -7948,106 +7950,9 @@ La roadmap est suivie dans `todo.md`.
 
 ### Premiere mission
 je suis actuelleemnt en train de vouloir terminer l'api,relativement a ma todo. pour chaque module,j'identifie les endpoinst a mettre sur pied et je les mets.actuellemt ,je veux mettre en place le cote metire,j'ai deja presque tout teste sur mes endpoints de haut jus'quax flottes,les seuls non encore teste sont(register avec photo,changer de photo,supprimer mon compte)
-voici l'ordre dans lequel je compte terminer ce metier:(gstions des managers,gestion des flottes,gestion des vehicules,gestion des drivers,gestions de toutes ls assignations,gestion des admins)
+voici l'ordre dans lequel je compte terminer ce metier:(gstions des managers,gestion des flottes,gestion des drivers, gestion des vehicules,gestions de toutes ls assignations,gestion des admins)
 
-voici une discussion que j'ai eu avec gemini,apres avoir teste la gestion de managers,que ej viens de emttre en palce avec lui,ton role sera d'analyse rtout mon code et cette discussion,pour ma'ider a assure la continuite,nous sommes a l'etape de discussion technique:"moi:
-
-Bien j'ai fais ca,je suis alle sur le service auth distant,j'ai cree un admin,j'ai ouvert une fenetre de navigation privee et j''ai teste ce qu'on vient de mettre sur pied,al gestion des managers.vocii mes retours de test:
--route get all amangaers; success
--route get manager by id: success
--route put manager by id: bizarre,je vois ca dans ke corps de requete:"{
-  "additionalProp1": "string",
-  "additionalProp2": "string",
-  "additionalProp3": "string"
-}" de plus je suis perplexe quant a l'utilite reeelle de ctte route,a quoi va t'elle reeelelemnt servir? vu que on peut deja update un fleet amanger via les users
--route dekete manger by id,erreur 500,voici l'rreur:"4c88a-0376-47d9-b696-e1056fabd3ec : Distant puis Local
-2026-01-25T17:36:42.916+01:00 ERROR 116115 --- [fleet-management] [or-http-epoll-1] c.y.f.i.a.i.rest.GlobalExceptionHandler  : Erreur API Distante (500 INTERNAL_SERVER_ERROR): {"error":"Internal Server Error","message":"An unexpected error occurred","timestamp":"2026-01-25T16:36:42.681950997Z","status":500}
-
-" e ne sais pas si c'est delete qui echoue cote serveur distant mais dans tous les cas,je vasi tester ca out a l'heure,peut etre va t'on aussi retirer ca ici car il y'a deja la route pour delete un user,je m'interroge alors clarifions tout ca,pas de code pour l'instant juste une discussion etd es uggestions(no code)
-
-reponse de gemini:
-C'est un excellent retour de test. Le fait que le GET ALL et GET ONE fonctionnent avec le compte Admin distant valide toute notre architecture de synchronisation (le plus dur est fait !).
-
-Discutons maintenant de tes deux points de blocage (PUT et DELETE) pour clarifier la stratégie.
-
-1. Le cas du PUT (Mise à jour Manager)
-
-Ton observation : Le Swagger est moche (additionalProp) et tu doutes de l'utilité de la route car on peut déjà modifier un utilisateur.
-
-Mon analyse métier :
-Il ne faut surtout pas supprimer cette route, mais il faut la spécialiser.
-
-Ce que fait la route "User" (Auth Service) : Elle modifie le Prénom, Nom, Email, Téléphone. C'est l'identité de la personne.
-
-Ce que doit faire la route "Manager" (Fleet Service) : Elle doit modifier le Nom de l'Entreprise (companyName).
-
-Pourquoi ? Parce que le "Nom de l'Entreprise" est stocké chez nous (dans la table locale fleet_managers), pas sur le service Auth distant.
-
-Scénario : Le client t'appelle : "Je ne suis plus 'Transport Douala', je suis devenu 'Cameroun Express', changez ça svp". Si tu n'as pas cette route, tu dois aller modifier la base de données à la main (SQL), ce qui est à éviter.
-
-👉 Décision proposée : On garde la route, mais on remplace la Map générique par un DTO précis UpdateCompanyRequest contenant uniquement le champ companyName. Ainsi, Swagger sera propre.
-
-2. Le cas du DELETE (Erreur 500 Distante)
-
-Ton observation : Erreur 500 venant du service distant. Tu te demandes si on ne devrait pas juste utiliser la suppression côté Auth.
-
-Mon analyse technique :
-L'erreur 500 (Internal Server Error) indique que le serveur d'Authentification distant a planté en essayant de supprimer l'utilisateur. Ce n'est pas une erreur de ton code Java, mais une erreur "là-bas".
-
-Pourquoi cette route est INDISPENSABLE chez nous :
-C'est une question de Nettoyage (Cascade).
-Si tu supprimes l'utilisateur uniquement sur l'interface Auth :
-
-L'utilisateur ne peut plus se connecter (OK).
-
-MAIS, dans ta base de données Fleet, il reste :
-
-Le profil fleet_manager.
-
-Ses fleets (Flottes).
-
-Ses vehicles (Véhicules).
-
-Ses drivers.
-
-Ces données deviennent des données orphelines (des déchets) qui polluent ton système et faussent les statistiques.
-
-👉 La stratégie du DELETE Admin :
-Notre endpoint /admin/managers/{id} doit agir comme un Orchestrateur de suppression :
-
-Il demande la suppression du compte Auth (ce qui a échoué ici).
-
-Il supprime toutes les données locales liées à ce manager (Flottes, Véhicules...).
-
-Hypothèses sur l'erreur 500 distante :
-
-Soit l'utilisateur est lié à d'autres services (ex: il a des factures impayées ailleurs) et la contrainte de clé étrangère distante fait planter le serveur.
-
-Soit c'est un bug du service Auth distant.
-
-👉 Décision proposée :
-
-On garde la route pour garantir la propreté des données locales.
-
-On doit rendre notre code plus robuste : Si le service distant renvoie une erreur (même 500), devons-nous quand même supprimer les données locales pour "nettoyer la merde" ? Ou doit-on bloquer ?
-
-Mon avis : En tant qu'Admin, si je clique sur "Supprimer", je veux que ça disparaisse de ma vue. On pourrait try/catch l'erreur distante, la logger ("Attention, suppression distante échouée"), mais procéder quand même à la suppression locale.
-
-Résumé des actions à valider :
-
-PUT : On garde, mais on nettoie le DTO pour ne gérer que le companyName.
-
-DELETE : On garde pour le nettoyage local. On modifie le code pour "forcer" la suppression locale même si le distant plante (avec un gros Warning dans les logs), ou alors on investigue pourquoi le distant renvoie 500.
-
-Qu'en penses-tu ?
-
-moi:
-Le cas du PUT (Mise à jour Manager)
-je valide ta proposition,ne doit t'on pas aussi ajouter lisence number dans le dto? et les supprimer sur la route account update,afin que ca reste juste l'identite la bas
-
-Le cas du DELETE (Erreur 500 Distante): ici on va supprimer tout en local uniquement si le serveur distant le supprime reeelelemnt,au cas contraire on renvoie une erreur
-
-nous sommes toujours en mode discussion. que dis-tu de mes propositions?"```
+j'ai fini de gerrer gestions des managers etg des flottes et j'ai meme teste. jai ensuite gerre gestion des drivers il me manquaot juste tester,pour ma pause,j'ai pushe sur gihub et comme il y'avait conflict,j'ai memereg avec ma collaboratrice.maintennat je commence a avoir des buggs alors que avant mes features amrchat sans probleme,tu vas m'aide a debugger,je vasi tout retester de haut en abs avant d'avancer.pret?```
 
 ---
 ### Fichier : `./docs/database_setup.md`
@@ -9709,14 +9614,17 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Table;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.domain.Persistable;
 import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
+
 import java.time.Instant;
 import java.util.UUID;
 
 @Table(name = "fleets", schema = "fleet")
 @Data @NoArgsConstructor @AllArgsConstructor
-public class FleetEntity {
+public class FleetEntity implements Persistable<UUID> {
     @Id
     private UUID id;
     
@@ -9730,6 +9638,17 @@ public class FleetEntity {
     
     @Column("created_at")
     private Instant createdAt;
+
+    // --- R2DBC Persistable Logic ---
+
+    @Transient // Ce champ n'est pas mappé en base
+    private boolean isNew = false;
+
+    @Override
+    public boolean isNew() {
+        // Si isNew est true OU si l'id est null, on considère que c'est une création
+        return isNew || id == null;
+    }
 }```
 
 ---
@@ -9976,9 +9895,17 @@ package com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository
 
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.FleetEntity;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 import java.util.UUID;
 
 public interface FleetR2dbcRepository extends ReactiveCrudRepository<FleetEntity, UUID> {
+    
+    Flux<FleetEntity> findAllByManagerId(UUID managerId);
+
+    // Vérification d'existence sécurisée (SELECT 1 ...)
+    Mono<Boolean> existsByIdAndManagerId(UUID id, UUID managerId);
 }```
 
 ---
@@ -10172,6 +10099,7 @@ public class GeofencePersistenceAdapter implements GeofencePersistencePort {
 ### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/persistence/DriverPersistenceAdapter.java`
 ```java
 package com.yowyob.fleet.infrastructure.adapters.outbound.persistence;
+
 import com.yowyob.fleet.domain.model.Driver;
 import com.yowyob.fleet.domain.ports.out.DriverPersistencePort;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.DriverEntity;
@@ -10193,43 +10121,46 @@ public class DriverPersistenceAdapter implements DriverPersistencePort {
 
     @Override
     public Mono<Driver> save(Driver driver) {
-        // Attention: le mapper génère une entité simple. 
-        // Si c'est une création, on doit forcer isNew=true manuellement si le mapper ne le fait pas.
-        DriverEntity entity = mapper.toEntity(driver);
-        
-        // Petite astuce: Si on sait qu'on appelle cette méthode pour créer, on peut vérifier si l'ID existe déjà
-        // Mais pour l'instant, supposons que save() gère les mises à jour et les créations.
-        // Dans notre UseCase actuel (Register), c'est une création.
-        
-        // Pour être propre, il faudrait que le service domaine indique s'il s'agit d'une création.
-        // Hack rapide et robuste : on essaie de trouver, si vide -> insert (isNew=true), sinon update.
-        
         return repository.findById(driver.userId())
                 .map(existing -> {
-                    // C'est un update
                     existing.setLicenceNumber(driver.licenceNumber());
                     existing.setStatus(driver.status());
                     existing.setAssignedVehicleId(driver.assignedVehicleId());
+                    existing.setFleetId(driver.fleetId()); // Ajouté
                     return existing;
                 })
                 .switchIfEmpty(Mono.defer(() -> {
-                    // C'est une création
                     DriverEntity newEntity = mapper.toEntity(driver);
-                    newEntity.setNewRecord(true); // Setter lombok généré ou méthode manuelle
+                    newEntity.setNewRecord(true);
                     return Mono.just(newEntity);
                 }))
                 .flatMap(repository::save)
                 .map(mapper::toDomain);
     }
+
     @Override
-public Mono<Void> updateVehicleAssignment(UUID userId, UUID vehicleId) {
-    return repository.findById(userId)
-            .flatMap(entity -> {
-                entity.setAssignedVehicleId(vehicleId);
-                entity.setNewRecord(false); // Ce n'est pas un nouvel enregistrement
-                return repository.save(entity);
-            }).then();
-}
+    public Mono<Void> updateVehicleAssignment(UUID userId, UUID vehicleId) {
+        return repository.findById(userId)
+                .flatMap(entity -> {
+                    entity.setAssignedVehicleId(vehicleId);
+                    entity.setNewRecord(false);
+                    return repository.save(entity);
+                }).then();
+    }
+
+    @Override
+    public Mono<Void> updateFleetAssignment(UUID driverId, UUID fleetId) {
+        return repository.findById(driverId)
+                .flatMap(entity -> {
+                    entity.setFleetId(fleetId);
+                    // Si on retire de la flotte (fleetId null), on retire aussi le véhicule par sécurité
+                    if (fleetId == null) {
+                        entity.setAssignedVehicleId(null);
+                    }
+                    entity.setNewRecord(false);
+                    return repository.save(entity);
+                }).then();
+    }
 
     @Override
     public Mono<Driver> findById(UUID userId) {
@@ -10241,6 +10172,10 @@ public Mono<Void> updateVehicleAssignment(UUID userId, UUID vehicleId) {
         return repository.findByFleetId(fleetId).map(mapper::toDomain);
     }
 
+    @Override
+    public Flux<Driver> findAll() {
+        return repository.findAll().map(mapper::toDomain);
+    }
 }```
 
 ---
@@ -10269,8 +10204,8 @@ import reactor.core.publisher.Mono;
 @RestController
 @RequestMapping("/api/v1/account")
 @RequiredArgsConstructor
-@Tag(name = "03. Account", description = "Gestion du profil personnel")
-@SecurityRequirement(name = "bearerAuth") // Utilise le schéma global
+@Tag(name = "03. Account", description = "Gestion du profil personnel (Identité)")
+@SecurityRequirement(name = "bearerAuth")
 public class AccountController {
 
     private final AuthUseCase authUseCase;
@@ -10284,7 +10219,7 @@ public class AccountController {
     }
 
     @PutMapping
-    @Operation(summary = "Mettre à jour mon profil", description = "Modifie nom, prénom, téléphone et infos métier.")
+    @Operation(summary = "Mettre à jour mon identité", description = "Modifie nom, prénom, téléphone et email. (Infos métier exclues)")
     public Mono<AuthPort.UserDetail> updateProfile(
             @Parameter(hidden = true) @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @Valid @RequestBody UpdateProfileRequest request
@@ -10292,8 +10227,7 @@ public class AccountController {
         return authUseCase.me(token)
                 .flatMap(user -> {
                     AuthUseCase.UpdateProfileCommand cmd = new AuthUseCase.UpdateProfileCommand(
-                            request.firstName(), request.lastName(), request.phone(), request.email(),
-                            request.companyName(), request.licenceNumber()
+                            request.firstName(), request.lastName(), request.phone(), request.email()
                     );
                     return authUseCase.updateProfile(user.id(), token, cmd);
                 });
@@ -10426,14 +10360,19 @@ package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
 
 import com.yowyob.fleet.domain.model.Fleet;
 import com.yowyob.fleet.domain.ports.in.ManageFleetUseCase;
+import com.yowyob.fleet.domain.ports.out.AuthPort;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.FleetRequest;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.FleetResponse;
 import com.yowyob.fleet.infrastructure.mappers.FleetMapper;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -10443,53 +10382,66 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/fleets")
 @RequiredArgsConstructor
-@Tag(name = "07. Fleets", description = "Gestion des flottes")
+@Tag(name = "07. Fleets", description = "Gestion des flottes (Sécurisé par Propriétaire)")
+@SecurityRequirement(name = "bearerAuth")
 public class FleetController {
 
     private final ManageFleetUseCase fleetUseCase;
     private final FleetMapper mapper;
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Create a new fleet")
-    public Mono<FleetResponse> create(@Valid @RequestBody FleetRequest request) {
-        return fleetUseCase.createFleet(mapper.toDomain(request))
-                .map(mapper::toResponse);
+    // Helper pour extraire l'utilisateur du token
+    private AuthPort.UserDetail getUser(Authentication auth) {
+        return (AuthPort.UserDetail) auth.getPrincipal();
     }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Get fleet details by ID")
-    public Mono<FleetResponse> getById(@PathVariable UUID id) {
-        return fleetUseCase.getFleetById(id)
+    private boolean isAdmin(Authentication auth) {
+        return auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_FLEET_ADMIN"));
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('FLEET_MANAGER')") // Seul un manager crée sa flotte
+    @Operation(summary = "Créer une flotte", description = "La flotte sera automatiquement liée au manager connecté.")
+    public Mono<FleetResponse> create(
+            @Valid @RequestBody FleetRequest request,
+            Authentication auth
+    ) {
+        Fleet domainObj = mapper.toDomain(request);
+        return fleetUseCase.createFleet(domainObj, getUser(auth).id())
                 .map(mapper::toResponse);
     }
 
     @GetMapping
-    @Operation(summary = "List all fleets")
-    public Flux<FleetResponse> getAll() {
-        return fleetUseCase.getAllFleets()
+    @Operation(summary = "Lister les flottes", description = "Admin : Tout voir / Manager : Voir ses flottes uniquement.")
+    public Flux<FleetResponse> getAll(Authentication auth) {
+        return fleetUseCase.getFleets(getUser(auth).id(), isAdmin(auth))
+                .map(mapper::toResponse);
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Détails d'une flotte")
+    public Mono<FleetResponse> getById(@PathVariable UUID id, Authentication auth) {
+        return fleetUseCase.getFleetById(id, getUser(auth).id(), isAdmin(auth))
                 .map(mapper::toResponse);
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Full update of a fleet")
-    public Mono<FleetResponse> update(@PathVariable UUID id, @Valid @RequestBody FleetRequest request) {
-        return fleetUseCase.updateFleet(id, mapper.toDomain(request))
-                .map(mapper::toResponse);
-    }
-
-    @PatchMapping("/{id}")
-    @Operation(summary = "Partial update of a fleet")
-    public Mono<FleetResponse> patch(@PathVariable UUID id, @RequestBody FleetRequest request) {
-        return fleetUseCase.patchFleet(id, mapper.toDomain(request))
+    @Operation(summary = "Mettre à jour une flotte")
+    public Mono<FleetResponse> update(
+            @PathVariable UUID id, 
+            @Valid @RequestBody FleetRequest request, 
+            Authentication auth
+    ) {
+        return fleetUseCase.updateFleet(id, mapper.toDomain(request), getUser(auth).id(), isAdmin(auth))
                 .map(mapper::toResponse);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Delete a fleet")
-    public Mono<Void> delete(@PathVariable UUID id) {
-        return fleetUseCase.deleteFleet(id);
+    @Operation(summary = "Supprimer une flotte")
+    public Mono<Void> delete(@PathVariable UUID id, Authentication auth) {
+        return fleetUseCase.deleteFleet(id, getUser(auth).id(), isAdmin(auth));
     }
 }```
 
@@ -10681,85 +10633,110 @@ package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
 
 import com.yowyob.fleet.domain.model.Driver;
 import com.yowyob.fleet.domain.ports.in.ManageDriverUseCase;
+import com.yowyob.fleet.domain.ports.out.AuthPort;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.DriverRegistrationRequest;
+import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.RecruitDriverRequest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/drivers")
+@RequestMapping("/api/v1")
 @RequiredArgsConstructor
-@Tag(name = "05. Drivers", description = "Gestion des chauffeurs")
+@Tag(name = "05. Drivers", description = "Gestion des chauffeurs (Création & Recrutement)")
+@SecurityRequirement(name = "bearerAuth")
 public class DriverController {
 
     private final ManageDriverUseCase driverUseCase;
 
-    @PostMapping
+    // Helper Auth
+    private AuthPort.UserDetail getUser(Authentication auth) {
+        return (AuthPort.UserDetail) auth.getPrincipal();
+    }
+    private boolean isAdmin(Authentication auth) {
+        return auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_FLEET_ADMIN"));
+    }
+    private String getToken(String header) { return header.substring(7); }
+
+    // 1. CRÉATION DIRECTE (Manager)
+    @PostMapping("/drivers")
     @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Register a new Driver", description = "Creates a remote Auth account and a local Fleet profile")
-    public Mono<Driver> register(@Valid @RequestBody DriverRegistrationRequest request) {
-        return driverUseCase.registerDriver(request);
+    @PreAuthorize("hasRole('FLEET_MANAGER')")
+    @Operation(summary = "Créer un nouveau Chauffeur", description = "Crée le compte Auth + Profil local + Lien Flotte.")
+    public Mono<Driver> register(
+            @Valid @RequestBody DriverRegistrationRequest request,
+            Authentication auth
+    ) {
+        return driverUseCase.registerDriver(request, getUser(auth).id());
     }
 
-    @GetMapping
-    @Operation(summary = "List drivers by fleet", description = "Retrieve all drivers belonging to a specific fleet")
-    public Flux<Driver> listByFleet(
-        @Parameter(
-            name = "fleetId", 
-            description = "UUID of the fleet", 
-            required = true,
-            in = ParameterIn.QUERY, 
-            schema = @Schema(type = "string", format = "uuid")
-        ) 
-        @RequestParam UUID fleetId
+    // 2. RECRUTEMENT (Manager)
+    @PostMapping("/fleets/{fleetId}/drivers")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('FLEET_MANAGER')")
+    @Operation(summary = "Recruter un Chauffeur existant", description = "Recherche par email/username/tel et ajoute à la flotte.")
+    public Mono<Void> recruit(
+            @PathVariable UUID fleetId,
+            @Valid @RequestBody RecruitDriverRequest request,
+            Authentication auth,
+            @Parameter(hidden = true) @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader
     ) {
-        return driverUseCase.getDriversByFleet(fleetId);
+        return driverUseCase.recruitDriver(fleetId, request.identifier(), getUser(auth).id(), getToken(authHeader));
     }
 
-    @GetMapping("/{userId}")
-    @Operation(summary = "Get driver details", description = "Retrieve local profile and vehicle assignment")
-    public Mono<Driver> get(
-        @Parameter(
-            name = "userId",
-            description = "Unique identifier (UUID) of the user/driver",
-            in = ParameterIn.PATH,
-            schema = @Schema(type = "string", format = "uuid")
-        )
-        @PathVariable UUID userId
+    // 3. LISTING (Admin/Manager)
+    @GetMapping("/drivers")
+    @Operation(summary = "Lister les chauffeurs", description = "Admin: Tout. Manager: Requis param 'fleetId'.")
+    public Flux<Driver> list(
+            @RequestParam(required = false) UUID fleetId,
+            Authentication auth
     ) {
+        return driverUseCase.getDrivers(fleetId, getUser(auth).id(), isAdmin(auth));
+    }
+
+    // 4. RETRAIT (Manager)
+    @DeleteMapping("/fleets/{fleetId}/drivers/{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('FLEET_MANAGER')")
+    @Operation(summary = "Renvoyer un chauffeur", description = "Retire le chauffeur de la flotte (ne supprime pas le compte).")
+    public Mono<Void> remove(
+            @PathVariable UUID fleetId,
+            @PathVariable UUID userId,
+            Authentication auth
+    ) {
+        return driverUseCase.removeDriverFromFleet(fleetId, userId, getUser(auth).id());
+    }
+
+    // 5. DÉTAIL
+    @GetMapping("/drivers/{userId}")
+    public Mono<Driver> get(@PathVariable UUID userId) {
         return driverUseCase.getDriverById(userId);
     }
 
-    @PostMapping("/{userId}/assign-vehicle")
-    @Operation(summary = "Assign vehicle", description = "Link a vehicle to a driver")
-    public Mono<Void> assign(@PathVariable UUID userId, @Valid @RequestBody VehicleAssignRequest req) {
-        return driverUseCase.assignVehicle(userId, req.vehicleId());
+    // 6. ASSIGNATION VÉHICULE
+    @PostMapping("/drivers/{userId}/assign-vehicle")
+    public Mono<Void> assign(@PathVariable UUID userId, @RequestBody VehicleAssignRequest req, Authentication auth) {
+        return driverUseCase.assignVehicle(userId, req.vehicleId(), getUser(auth).id());
     }
 
-    @PostMapping("/{userId}/unassign-vehicle")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Unassign vehicle", description = "Remove current vehicle link from driver")
-    public Mono<Void> unassign(@PathVariable UUID userId) {
-        return driverUseCase.unassignVehicle(userId);
+    @PostMapping("/drivers/{userId}/unassign-vehicle")
+    public Mono<Void> unassign(@PathVariable UUID userId, Authentication auth) {
+        return driverUseCase.unassignVehicle(userId, getUser(auth).id());
     }
 
-    /**
-     * DTO interne pour l'assignation de véhicule.
-     */
-    public record VehicleAssignRequest(
-        @io.swagger.v3.oas.annotations.media.Schema(description = "UUID of the vehicle to assign", required = true)
-        UUID vehicleId
-    ) {}
+    public record VehicleAssignRequest(UUID vehicleId) {}
 }```
 
 ---
@@ -10835,15 +10812,23 @@ package com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto;
 import jakarta.validation.constraints.Email;
 
 public record UpdateProfileRequest(
-    // Infos Identité (Propagées vers Auth Service)
+    // Uniquement les infos Identité (Propagées vers Auth Service)
     String firstName,
     String lastName,
     String phone,
-    @Email String email,
-    
-    // Infos Métier (Stockées localement)
-    String companyName,    // Uniquement pour FLEET_MANAGER
-    String licenceNumber   // Uniquement pour FLEET_DRIVER
+    @Email String email
+) {}```
+
+---
+### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/dto/UpdateManagerRequest.java`
+```java
+package com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto;
+
+import jakarta.validation.constraints.NotBlank;
+
+public record UpdateManagerRequest(
+    @NotBlank(message = "Le nom de l'entreprise est obligatoire")
+    String companyName
 ) {}```
 
 ---
@@ -10860,6 +10845,20 @@ public record FinancialUpdateRequest(
     LocalDate purchaseDate,
     Integer depreciationRate,
     Float costPerKm
+) {}```
+
+---
+### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/dto/RecruitDriverRequest.java`
+```java
+package com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+
+public record RecruitDriverRequest(
+    @NotBlank(message = "L'identifiant est obligatoire")
+    @Schema(description = "Email, Nom d'utilisateur ou Téléphone du chauffeur", example = "chauffeur@yowyob.com")
+    String identifier
 ) {}```
 
 ---
@@ -10960,17 +10959,15 @@ public record MaintenanceUpdateRequest(
 ```java
 package com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import java.util.UUID;
 
 public record FleetRequest(
     @NotBlank(message = "Le nom de la flotte est obligatoire") 
+    @Schema(description = "Nom commercial de la flotte (ex: Zone Douala Nord)", example = "Douala Express")
     String name,
     
-    @NotNull(message = "L'ID du Manager est obligatoire") 
-    UUID managerId,
-    
+    @Schema(description = "Numéro du Dispatching / Contact d'urgence pour cette flotte", example = "+237699000000")
     String phoneNumber
 ) {}```
 
@@ -10996,10 +10993,12 @@ package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
 
 import com.yowyob.fleet.domain.ports.in.ManageFleetManagerUseCase;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.FleetManagerResponse;
+import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.UpdateManagerRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -11008,7 +11007,6 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -11039,20 +11037,23 @@ public class AdminManagerController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Mettre à jour l'entreprise", description = "Modifie le nom de la compagnie.")
-    public Mono<Void> updateCompany(@PathVariable UUID id, @RequestBody Map<String, String> body) {
-        return manageFleetManagerUseCase.updateManagerCompany(id, body.get("companyName"));
+    @Operation(summary = "Mettre à jour l'entreprise", description = "Modifie uniquement le nom de la compagnie.")
+    public Mono<Void> updateCompany(
+        @PathVariable UUID id, 
+        @Valid @RequestBody UpdateManagerRequest request
+    ) {
+        return manageFleetManagerUseCase.updateManagerCompany(id, request.companyName());
     }
 
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Supprimer un manager", description = "Supprime le compte Auth et les données locales.")
-    public Mono<Void> delete(
-        @PathVariable UUID id,
-        @Parameter(hidden = true) @RequestHeader(HttpHeaders.AUTHORIZATION) String token
-    ) {
-        return manageFleetManagerUseCase.deleteManager(id, token);
-    }
+    // @DeleteMapping("/{id}")
+    // @ResponseStatus(HttpStatus.NO_CONTENT)
+    // @Operation(summary = "Supprimer un manager", description = "Attention: Échoue si le service distant refuse la suppression (Sécurité).")
+    // public Mono<Void> delete(
+    //     @PathVariable UUID id,
+    //     @Parameter(hidden = true) @RequestHeader(HttpHeaders.AUTHORIZATION) String token
+    // ) {
+    //     return manageFleetManagerUseCase.deleteManager(id, token);
+    // }
 }```
 
 ---
@@ -11828,8 +11829,7 @@ public interface AuthUseCase {
     ) {}
 
     record UpdateProfileCommand(
-        String firstName, String lastName, String phone, String email,
-        String companyName, String licenceNumber
+        String firstName, String lastName, String phone, String email
     ) {}
 
     record FileContent(String filename, String contentType, byte[] data) {}
@@ -11888,12 +11888,11 @@ import reactor.core.publisher.Mono;
 import java.util.UUID;
 
 public interface ManageFleetUseCase {
-    Mono<Fleet> createFleet(Fleet fleet);
-    Mono<Fleet> getFleetById(UUID id);
-    Flux<Fleet> getAllFleets();
-    Mono<Fleet> updateFleet(UUID id, Fleet fleet);
-    Mono<Fleet> patchFleet(UUID id, Fleet fleet);
-    Mono<Void> deleteFleet(UUID id);
+    Mono<Fleet> createFleet(Fleet fleet, UUID managerId);
+    Mono<Fleet> getFleetById(UUID fleetId, UUID requesterId, boolean isAdmin);
+    Flux<Fleet> getFleets(UUID requesterId, boolean isAdmin);
+    Mono<Fleet> updateFleet(UUID fleetId, Fleet fleet, UUID requesterId, boolean isAdmin);
+    Mono<Void> deleteFleet(UUID fleetId, UUID requesterId, boolean isAdmin);
 }```
 
 ---
@@ -11908,11 +11907,22 @@ import reactor.core.publisher.Mono;
 import java.util.UUID;
 
 public interface ManageDriverUseCase {
-    Mono<Driver> registerDriver(DriverRegistrationRequest request);
+    // Création complète (Manager)
+    Mono<Driver> registerDriver(DriverRegistrationRequest request, UUID managerId);
+    
+    // Recrutement existant (Manager)
+    Mono<Void> recruitDriver(UUID fleetId, String identifier, UUID managerId, String token);
+    
+    // Lecture
     Mono<Driver> getDriverById(UUID userId);
-    Flux<Driver> getDriversByFleet(UUID fleetId);
-    Mono<Void> assignVehicle(UUID userId, UUID vehicleId);
-    Mono<Void> unassignVehicle(UUID userId);
+    Flux<Driver> getDrivers(UUID fleetId, UUID requesterId, boolean isAdmin);
+    
+    // Gestion Véhicule
+    Mono<Void> assignVehicle(UUID userId, UUID vehicleId, UUID requesterId);
+    Mono<Void> unassignVehicle(UUID userId, UUID requesterId);
+    
+    // Retrait de la flotte (Manager)
+    Mono<Void> removeDriverFromFleet(UUID fleetId, UUID driverId, UUID requesterId);
 }```
 
 ---
@@ -11981,32 +11991,15 @@ import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
-/**
- * Port de sortie pour la gestion de la persistence des chauffeurs.
- */
 public interface DriverPersistencePort {
-
-    /**
-     * Sauvegarde ou met à jour un chauffeur dans la base locale.
-     */
     Mono<Driver> save(Driver driver);
-
-    /**
-     * Récupère un chauffeur par son identifiant utilisateur unique (UUID TraMaSys).
-     */
     Mono<Driver> findById(UUID userId);
-
-    /**
-     * Récupère tous les chauffeurs rattachés à une flotte spécifique.
-     */
     Flux<Driver> findAllByFleetId(UUID fleetId);
-
-    /**
-     * Met à jour l'assignation du véhicule pour un chauffeur.
-     * @param userId Identifiant du chauffeur.
-     * @param vehicleId Identifiant du véhicule (peut être null pour désassigner).
-     */
     Mono<Void> updateVehicleAssignment(UUID userId, UUID vehicleId);
+    
+    // NOUVEAU : Gérer l'appartenance à une flotte
+    Mono<Void> updateFleetAssignment(UUID driverId, UUID fleetId);
+    Flux<Driver> findAll(); // Pour l'admin
 }```
 
 ---
@@ -12270,16 +12263,10 @@ public class AuthService implements AuthUseCase {
 
     @Override
     public Mono<AuthPort.UserDetail> updateProfile(UUID userId, String token, UpdateProfileCommand command) {
+        // Nettoyage : On ne touche plus qu'au service distant ici.
+        // La mise à jour des données métier (Company, Licence) se fait via des endpoints dédiés.
         return authPort.updateUserProfile(userId, token, command)
-                .flatMap(updatedUser -> {
-                    Mono<Void> localUpdate = Mono.empty();
-                    if (updatedUser.roles().contains("FLEET_MANAGER") && command.companyName() != null) {
-                        localUpdate = managerPort.updateCompany(userId, command.companyName());
-                    } 
-                    // Pour le driver, on pourrait update le permis ici si nécessaire
-                    
-                    return localUpdate.then(enrichWithLocalData(updatedUser));
-                });
+                .flatMap(this::enrichWithLocalData);
     }
 
     @Override
@@ -12294,12 +12281,12 @@ public class AuthService implements AuthUseCase {
 
     @Override
     public Mono<Void> deleteAccount(UUID userId, String token) {
-        // 1. Supprimer côté Auth distant
+        // STRICT CONSISTENCY : On supprime d'abord distant. Si ça échoue, on ne touche pas au local.
+        // Si distant OK -> On supprime local.
         return authPort.deleteRemoteAccount(userId, token)
             .then(Mono.defer(() -> {
-                // 2. Supprimer localement (Cascade DB fera le reste si FK configurées, 
-                // mais on peut expliciter pour plus de sûreté ou pour les fichiers liés)
-                // Ici on assume que le ON DELETE CASCADE de la DB fait le job sur drivers/fleet_managers
+                // TODO: Implémenter la suppression explicite locale si le CASCADE DB n'est pas suffisant
+                // Pour l'instant, on suppose que la FK DB gère le nettoyage ou que c'est géré par l'AdminController
                 return Mono.empty();
             }));
     }
@@ -12532,8 +12519,12 @@ package com.yowyob.fleet.application.service;
 
 import com.yowyob.fleet.domain.model.Fleet;
 import com.yowyob.fleet.domain.ports.in.ManageFleetUseCase;
-import com.yowyob.fleet.domain.ports.out.FleetRepositoryPort;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.FleetEntity;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.FleetR2dbcRepository;
+import com.yowyob.fleet.infrastructure.mappers.FleetMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -12541,72 +12532,86 @@ import reactor.core.publisher.Mono;
 import java.time.Instant;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class FleetService implements ManageFleetUseCase {
 
-    private final FleetRepositoryPort fleetRepository;
+    private final FleetR2dbcRepository repository;
+    private final FleetMapper mapper;
 
     @Override
-    public Mono<Fleet> createFleet(Fleet fleet) {
-        // Business logic: ensure creation date is set if not provided
+    public Mono<Fleet> createFleet(Fleet fleet, UUID managerId) {
+        // 1. Génération de l'ID côté Application (UUID v4)
+        UUID newFleetId = UUID.randomUUID();
+
         Fleet fleetToSave = new Fleet(
-                fleet.id(),
-                fleet.managerId(), // CORRECTION : managerId() et non managerUserId()
+                newFleetId, // ID généré ici
+                managerId,
                 fleet.name(),
                 fleet.phoneNumber(),
-                fleet.createdAt() != null ? fleet.createdAt() : Instant.now(), // CORRECTION : createdAt() et Instant.now()
+                Instant.now(),
                 0
         );
-        return fleetRepository.save(fleetToSave);
+
+        // 2. Mapping vers l'entité
+        FleetEntity entity = mapper.toEntity(fleetToSave);
+        
+        // 3. IMPORTANT : Forcer le flag isNew à true pour que R2DBC fasse un INSERT
+        // (Sinon il fera un UPDATE car l'ID est non-null)
+        entity.setNew(true);
+
+        return repository.save(entity)
+                .map(mapper::toDomain);
     }
 
     @Override
-    public Mono<Fleet> getFleetById(UUID id) {
-        return fleetRepository.findById(id);
+    public Flux<Fleet> getFleets(UUID requesterId, boolean isAdmin) {
+        if (isAdmin) {
+            return repository.findAll().map(mapper::toDomain);
+        } else {
+            return repository.findAllByManagerId(requesterId).map(mapper::toDomain);
+        }
     }
 
     @Override
-    public Flux<Fleet> getAllFleets() {
-        return fleetRepository.findAll();
-    }
-
-    @Override
-    public Mono<Fleet> updateFleet(UUID id, Fleet fleet) {
-        return fleetRepository.findById(id)
-                .flatMap(existingFleet -> {
-                    Fleet updated = new Fleet(
-                            id,
-                            fleet.managerId(), // CORRECTION
-                            fleet.name(),
-                            fleet.phoneNumber(),
-                            existingFleet.createdAt(), // CORRECTION : Keep original createdAt
-                            existingFleet.vehicleCount()
-                    );
-                    return fleetRepository.save(updated);
+    public Mono<Fleet> getFleetById(UUID fleetId, UUID requesterId, boolean isAdmin) {
+        return repository.findById(fleetId)
+                .map(mapper::toDomain)
+                .flatMap(fleet -> {
+                    if (!isAdmin && !fleet.managerId().equals(requesterId)) {
+                        return Mono.error(new AccessDeniedException("Vous n'avez pas accès à cette flotte."));
+                    }
+                    return Mono.just(fleet);
                 });
     }
 
     @Override
-    public Mono<Fleet> patchFleet(UUID id, Fleet fleet) {
-        return fleetRepository.findById(id)
-                .flatMap(existing -> {
-                    // Logic: Update only non-null fields from the request
-                    Fleet patched = new Fleet(
-                            id,
-                            fleet.managerId() != null ? fleet.managerId() : existing.managerId(), // CORRECTION
-                            fleet.name() != null ? fleet.name() : existing.name(),
-                            fleet.phoneNumber() != null ? fleet.phoneNumber() : existing.phoneNumber(),
-                            existing.createdAt(), // CORRECTION
-                            existing.vehicleCount()
-                    );
-                    return fleetRepository.save(patched);
-                });
+    public Mono<Fleet> updateFleet(UUID fleetId, Fleet inputFleet, UUID requesterId, boolean isAdmin) {
+        return repository.findById(fleetId)
+                .flatMap(existingEntity -> {
+                    if (!isAdmin && !existingEntity.getManagerId().equals(requesterId)) {
+                        return Mono.error(new AccessDeniedException("Modification interdite."));
+                    }
+
+                    existingEntity.setName(inputFleet.name());
+                    existingEntity.setPhoneNumber(inputFleet.phoneNumber());
+                    
+                    // Pas besoin de setNew(false), c'est le défaut, donc R2DBC fera un UPDATE
+                    return repository.save(existingEntity);
+                })
+                .map(mapper::toDomain);
     }
 
     @Override
-    public Mono<Void> deleteFleet(UUID id) {
-        return fleetRepository.deleteById(id);
+    public Mono<Void> deleteFleet(UUID fleetId, UUID requesterId, boolean isAdmin) {
+        return repository.findById(fleetId)
+                .flatMap(existingEntity -> {
+                    if (!isAdmin && !existingEntity.getManagerId().equals(requesterId)) {
+                        return Mono.error(new AccessDeniedException("Suppression interdite."));
+                    }
+                    return repository.delete(existingEntity);
+                });
     }
 }```
 
@@ -12621,8 +12626,10 @@ import com.yowyob.fleet.domain.ports.in.ManageDriverUseCase;
 import com.yowyob.fleet.domain.ports.out.AuthPort;
 import com.yowyob.fleet.domain.ports.out.DriverPersistencePort;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.DriverRegistrationRequest;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.FleetR2dbcRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -12637,62 +12644,98 @@ public class DriverService implements ManageDriverUseCase {
 
     private final DriverPersistencePort driverPersistencePort;
     private final AuthPort authPort;
+    private final FleetR2dbcRepository fleetRepository; // Pour vérifier la propriété
 
+    private static final String SERVICE_NAME = "FLEET_MANAGEMENT";
+
+    // --- 1. CRÉATION COMPLÈTE ---
     @Override
-    public Mono<Driver> registerDriver(DriverRegistrationRequest request) {
-        log.info("Enrôlement chauffeur : Appel Auth Service pour {}", request.username());
-        
-        // 1. Préparation de la commande avec le rôle spécifique
-        AuthUseCase.RegisterCommand command = new AuthUseCase.RegisterCommand(
-            request.username(),
-            request.password(),
-            request.email(),
-            request.phone(),
-            request.firstName(),
-            request.lastName(),
-            List.of("FLEET_DRIVER"), // On utilise le rôle standardisé
-            null // Pas de photo via cet endpoint spécifique
-        );
-
-        // 2. Appel au service d'authentification distant
-        return authPort.registerInRemote(command)
+    public Mono<Driver> registerDriver(DriverRegistrationRequest request, UUID managerId) {
+        return checkFleetOwnership(request.fleetId(), managerId)
+            .then(Mono.defer(() -> {
+                AuthUseCase.RegisterCommand command = new AuthUseCase.RegisterCommand(
+                    request.username(), request.password(), request.email(), request.phone(),
+                    request.firstName(), request.lastName(), List.of("FLEET_DRIVER"), null
+                );
+                return authPort.registerInRemote(command);
+            }))
             .flatMap(authRes -> {
-                log.info("Étape 2 : Création du profil chauffeur local pour UUID {}", authRes.user().id());
-                
-                // 3. Création du modèle de domaine Driver
                 Driver localDriver = new Driver(
-                    authRes.user().id(), // UUID TraMaSys
-                    null, // fleetId à définir plus tard
+                    authRes.user().id(),
+                    request.fleetId(),
                     request.licenceNumber(),
-                    "ACTIVE", // Actif par défaut
-                    null,  // Aucun véhicule au départ
+                    "ACTIVE",
+                    null,
                     ""
                 );
-                
-                // 4. Sauvegarde en base de données locale
                 return driverPersistencePort.save(localDriver);
             });
     }
 
+    // --- 2. RECRUTEMENT (Filtrage manuel) ---
+    @Override
+    public Mono<Void> recruitDriver(UUID fleetId, String identifier, UUID managerId, String token) {
+        return checkFleetOwnership(fleetId, managerId)
+            .thenMany(authPort.getUsersByService(SERVICE_NAME, token)) // Récupère tout
+            .filter(u -> isMatch(u, identifier)) // Filtre localement
+            .filter(u -> u.roles().contains("FLEET_DRIVER")) // Vérifie que c'est un chauffeur
+            .next() // Prend le premier
+            .switchIfEmpty(Mono.error(new RuntimeException("Aucun chauffeur trouvé avec cet identifiant : " + identifier)))
+            .flatMap(user -> driverPersistencePort.updateFleetAssignment(user.id(), fleetId));
+    }
+
+    private boolean isMatch(AuthPort.UserDetail user, String id) {
+        return id.equalsIgnoreCase(user.email()) || 
+               id.equalsIgnoreCase(user.username()) || 
+               id.equals(user.phone());
+    }
+
+    // --- 3. LECTURE SÉCURISÉE ---
+    @Override
+    public Flux<Driver> getDrivers(UUID fleetId, UUID requesterId, boolean isAdmin) {
+        if (isAdmin) {
+            return fleetId != null ? driverPersistencePort.findAllByFleetId(fleetId) : driverPersistencePort.findAll();
+        }
+        // Manager : Doit fournir un fleetId ET posséder la flotte
+        if (fleetId == null) {
+            // TODO: On pourrait implémenter "toutes mes flottes" ici, mais on commence simple
+            return Flux.error(new IllegalArgumentException("fleetId obligatoire pour les managers"));
+        }
+        return checkFleetOwnership(fleetId, requesterId)
+                .thenMany(driverPersistencePort.findAllByFleetId(fleetId));
+    }
+
     @Override
     public Mono<Driver> getDriverById(UUID userId) {
+        // TODO: Ajouter sécurité (Un manager ne devrait voir que SES chauffeurs)
         return driverPersistencePort.findById(userId);
     }
 
+    // --- 4. GESTION LIENS ---
     @Override
-    public Flux<Driver> getDriversByFleet(UUID fleetId) {
-        return driverPersistencePort.findAllByFleetId(fleetId);
+    public Mono<Void> removeDriverFromFleet(UUID fleetId, UUID driverId, UUID requesterId) {
+        return checkFleetOwnership(fleetId, requesterId)
+                .then(driverPersistencePort.updateFleetAssignment(driverId, null));
     }
 
     @Override
-    public Mono<Void> assignVehicle(UUID userId, UUID vehicleId) {
-        // Optionnel : Ajouter une logique de vérification (ex: véhicule libre ?)
+    public Mono<Void> assignVehicle(UUID userId, UUID vehicleId, UUID requesterId) {
+        // TODO: Vérifier que le véhicule appartient bien au manager (via la flotte)
         return driverPersistencePort.updateVehicleAssignment(userId, vehicleId);
     }
 
     @Override
-    public Mono<Void> unassignVehicle(UUID userId) {
+    public Mono<Void> unassignVehicle(UUID userId, UUID requesterId) {
         return driverPersistencePort.updateVehicleAssignment(userId, null);
+    }
+
+    // --- HELPER ---
+    private Mono<Void> checkFleetOwnership(UUID fleetId, UUID managerId) {
+        return fleetRepository.existsByIdAndManagerId(fleetId, managerId)
+                .flatMap(exists -> {
+                    if (!exists) return Mono.error(new AccessDeniedException("Cette flotte ne vous appartient pas."));
+                    return Mono.empty();
+                });
     }
 }```
 
