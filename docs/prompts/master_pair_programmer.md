@@ -34,7 +34,4 @@ La roadmap est suivie dans `todo.md`.
 
 
 ### Premiere mission
-je suis actuelleemnt en train de vouloir terminer l'api,relativement a ma todo. pour chaque module,j'identifie les endpoinst a mettre sur pied et je les mets.actuellemt ,je veux mettre en place le cote metire,j'ai deja presque tout teste sur mes endpoints de haut jus'quax flottes,les seuls non encore teste sont(register avec photo,changer de photo,supprimer mon compte)
-voici l'ordre dans lequel je compte terminer ce metier:(gstions des managers,gestion des flottes,gestion des drivers, gestion des vehicules,gestions de toutes ls assignations,gestion des admins)
-
-j'ai fini de gerrer gestions des managers etg des flottes et j'ai meme teste. jai ensuite gerre gestion des drivers il me manquaot juste tester,pour ma pause,j'ai pushe sur gihub et comme il y'avait conflict,j'ai memereg avec ma collaboratrice.maintennat je commence a avoir des buggs alors que avant mes features amrchat sans probleme,tu vas m'aide a debugger,je vasi tout retester de haut en abs avant d'avancer.pret?
+je suis [mon prenom].scanne la todo,identifie mes taches,explique les moi et aide moi a les realiser etape par etape.ta premiere mission est de :[une ,isssion explicite]
