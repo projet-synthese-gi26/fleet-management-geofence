@@ -58,7 +58,6 @@ public class FakeAuthAdapter implements AuthPort {
     @Override
     public Mono<UserDetail> getUserById(UUID userId, String token) {
         log.info("🛠 MODE FAKE AUTH : Récupération user par ID {}", userId);
-        // On génère des données dynamiques basées sur l'ID pour que la liste ait l'air réelle
         String suffix = userId.toString().substring(0, 5);
         return Mono.just(createFakeUser(
             userId, 
@@ -71,10 +70,19 @@ public class FakeAuthAdapter implements AuthPort {
     @Override
     public Flux<UserDetail> getUsersByService(String serviceName, String token) {
         log.info("🛠 MODE FAKE AUTH : Récupération users pour service {}", serviceName);
-        // On génère 2 fake managers
         return Flux.just(
             createFakeUser(UUID.randomUUID(), "manager_1", "m1@yowyob.com", "FLEET_MANAGER"),
-            createFakeUser(UUID.randomUUID(), "manager_2", "m2@yowyob.com", "FLEET_MANAGER")
+            createFakeUser(UUID.randomUUID(), "driver_1", "d1@yowyob.com", "FLEET_DRIVER")
+        );
+    }
+
+    @Override
+    public Flux<UserDetail> getAllUsers(String token) {
+        log.info("🛠 MODE FAKE AUTH : Récupération de TOUS les users (Super Admin)");
+        return Flux.just(
+            createFakeUser(FAKE_ADMIN_ID, "super_admin", "super@yowyob.com", "FLEET_SUPER_ADMIN"),
+            createFakeUser(UUID.randomUUID(), "admin_1", "admin1@yowyob.com", "FLEET_ADMIN"),
+            createFakeUser(UUID.randomUUID(), "manager_demo", "manager@demo.com", "FLEET_MANAGER")
         );
     }
 
@@ -105,7 +113,13 @@ public class FakeAuthAdapter implements AuthPort {
 
     @Override
     public Mono<Void> deleteRemoteAccount(UUID userId, String token) {
-        log.info("🛠 MODE FAKE AUTH : Suppression compte distant pour {}", userId);
+        log.info("🛠 MODE FAKE AUTH : Suppression définitive compte distant pour {}", userId);
+        return Mono.empty();
+    }
+
+    @Override
+    public Mono<Void> moveUserToService(UUID userId, String newServiceName, String token) {
+        log.info("🛠 MODE FAKE AUTH : Soft Delete / Déplacement de l'user {} vers le service {}", userId, newServiceName);
         return Mono.empty();
     }
 

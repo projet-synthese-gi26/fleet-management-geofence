@@ -23,18 +23,14 @@ public class DriverPersistenceAdapter implements DriverPersistencePort {
     public Mono<Driver> save(Driver driver) {
         return repository.findById(driver.userId())
                 .map(existing -> {
-                    // Cas UPDATE : On met à jour les champs
                     existing.setLicenceNumber(driver.licenceNumber());
                     existing.setStatus(driver.status());
                     existing.setAssignedVehicleId(driver.assignedVehicleId());
                     existing.setFleetId(driver.fleetId());
-                    // Pas besoin de markAsNew(), isNew reste false par défaut -> UPDATE
                     return existing;
                 })
                 .switchIfEmpty(Mono.defer(() -> {
-                    // Cas INSERT : L'entité n'existe pas
                     DriverEntity newEntity = mapper.toEntity(driver);
-                    // CRUCIAL : On force le flag pour dire à R2DBC "C'est un INSERT"
                     newEntity.markAsNew(); 
                     return Mono.just(newEntity);
                 }))
@@ -66,6 +62,11 @@ public class DriverPersistenceAdapter implements DriverPersistencePort {
     @Override
     public Mono<Driver> findById(UUID userId) {
         return repository.findById(userId).map(mapper::toDomain);
+    }
+
+    @Override
+    public Mono<Driver> findByAssignedVehicleId(UUID vehicleId) {
+        return repository.findByAssignedVehicleId(vehicleId).map(mapper::toDomain);
     }
 
     @Override

@@ -1,16 +1,19 @@
 package com.yowyob.fleet.application.service;
 
 import com.yowyob.fleet.domain.model.Driver;
+import com.yowyob.fleet.domain.model.Vehicle;
 import com.yowyob.fleet.domain.ports.in.AuthUseCase;
 import com.yowyob.fleet.domain.ports.in.ManageDriverUseCase;
 import com.yowyob.fleet.domain.ports.out.AuthPort;
 import com.yowyob.fleet.domain.ports.out.DriverPersistencePort;
+import com.yowyob.fleet.domain.ports.out.VehiclePersistencePort;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.DriverRegistrationRequest;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.FleetR2dbcRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -23,6 +26,7 @@ import java.util.UUID;
 public class DriverService implements ManageDriverUseCase {
 
     private final DriverPersistencePort driverPersistencePort;
+    private final VehiclePersistencePort vehiclePersistencePort; // Nécessaire pour Smart Swap
     private final AuthPort authPort;
     private final FleetR2dbcRepository fleetRepository; 
 
@@ -31,9 +35,9 @@ public class DriverService implements ManageDriverUseCase {
     // --- 1. CRÉATION COMPLÈTE ---
     @Override
     public Mono<Driver> registerDriver(UUID fleetId, DriverRegistrationRequest request, UUID managerId) {
-        // Utilisation du fleetId passé en argument
         return checkFleetOwnership(fleetId, managerId)
             .then(Mono.defer(() -> {
+                // Pas de photo ici
                 AuthUseCase.RegisterCommand command = new AuthUseCase.RegisterCommand(
                     request.username(), request.password(), request.email(), request.phone(),
                     request.firstName(), request.lastName(), List.of("FLEET_DRIVER"), null
@@ -43,17 +47,17 @@ public class DriverService implements ManageDriverUseCase {
             .flatMap(authRes -> {
                 Driver localDriver = new Driver(
                     authRes.user().id(),
-                    fleetId, // ID venant de l'URL
+                    fleetId,
                     request.licenceNumber(),
                     "ACTIVE",
                     null,
-                    request.photoUrl() // Assure-toi de mapper la photo si dispo
+                    null // La photo est gérée par le driver lui-même
                 );
                 return driverPersistencePort.save(localDriver);
             });
     }
 
-    // --- 2. RECRUTEMENT (Filtrage manuel) ---
+    // --- 2. RECRUTEMENT ---
     @Override
     public Mono<Void> recruitDriver(UUID fleetId, String identifier, UUID managerId, String token) {
         return checkFleetOwnership(fleetId, managerId)
@@ -71,7 +75,7 @@ public class DriverService implements ManageDriverUseCase {
                id.equals(user.phone());
     }
 
-    // --- 3. LECTURE SÉCURISÉE ---
+    // --- 3. LECTURE ---
     @Override
     public Flux<Driver> getDrivers(UUID fleetId, UUID requesterId, boolean isAdmin) {
         if (isAdmin) {
@@ -93,20 +97,76 @@ public class DriverService implements ManageDriverUseCase {
     @Override
     public Mono<Void> removeDriverFromFleet(UUID fleetId, UUID driverId, UUID requesterId) {
         return checkFleetOwnership(fleetId, requesterId)
+                .then(unassignVehicle(driverId, requesterId)) // On libère le véhicule avant de virer le chauffeur
                 .then(driverPersistencePort.updateFleetAssignment(driverId, null));
     }
 
+    /**
+     * SMART SWAP : Assignation Intelligente
+     */
     @Override
-    public Mono<Void> assignVehicle(UUID userId, UUID vehicleId, UUID requesterId) {
-        return driverPersistencePort.updateVehicleAssignment(userId, vehicleId);
+    @Transactional
+    public Mono<Void> assignVehicle(UUID driverId, UUID targetVehicleId, UUID requesterId) {
+        // 1. On récupère le véhicule cible pour vérifier sa flotte (Sécurité)
+        return vehiclePersistencePort.getLocalDataById(targetVehicleId)
+            .switchIfEmpty(Mono.error(new RuntimeException("Véhicule introuvable")))
+            .flatMap(vehicle -> checkFleetOwnership(vehicle.fleetId(), requesterId).thenReturn(vehicle))
+            .flatMap(targetVehicle -> {
+                // 2. Gestion Chauffeur Cible : Avait-il un autre véhicule ?
+                Mono<Void> clearOldVehicleOfDriver = driverPersistencePort.findById(driverId)
+                    .flatMap(driver -> {
+                        if (driver.assignedVehicleId() != null && !driver.assignedVehicleId().equals(targetVehicleId)) {
+                            // On détache l'ancien véhicule du chauffeur
+                            return updateVehicleLink(driver.assignedVehicleId(), null);
+                        }
+                        return Mono.empty();
+                    });
+
+                // 3. Gestion Véhicule Cible : Avait-il un autre chauffeur ?
+                Mono<Void> clearOldDriverOfVehicle = driverPersistencePort.findByAssignedVehicleId(targetVehicleId)
+                    .flatMap(oldDriver -> {
+                        if (!oldDriver.userId().equals(driverId)) {
+                            // On détache l'ancien chauffeur de ce véhicule
+                            return driverPersistencePort.updateVehicleAssignment(oldDriver.userId(), null);
+                        }
+                        return Mono.empty();
+                    });
+
+                // 4. Exécution Atomique
+                return clearOldVehicleOfDriver
+                        .then(clearOldDriverOfVehicle)
+                        .then(updateVehicleLink(targetVehicleId, driverId)) // Met à jour le véhicule
+                        .then(driverPersistencePort.updateVehicleAssignment(driverId, targetVehicleId)); // Met à jour le driver
+            });
     }
 
     @Override
-    public Mono<Void> unassignVehicle(UUID userId, UUID requesterId) {
-        return driverPersistencePort.updateVehicleAssignment(userId, null);
+    @Transactional
+    public Mono<Void> unassignVehicle(UUID driverId, UUID requesterId) {
+        return driverPersistencePort.findById(driverId)
+            .flatMap(driver -> {
+                if (driver.assignedVehicleId() == null) return Mono.empty();
+                
+                // On met à jour le véhicule (driver = null)
+                return updateVehicleLink(driver.assignedVehicleId(), null)
+                        .then(driverPersistencePort.updateVehicleAssignment(driverId, null));
+            });
     }
 
-    // --- HELPER ---
+    // Helper pour mettre à jour la FK côté Véhicule
+    private Mono<Void> updateVehicleLink(UUID vehicleId, UUID driverId) {
+        return vehiclePersistencePort.getLocalDataById(vehicleId)
+            .flatMap(v -> {
+                Vehicle updated = new Vehicle(
+                    v.id(), v.fleetId(), driverId, v.vehicleTypeId(), 
+                    v.licensePlate(), v.brand(), v.model(), v.manufacturingYear(), v.type(), v.color(), 
+                    v.status(), v.photoUrl(), v.financialParameters(), v.maintenanceParameters(), null
+                );
+                return vehiclePersistencePort.saveLocalData(updated);
+            }).then();
+    }
+
+    // Helper Sécurité
     private Mono<Void> checkFleetOwnership(UUID fleetId, UUID managerId) {
         return fleetRepository.existsByIdAndManagerId(fleetId, managerId)
                 .flatMap(exists -> {
