@@ -2,19 +2,18 @@ package com.yowyob.fleet.domain.ports.in;
 
 import com.yowyob.fleet.domain.model.Vehicle;
 import com.yowyob.fleet.domain.model.VehicleParameters;
+import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.VehicleRegistrationRequest; // Dépendance DTO acceptée au niveau input port pour simplifier
 
 import reactor.core.publisher.Mono;
 import java.util.UUID;
 
 public interface ManageVehicleUseCase {
-    /**
-     * Aggregates local exploitation data with remote technical data.
-     */
     Mono<Vehicle> getVehicleDetails(UUID vehicleId);
-
-    /**
-     * Adds a vehicle to a fleet after verifying its existence in the remote service.
-     */
+    
+    // Nouvelle signature principale
+    Mono<Vehicle> createVehicle(UUID fleetId, VehicleRegistrationRequest request);
+    
+    @Deprecated
     Mono<Vehicle> addVehicleToFleet(Vehicle vehicle);
 
     Mono<Void> updateFinancialParameters(UUID vehicleId, VehicleParameters.Financial params);

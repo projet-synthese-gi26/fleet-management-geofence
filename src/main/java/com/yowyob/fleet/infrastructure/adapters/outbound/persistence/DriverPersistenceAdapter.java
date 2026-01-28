@@ -23,15 +23,19 @@ public class DriverPersistenceAdapter implements DriverPersistencePort {
     public Mono<Driver> save(Driver driver) {
         return repository.findById(driver.userId())
                 .map(existing -> {
+                    // Cas UPDATE : On met à jour les champs
                     existing.setLicenceNumber(driver.licenceNumber());
                     existing.setStatus(driver.status());
                     existing.setAssignedVehicleId(driver.assignedVehicleId());
-                    existing.setFleetId(driver.fleetId()); // Ajouté
+                    existing.setFleetId(driver.fleetId());
+                    // Pas besoin de markAsNew(), isNew reste false par défaut -> UPDATE
                     return existing;
                 })
                 .switchIfEmpty(Mono.defer(() -> {
+                    // Cas INSERT : L'entité n'existe pas
                     DriverEntity newEntity = mapper.toEntity(driver);
-                    newEntity.setNewRecord(true);
+                    // CRUCIAL : On force le flag pour dire à R2DBC "C'est un INSERT"
+                    newEntity.markAsNew(); 
                     return Mono.just(newEntity);
                 }))
                 .flatMap(repository::save)
@@ -43,7 +47,6 @@ public class DriverPersistenceAdapter implements DriverPersistencePort {
         return repository.findById(userId)
                 .flatMap(entity -> {
                     entity.setAssignedVehicleId(vehicleId);
-                    entity.setNewRecord(false);
                     return repository.save(entity);
                 }).then();
     }
@@ -53,11 +56,9 @@ public class DriverPersistenceAdapter implements DriverPersistencePort {
         return repository.findById(driverId)
                 .flatMap(entity -> {
                     entity.setFleetId(fleetId);
-                    // Si on retire de la flotte (fleetId null), on retire aussi le véhicule par sécurité
                     if (fleetId == null) {
                         entity.setAssignedVehicleId(null);
                     }
-                    entity.setNewRecord(false);
                     return repository.save(entity);
                 }).then();
     }

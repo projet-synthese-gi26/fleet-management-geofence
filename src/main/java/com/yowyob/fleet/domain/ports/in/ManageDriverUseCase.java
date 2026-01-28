@@ -7,8 +7,8 @@ import reactor.core.publisher.Mono;
 import java.util.UUID;
 
 public interface ManageDriverUseCase {
-    // Création complète (Manager)
-    Mono<Driver> registerDriver(DriverRegistrationRequest request, UUID managerId);
+    // Création complète (Manager) : fleetId passé explicitement
+    Mono<Driver> registerDriver(UUID fleetId, DriverRegistrationRequest request, UUID managerId);
     
     // Recrutement existant (Manager)
     Mono<Void> recruitDriver(UUID fleetId, String identifier, UUID managerId, String token);

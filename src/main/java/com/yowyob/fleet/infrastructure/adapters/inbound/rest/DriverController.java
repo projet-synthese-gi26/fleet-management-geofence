@@ -39,23 +39,24 @@ public class DriverController {
     }
     private String getToken(String header) { return header.substring(7); }
 
-    // 1. CRÉATION DIRECTE (Manager)
-    @PostMapping("/drivers")
+    // 1. CRÉATION DIRECTE (Nouvelle Route)
+    @PostMapping("/fleets/{fleetId}/drivers/register")
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('FLEET_MANAGER')")
-    @Operation(summary = "Créer un nouveau Chauffeur", description = "Crée le compte Auth + Profil local + Lien Flotte.")
+    @Operation(summary = "Créer un nouveau Chauffeur", description = "Crée le compte Auth + Profil local.")
     public Mono<Driver> register(
+            @PathVariable UUID fleetId,
             @Valid @RequestBody DriverRegistrationRequest request,
             Authentication auth
     ) {
-        return driverUseCase.registerDriver(request, getUser(auth).id());
+        return driverUseCase.registerDriver(fleetId, request, getUser(auth).id());
     }
 
-    // 2. RECRUTEMENT (Manager)
-    @PostMapping("/fleets/{fleetId}/drivers")
+    // 2. RECRUTEMENT (Route Renommée)
+    @PostMapping("/fleets/{fleetId}/drivers/recruit")
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasRole('FLEET_MANAGER')")
-    @Operation(summary = "Recruter un Chauffeur existant", description = "Recherche par email/username/tel et ajoute à la flotte.")
+    @Operation(summary = "Recruter un Chauffeur existant", description = "Recherche par identifiant et ajoute à la flotte.")
     public Mono<Void> recruit(
             @PathVariable UUID fleetId,
             @Valid @RequestBody RecruitDriverRequest request,
@@ -65,7 +66,7 @@ public class DriverController {
         return driverUseCase.recruitDriver(fleetId, request.identifier(), getUser(auth).id(), getToken(authHeader));
     }
 
-    // 3. LISTING (Admin/Manager)
+    // 3. LISTING
     @GetMapping("/drivers")
     @Operation(summary = "Lister les chauffeurs", description = "Admin: Tout. Manager: Requis param 'fleetId'.")
     public Flux<Driver> list(
@@ -75,11 +76,11 @@ public class DriverController {
         return driverUseCase.getDrivers(fleetId, getUser(auth).id(), isAdmin(auth));
     }
 
-    // 4. RETRAIT (Manager)
+    // 4. RETRAIT
     @DeleteMapping("/fleets/{fleetId}/drivers/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('FLEET_MANAGER')")
-    @Operation(summary = "Renvoyer un chauffeur", description = "Retire le chauffeur de la flotte (ne supprime pas le compte).")
+    @Operation(summary = "Renvoyer un chauffeur", description = "Retire le chauffeur de la flotte.")
     public Mono<Void> remove(
             @PathVariable UUID fleetId,
             @PathVariable UUID userId,
@@ -94,7 +95,7 @@ public class DriverController {
         return driverUseCase.getDriverById(userId);
     }
 
-    // 6. ASSIGNATION VÉHICULE
+    // 6. ASSIGNATION
     @PostMapping("/drivers/{userId}/assign-vehicle")
     public Mono<Void> assign(@PathVariable UUID userId, @RequestBody VehicleAssignRequest req, Authentication auth) {
         return driverUseCase.assignVehicle(userId, req.vehicleId(), getUser(auth).id());

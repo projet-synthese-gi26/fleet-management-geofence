@@ -2,7 +2,7 @@ package com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+// import jakarta.validation.constraints.NotNull; // Supprimé car plus utilisé ici
 import java.util.UUID;
 
 /**
@@ -32,9 +32,8 @@ public record DriverRegistrationRequest(
     String lastName,
 
     // --- Informations métier (Base locale Fleet) ---
-
-    @NotNull(message = "L'ID de la flotte est obligatoire")
-    UUID fleetId,
+    
+    // fleetId SUPPRIMÉ : Il viendra de l'URL
 
     @NotBlank(message = "Le numéro de permis de conduire est obligatoire")
     String licenceNumber,

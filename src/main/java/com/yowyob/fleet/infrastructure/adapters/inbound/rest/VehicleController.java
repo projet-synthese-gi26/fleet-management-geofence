@@ -26,16 +26,17 @@ public class VehicleController {
 
     @PostMapping("/fleets/{fleetId}/vehicles")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Ajouter un véhicule à une flotte (ADMIN)")
-    public Mono<Vehicle> addVehicle(@PathVariable UUID fleetId, @Valid @RequestBody VehicleRegistrationRequest request) {
-        Vehicle shell = new Vehicle(request.vehicleId(), fleetId, null, request.vehicleTypeId(), 
-                                    null, null, null, null, null, null, "AVAILABLE", null, null, null, null);
-        return vehicleUseCase.addVehicleToFleet(shell);
+    @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'FLEET_ADMIN')") // Manager peut créer ses véhicules
+    @Operation(summary = "Créer un véhicule (Distant + Local)", description = "Crée le véhicule sur le service central puis l'ajoute à la flotte.")
+    public Mono<Vehicle> createVehicle(
+            @PathVariable UUID fleetId, 
+            @Valid @RequestBody VehicleRegistrationRequest request
+    ) {
+        return vehicleUseCase.createVehicle(fleetId, request);
     }
 
     @GetMapping("/vehicles/{vehicleId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'FLEET_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FLEET_MANAGER', 'FLEET_DRIVER')")
     @Operation(summary = "Détails complets aggrégés (Local + Remote)")
     public Mono<Vehicle> getVehicle(@PathVariable UUID vehicleId) {
         return vehicleUseCase.getVehicleDetails(vehicleId);
@@ -43,8 +44,11 @@ public class VehicleController {
 
     @DeleteMapping("/vehicles/{vehicleId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FLEET_MANAGER')")
+    @Operation(summary = "Supprimer un véhicule", description = "Supprime du service distant ET local.")
     public Mono<Void> delete(@PathVariable UUID vehicleId) {
         return vehicleUseCase.removeVehicleFromFleet(vehicleId);
     }
+    
+    // TODO: Ajouter endpoints pour update financial/maintenance parameters
 }

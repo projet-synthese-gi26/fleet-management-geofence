@@ -9,7 +9,6 @@ import org.mapstruct.Named;
 @Mapper(componentModel = "spring")
 public interface DriverMapper {
 
-    @Mapping(target = "newRecord", ignore = true) // On ignore le flag technique
     @Mapping(target = "status", source = "status", qualifiedByName = "booleanToStatusString")
     DriverEntity toEntity(Driver domain);
 

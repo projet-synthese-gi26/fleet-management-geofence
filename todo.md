@@ -37,22 +37,24 @@
 *Responsabilité : Logique complexe, agrégation de données, machines à états, validation finale.*
 
 #### Module 1 : Finalisation Auth & Drivers
-- [ ] **Tâche 1.1 :** Validation Tests en local : Gestion des Drivers (Création, Listing, Retrait).
-- [ ] **Tâche 1.2 :** Implémentation : Upload/Update de la photo de profil (User, Driver, Fleet Manager, Admin).
+- [x] **Tâche 1.1 :** Validation Tests en local : Gestion des Drivers (Création, Listing, Retrait).
+- [ ] **Tâche 1.2 :** Implémentation : Gestion des Admins et Super Admins (1 Super Admin défini en dur dans le code/configuration qui peut créer les autres admins ; il sera configuré dans le `application.yml`).
 - [ ] **Tâche 1.3 :** Implémentation : Suppression de compte (Changement de service vers le service `User_Deleted`).
-- [ ] **Tâche 1.4 :** Implémentation : Gestion des Admins et Super Admins (1 Super Admin défini en dur dans le code/configuration qui peut créer les autres admins ; il sera configuré dans le `application.yml`).
+- [ ] **Tâche 1.4 :** Implémentation : Upload/Update de la photo de profil (User, Driver, Fleet Manager, Admin).
+- [ ] **Tâche 1.5 :** Test et Implémentation : Gestion des assignations chauffeur-vehicules,flottes-chauffeurs,managers-flottes
+
 
 #### Module 2 : Gestion Avancée des Véhicules
-- [ ] **Tâche 2.1 :** Refonte `VehicleService` : Agrégation réactive robuste (Données locales + Données distantes `VehicleApiClient`).
-- [ ] **Tâche 2.2 :** CRUD Paramètres Financiers (Relation 1-1).
-- [ ] **Tâche 2.3 :** CRUD Paramètres Maintenance (Relation 1-1).
-- [ ] **Tâche 2.4 :** Logique d'Assignation Croisée (Empêcher conflit : 1 Driver sur 2 véhicules, etc.).
+- [x] **Tâche 2.1 :** Refonte `VehicleService` : Agrégation réactive robuste (Données locales + Données distantes `VehicleApiClient`).
+- [x] **Tâche 2.2 :** CRUD Paramètres Financiers (Relation 1-1).
+- [x] **Tâche 2.3 :** CRUD Paramètres Maintenance (Relation 1-1).
+- [x] **Tâche 2.4 :** Logique d'Assignation Croisée (Empêcher conflit : 1 Driver sur 2 véhicules, etc.).
 
 #### Module 3 : Gestion des Trajets (Trips) & Télémétrie
-- [ ] **Tâche 3.1 :** Endpoint `Start Trip` : Initialisation, verrouillage véhicule/driver.
-- [ ] **Tâche 3.2 :** Endpoint `Telemetry` : Ingestion haute fréquence des points GPS (WebFlux Stream).
-- [ ] **Tâche 3.3 :** Endpoint `End Trip` : Clôture, calcul distance/durée, libération ressources.
-- [ ] **Tâche 3.4 :** Identification d'autres endpoints si nécessaire et implémentation.
+- [x] **Tâche 3.1 :** Endpoint `Start Trip` : Initialisation, verrouillage véhicule/driver.
+- [x] **Tâche 3.2 :** Endpoint `Telemetry` : Ingestion haute fréquence des points GPS (WebFlux Stream).
+- [x] **Tâche 3.3 :** Endpoint `End Trip` : Clôture, calcul distance/durée, libération ressources.
+- [x] **Tâche 3.4 :** Identification d'autres endpoints si nécessaire et implémentation.
 
 ---
 

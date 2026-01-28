@@ -1,5 +1,5 @@
 # Contexte du Projet : Fleet & Geofence API
-Généré le : Tue 27 Jan 2026 09:38:11 PM WAT
+Généré le : Wed 28 Jan 2026 07:58:40 AM WAT
 Framework : Spring Boot WebFlux (Reactive)
 
 ## 1. Arborescence du Projet
@@ -22,7 +22,7 @@ Framework : Spring Boot WebFlux (Reactive)
 │   ├── database_setup.md
 │   ├── fleet-management.pdf
 │   ├── prompts
-│   │   ├── discussion.txt
+│   │   ├── gabriel.md
 │   │   └── master_pair_programmer.md
 │   ├── refactor
 │   │   ├── 1_analysis_of_needs.md
@@ -63,6 +63,7 @@ Framework : Spring Boot WebFlux (Reactive)
 │   │   │               │       ├── FleetManagerService.java
 │   │   │               │       ├── FleetService.java
 │   │   │               │       ├── GeofenceService.java
+│   │   │               │       ├── TripService.java
 │   │   │               │       └── VehicleService.java
 │   │   │               ├── domain
 │   │   │               │   ├── model
@@ -71,6 +72,7 @@ Framework : Spring Boot WebFlux (Reactive)
 │   │   │               │   │   ├── FleetManager.java
 │   │   │               │   │   ├── GeofencePoint.java
 │   │   │               │   │   ├── GeofenceZone.java
+│   │   │               │   │   ├── Trip.java
 │   │   │               │   │   ├── Vehicle.java
 │   │   │               │   │   └── VehicleParameters.java
 │   │   │               │   └── ports
@@ -80,9 +82,11 @@ Framework : Spring Boot WebFlux (Reactive)
 │   │   │               │       │   ├── ManageFleetManagerUseCase.java
 │   │   │               │       │   ├── ManageFleetUseCase.java
 │   │   │               │       │   ├── ManageGeofenceUseCase.java
+│   │   │               │       │   ├── ManageTripUseCase.java
 │   │   │               │       │   └── ManageVehicleUseCase.java
 │   │   │               │       └── out
 │   │   │               │           ├── AuthPort.java
+│   │   │               │           ├── DistanceCalculatorPort.java
 │   │   │               │           ├── DriverPersistencePort.java
 │   │   │               │           ├── ExternalGeofencePort.java
 │   │   │               │           ├── ExternalVehiclePort.java
@@ -110,6 +114,8 @@ Framework : Spring Boot WebFlux (Reactive)
 │   │   │                   │   │       │   ├── MaintenanceUpdateRequest.java
 │   │   │                   │   │       │   ├── RecruitDriverRequest.java
 │   │   │                   │   │       │   ├── RegisterRequest.java
+│   │   │                   │   │       │   ├── StartTripRequest.java
+│   │   │                   │   │       │   ├── TelemetryRequest.java
 │   │   │                   │   │       │   ├── UpdateManagerRequest.java
 │   │   │                   │   │       │   ├── UpdateProfileRequest.java
 │   │   │                   │   │       │   └── VehicleRegistrationRequest.java
@@ -117,6 +123,7 @@ Framework : Spring Boot WebFlux (Reactive)
 │   │   │                   │   │       ├── GeofenceController.java
 │   │   │                   │   │       ├── GlobalExceptionHandler.java
 │   │   │                   │   │       ├── HealthCheckController.java
+│   │   │                   │   │       ├── TripController.java
 │   │   │                   │   │       └── VehicleController.java
 │   │   │                   │   └── outbound
 │   │   │                   │       ├── external
@@ -127,6 +134,7 @@ Framework : Spring Boot WebFlux (Reactive)
 │   │   │                   │       │   ├── dto
 │   │   │                   │       │   │   └── VehicleExternalResponse.java
 │   │   │                   │       │   ├── FakeAuthAdapter.java
+│   │   │                   │       │   ├── FakeDistanceAdapter.java
 │   │   │                   │       │   ├── GeofenceApiAdapter.java
 │   │   │                   │       │   ├── RemoteAuthAdapter.java
 │   │   │                   │       │   └── VehicleApiAdapter.java
@@ -141,10 +149,12 @@ Framework : Spring Boot WebFlux (Reactive)
 │   │   │                   │           │   ├── GeofenceZoneEntity.java
 │   │   │                   │           │   ├── MaintenanceParameterEntity.java
 │   │   │                   │           │   ├── OperationalParameterEntity.java
+│   │   │                   │           │   ├── TripEntity.java
 │   │   │                   │           │   └── VehicleLocalEntity.java
 │   │   │                   │           ├── FleetManagerPersistenceAdapter.java
 │   │   │                   │           ├── FleetPersistenceAdapter.java
 │   │   │                   │           ├── GeofencePersistenceAdapter.java
+│   │   │                   │           ├── RedisTelemetryAdapter.java
 │   │   │                   │           ├── repository
 │   │   │                   │           │   ├── DriverR2dbcRepository.java
 │   │   │                   │           │   ├── FinancialParameterR2dbcRepository.java
@@ -153,6 +163,7 @@ Framework : Spring Boot WebFlux (Reactive)
 │   │   │                   │           │   ├── GeofenceEventR2dbcRepository.java
 │   │   │                   │           │   ├── GeofenceR2dbcRepository.java
 │   │   │                   │           │   ├── MaintenanceParameterR2dbcRepository.java
+│   │   │                   │           │   ├── TripR2dbcRepository.java
 │   │   │                   │           │   └── VehicleLocalR2dbcRepository.java
 │   │   │                   │           └── VehiclePersistenceAdapter.java
 │   │   │                   ├── config
@@ -196,7 +207,7 @@ Framework : Spring Boot WebFlux (Reactive)
 ├── test_profile.jpg
 └── todo.md
 
-48 directories, 142 files
+48 directories, 153 files
 ```
 ## 2. Contenu des Fichiers
 
@@ -7913,6 +7924,52 @@ LIMIT 5;
 -- =====================================================```
 
 ---
+### Fichier : `./docs/prompts/gabriel.md`
+```md
+# 🤖 Master Prompt : Senior Pair Programmer WebFlux
+
+Tu es mon Senior Pair Programmer expert en Java **Spring Boot WebFlux (Réactif)**.
+Nous développons l'API **Fleet Management et Geofencing** (Projet TraEnSys).
+
+### 📋 Ta Méthode de Travail (IMPÉRATIF)
+Pour chaque tâche demandée, tu dois obligatoirement suivre ces étapes :
+
+**Étape 1 : Conception fonctionnelle**
+- Analyse du besoin, user stories et ajustement du modèle de données.Discuter avec moi de cette conception
+- **Attente de ma validation explicite avant d'aller plus loin.**
+
+**Étape 2 : Discussion Technique**
+- Avant de coder, explique brièvement comment l'architechture sera gérée pour cette tâche.ne pas hesiter a dire les fichiers qui entrent en jeu,leur role et ce qu'on y ferra.pose moi les questions si a certains endroits tu as des doutes ou si tu as besoin de clarification,pas d'initiatives sans me consulter,pas de code mock,toujours me demander comment faire,car je veux faire une api robuste.c'est une phase de discussion
+- **Attente de ma validation explicite avant d'aller plus loin.**
+
+**Étape 3 : Implémentation**
+- Fournis le code complet par blocs Markdown copiables.
+- Respecte l'architecture hexagonale du projet.
+-respecte egalement mes consignes
+
+**Étape 4 : Tests & Validation**
+- Instructions pour tester via swagger .
+
+### 🚫 Tes Règles de Conduite
+1. **Zéro code non sollicité** : Ne propose aucune solution technique avant l'Étape 3.
+2. **Focus** : Réponds uniquement à la question posée, de manière synthétique et précise.
+3. **Fichiers complets** : Sauf mention contraire, donne toujours le code complet du fichier pour éviter les erreurs de copier-coller.
+4. **Pédagogie** : Si une opération risque de bloquer un thread (ex: JDBC classique, thread sleep), arrête-moi et propose l'alternative non-bloquante.
+
+### 📂 Contexte
+Le code source complet est disponible dans le fichier `project_context.txt`.
+La roadmap est suivie dans `todo.md`.
+
+
+### Premiere mission
+je suis gabriel.scanne la todo,identifie mes taches.je suis en train de finaliser la gestion des trips,j'ai deja coche dans la tdo,maintennat je debugge et teste juste.
+voici:
+erreur dans le service:"The method setStartTime(LocalTime) in the type TripEntity is not applicable for the arguments (Instant)Java(67108979)
+Windsurf: Explain Problem
+
+void com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.TripEntity.setStartTime(LocalTime startTime)" donne moi le service complet et a jour```
+
+---
 ### Fichier : `./docs/prompts/master_pair_programmer.md`
 ```md
 # 🤖 Master Prompt : Senior Pair Programmer WebFlux
@@ -8064,10 +8121,12 @@ Once the log shows `🚀 LOCAL DATABASE READY!`, open your browser:
 *Responsabilité : Logique complexe, agrégation de données, machines à états, validation finale.*
 
 #### Module 1 : Finalisation Auth & Drivers
-- [ ] **Tâche 1.1 :** Validation Tests en local : Gestion des Drivers (Création, Listing, Retrait).
-- [ ] **Tâche 1.2 :** Implémentation : Upload/Update de la photo de profil (User, Driver, Fleet Manager, Admin).
-- [ ] **Tâche 1.3 :** Implémentation : Suppression de compte (Changement de service vers le service `User_Deleted`).
-- [ ] **Tâche 1.4 :** Implémentation : Gestion des Admins et Super Admins (1 Super Admin défini en dur dans le code/configuration qui peut créer les autres admins ; il sera configuré dans le `application.yml`).
+- [x] **Tâche 1.1 :** Validation Tests en local : Gestion des Drivers (Création, Listing, Retrait).
+- [ ] **Tâche 1.3 :** Implémentation : Upload/Update de la photo de profil (User, Driver, Fleet Manager, Admin).
+- [ ] **Tâche 1.2 :** Test et Implémentation : Gestion des assignations chauffeur-vehicules,flottes-chauffeurs,managers-flottes
+- [ ] **Tâche 1.4 :** Implémentation : Suppression de compte (Changement de service vers le service `User_Deleted`).
+- [ ] **Tâche 1.5 :** Implémentation : Gestion des Admins et Super Admins (1 Super Admin défini en dur dans le code/configuration qui peut créer les autres admins ; il sera configuré dans le `application.yml`).
+
 
 #### Module 2 : Gestion Avancée des Véhicules
 - [ ] **Tâche 2.1 :** Refonte `VehicleService` : Agrégation réactive robuste (Données locales + Données distantes `VehicleApiClient`).
@@ -8076,10 +8135,10 @@ Once the log shows `🚀 LOCAL DATABASE READY!`, open your browser:
 - [ ] **Tâche 2.4 :** Logique d'Assignation Croisée (Empêcher conflit : 1 Driver sur 2 véhicules, etc.).
 
 #### Module 3 : Gestion des Trajets (Trips) & Télémétrie
-- [ ] **Tâche 3.1 :** Endpoint `Start Trip` : Initialisation, verrouillage véhicule/driver.
-- [ ] **Tâche 3.2 :** Endpoint `Telemetry` : Ingestion haute fréquence des points GPS (WebFlux Stream).
-- [ ] **Tâche 3.3 :** Endpoint `End Trip` : Clôture, calcul distance/durée, libération ressources.
-- [ ] **Tâche 3.4 :** Identification d'autres endpoints si nécessaire et implémentation.
+- [x] **Tâche 3.1 :** Endpoint `Start Trip` : Initialisation, verrouillage véhicule/driver.
+- [x] **Tâche 3.2 :** Endpoint `Telemetry` : Ingestion haute fréquence des points GPS (WebFlux Stream).
+- [x] **Tâche 3.3 :** Endpoint `End Trip` : Clôture, calcul distance/durée, libération ressources.
+- [x] **Tâche 3.4 :** Identification d'autres endpoints si nécessaire et implémentation.
 
 ---
 
@@ -8237,33 +8296,27 @@ resilience4j:
 ```sql
 --liquibase formatted sql
 
---changeset gabriel:create-fleet-enums splitStatements:true
--- 1. ENUMS STATIQUES (Logique métier figée)
-CREATE TYPE fleet.engine_status_enum AS ENUM ('OK', 'NEEDS_SERVICE', 'OUT_OF_SERVICE');
-CREATE TYPE fleet.maintenance_status_enum AS ENUM ('UP_TO_DATE', 'PENDING', 'OVERDUE');
-CREATE TYPE fleet.event_type_enum AS ENUM ('ENTRY', 'EXIT');
-CREATE TYPE fleet.trip_status_enum AS ENUM ('SCHEDULED', 'ONGOING', 'COMPLETED', 'CANCELLED');
-CREATE TYPE fleet.driver_status_enum AS ENUM ('ACTIVE', 'INACTIVE');
-CREATE TYPE fleet.vehicle_status_enum AS ENUM ('AVAILABLE', 'ON_TRIP', 'MAINTENANCE');
+--changeset gabriel:create-fleet-tables-v2 splitStatements:true
 
---changeset gabriel:create-fleet-tables splitStatements:true
+-- 1. NETTOYAGE PREALABLE (Au cas où)
+-- On ne crée plus les types ENUM car ils posent problème avec R2DBC sans convertisseurs complexes.
 
 -- 2. DONNÉES DE RÉFÉRENCE DYNAMIQUES
-CREATE TABLE fleet.vehicle_types (
+CREATE TABLE IF NOT EXISTS fleet.vehicle_types (
     id UUID PRIMARY KEY,
-    code VARCHAR(50) UNIQUE NOT NULL, -- Ex: CAR, TRUCK
-    label VARCHAR(100) NOT NULL,      -- Ex: Voiture de Tourisme
+    code VARCHAR(50) UNIQUE NOT NULL, 
+    label VARCHAR(100) NOT NULL,      
     description TEXT
 );
 
 -- 3. ACTEURS (Extensions de public.users)
-CREATE TABLE fleet.fleet_managers (
-    user_id UUID PRIMARY KEY, -- FK vers public.users
+CREATE TABLE IF NOT EXISTS fleet.fleet_managers (
+    user_id UUID PRIMARY KEY, 
     company_name VARCHAR(100)
 );
 
 -- 4. ORGANISATION
-CREATE TABLE fleet.fleets (
+CREATE TABLE IF NOT EXISTS fleet.fleets (
   id UUID PRIMARY KEY,
   manager_id UUID NOT NULL REFERENCES fleet.fleet_managers(user_id),
   name VARCHAR(255) NOT NULL,
@@ -8271,33 +8324,33 @@ CREATE TABLE fleet.fleets (
   created_at TIMESTAMP DEFAULT now()
 );
 
-CREATE TABLE fleet.drivers (
-  user_id UUID PRIMARY KEY, -- FK vers public.users
+CREATE TABLE IF NOT EXISTS fleet.drivers (
+  user_id UUID PRIMARY KEY, 
   fleet_id UUID REFERENCES fleet.fleets(id) ON DELETE SET NULL,
   licence_number VARCHAR(100) UNIQUE NOT NULL,
-  status fleet.driver_status_enum DEFAULT 'ACTIVE',
+  status VARCHAR(50) DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'INACTIVE')),
+  assigned_vehicle_id UUID, -- FK ajoutée plus tard pour éviter dépendance cyclique
   photo_url VARCHAR(255)
 );
 
 -- 5. GEOFENCING (Zones)
-CREATE TABLE fleet.geofence_zones (
+CREATE TABLE IF NOT EXISTS fleet.geofence_zones (
   id UUID PRIMARY KEY,
   fleet_id UUID NOT NULL REFERENCES fleet.fleets(id) ON DELETE CASCADE,
   name VARCHAR(255) NOT NULL,
   description TEXT,
+  type VARCHAR(50) DEFAULT 'POLYGON', -- POLYGON, CIRCLE
+  radius NUMERIC,
   surface_area NUMERIC,
   perimeter NUMERIC
 );
 
 -- 6. VÉHICULES
-CREATE TABLE fleet.vehicles (
+CREATE TABLE IF NOT EXISTS fleet.vehicles (
   id UUID PRIMARY KEY,
   fleet_id UUID NOT NULL REFERENCES fleet.fleets(id) ON DELETE CASCADE,
   
-  -- Assignation dynamique
   current_driver_id UUID REFERENCES fleet.drivers(user_id) ON DELETE SET NULL,
-  
-  -- Typage dynamique (FK vers table)
   vehicle_type_id UUID REFERENCES fleet.vehicle_types(id), 
   
   license_plate VARCHAR(50) UNIQUE NOT NULL,
@@ -8305,15 +8358,20 @@ CREATE TABLE fleet.vehicles (
   model VARCHAR(100),
   manufacturing_year INT,
   color VARCHAR(50),
-  status fleet.vehicle_status_enum DEFAULT 'AVAILABLE',
+  status VARCHAR(50) DEFAULT 'AVAILABLE' CHECK (status IN ('AVAILABLE', 'ON_TRIP', 'MAINTENANCE')),
   photo_url VARCHAR(255)
 );
 
+-- Ajout de la FK manquante sur drivers
+ALTER TABLE fleet.drivers 
+ADD CONSTRAINT fk_driver_vehicle 
+FOREIGN KEY (assigned_vehicle_id) REFERENCES fleet.vehicles(id) ON DELETE SET NULL;
+
 -- 7. PARAMÈTRES VÉHICULES (1-1)
-CREATE TABLE fleet.operational_parameters (
+CREATE TABLE IF NOT EXISTS fleet.operational_parameters (
   id UUID PRIMARY KEY,
   vehicle_id UUID UNIQUE REFERENCES fleet.vehicles(id) ON DELETE CASCADE,
-  current_location_point_id UUID, -- FK ajoutée plus bas
+  current_location_point_id UUID, 
   status BOOLEAN DEFAULT true,
   current_speed NUMERIC,
   fuel_level VARCHAR(50),
@@ -8323,7 +8381,7 @@ CREATE TABLE fleet.operational_parameters (
   timestamp TIMESTAMP DEFAULT now()
 );
 
-CREATE TABLE fleet.financial_parameters (
+CREATE TABLE IF NOT EXISTS fleet.financial_parameters (
   id UUID PRIMARY KEY,
   vehicle_id UUID UNIQUE REFERENCES fleet.vehicles(id) ON DELETE CASCADE,
   insurance_number VARCHAR(100),
@@ -8334,18 +8392,18 @@ CREATE TABLE fleet.financial_parameters (
   cost_per_km NUMERIC
 );
 
-CREATE TABLE fleet.maintenance_parameters (
+CREATE TABLE IF NOT EXISTS fleet.maintenance_parameters (
   id UUID PRIMARY KEY,
   vehicle_id UUID UNIQUE REFERENCES fleet.vehicles(id) ON DELETE CASCADE,
   last_maintenance_at DATE,
   next_maintenance_at DATE,
-  engine_status fleet.engine_status_enum DEFAULT 'OK',
+  engine_status VARCHAR(50) DEFAULT 'OK' CHECK (engine_status IN ('OK', 'NEEDS_SERVICE', 'OUT_OF_SERVICE')),
   battery_health INT,
-  maintenance_status fleet.maintenance_status_enum DEFAULT 'UP_TO_DATE'
+  maintenance_status VARCHAR(50) DEFAULT 'UP_TO_DATE' CHECK (maintenance_status IN ('UP_TO_DATE', 'PENDING', 'OVERDUE'))
 );
 
 -- 8. TRAJETS & ROUTES
-CREATE TABLE fleet.trips (
+CREATE TABLE IF NOT EXISTS fleet.trips (
   id UUID PRIMARY KEY,
   vehicle_id UUID REFERENCES fleet.vehicles(id) ON DELETE CASCADE,
   driver_id UUID REFERENCES fleet.drivers(user_id) ON DELETE SET NULL,
@@ -8353,17 +8411,16 @@ CREATE TABLE fleet.trips (
   end_date DATE,
   start_time TIME NOT NULL,
   end_time TIME,
-  status fleet.trip_status_enum DEFAULT 'SCHEDULED',
+  status VARCHAR(50) DEFAULT 'SCHEDULED' CHECK (status IN ('SCHEDULED', 'ONGOING', 'COMPLETED', 'CANCELLED')),
   
-  -- Historisation du type au moment du trajet
   vehicle_type_id UUID REFERENCES fleet.vehicle_types(id), 
   
   distance_km NUMERIC,
   duration_minutes INT
 );
 
--- 9. GÉOMÉTRIE (Legacy / Compatibilité Objet)
-CREATE TABLE fleet.geofence_points (
+-- 9. GÉOMÉTRIE
+CREATE TABLE IF NOT EXISTS fleet.geofence_points (
   id UUID PRIMARY KEY,
   latitude NUMERIC NOT NULL,
   longitude NUMERIC NOT NULL
@@ -8373,14 +8430,14 @@ ALTER TABLE fleet.operational_parameters
 ADD CONSTRAINT fk_operational_point 
 FOREIGN KEY (current_location_point_id) REFERENCES fleet.geofence_points(id) ON DELETE SET NULL;
 
-CREATE TABLE fleet.routes (
+CREATE TABLE IF NOT EXISTS fleet.routes (
   id UUID PRIMARY KEY,
   trip_id UUID REFERENCES fleet.trips(id) ON DELETE CASCADE,
   start_point_id UUID REFERENCES fleet.geofence_points(id),
   end_point_id UUID REFERENCES fleet.geofence_points(id)
 );
 
-CREATE TABLE fleet.geofence_point_zone_linkages (
+CREATE TABLE IF NOT EXISTS fleet.geofence_point_zone_linkages (
   point_id UUID REFERENCES fleet.geofence_points(id) ON DELETE CASCADE,
   zone_id UUID REFERENCES fleet.geofence_zones(id) ON DELETE CASCADE,
   vertex_order INT,
@@ -8388,11 +8445,11 @@ CREATE TABLE fleet.geofence_point_zone_linkages (
 );
 
 -- 10. ÉVÉNEMENTS
-CREATE TABLE fleet.geofence_events (
+CREATE TABLE IF NOT EXISTS fleet.geofence_events (
   id UUID PRIMARY KEY,
   vehicle_id UUID REFERENCES fleet.vehicles(id) ON DELETE CASCADE,
   zone_id UUID REFERENCES fleet.geofence_zones(id) ON DELETE SET NULL,
-  type fleet.event_type_enum,
+  type VARCHAR(50) CHECK (type IN ('ENTRY', 'EXIT')),
   timestamp TIMESTAMP DEFAULT now()
 );```
 
@@ -8768,7 +8825,6 @@ import org.mapstruct.Named;
 @Mapper(componentModel = "spring")
 public interface DriverMapper {
 
-    @Mapping(target = "newRecord", ignore = true) // On ignore le flag technique
     @Mapping(target = "status", source = "status", qualifiedByName = "booleanToStatusString")
     DriverEntity toEntity(Driver domain);
 
@@ -8785,6 +8841,50 @@ public interface DriverMapper {
     default Boolean statusStringToBoolean(String status) {
         if (status == null) return true;
         return "ACTIVE".equalsIgnoreCase(status);
+    }
+}```
+
+---
+### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/external/FakeDistanceAdapter.java`
+```java
+package com.yowyob.fleet.infrastructure.adapters.outbound.external;
+
+import com.yowyob.fleet.domain.model.GeofencePoint;
+import com.yowyob.fleet.domain.ports.out.DistanceCalculatorPort;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+
+@Component
+public class FakeDistanceAdapter implements DistanceCalculatorPort {
+
+    @Override
+    public Double calculateTotalDistanceKm(List<GeofencePoint> points) {
+        if (points == null || points.size() < 2) {
+            return 0.0;
+        }
+
+        double totalDistance = 0.0;
+        for (int i = 0; i < points.size() - 1; i++) {
+            totalDistance += haversine(
+                points.get(i).latitude(), points.get(i).longitude(),
+                points.get(i+1).latitude(), points.get(i+1).longitude()
+            );
+        }
+        // Arrondi à 2 décimales
+        return Math.round(totalDistance * 100.0) / 100.0;
+    }
+
+    // Formule standard pour distance entre 2 points GPS
+    private double haversine(double lat1, double lon1, double lat2, double lon2) {
+        final int R = 6371; // Rayon de la terre en km
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                   Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                   Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
     }
 }```
 
@@ -9535,6 +9635,73 @@ public class GeofenceEventEntity {
 }```
 
 ---
+### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/persistence/entity/TripEntity.java`
+```java
+package com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.domain.Persistable;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.UUID;
+
+@Table(name = "trips", schema = "fleet")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class TripEntity implements Persistable<UUID> {
+
+    @Id
+    private UUID id;
+
+    @Column("vehicle_id")
+    private UUID vehicleId;
+
+    @Column("driver_id")
+    private UUID driverId;
+
+    @Column("vehicle_type_id")
+    private UUID vehicleTypeId; // Pour historique
+
+    @Column("start_date")
+    private LocalDate startDate;
+
+    @Column("start_time")
+    private LocalTime startTime;
+
+    @Column("end_date")
+    private LocalDate endDate;
+
+    @Column("end_time")
+    private LocalTime endTime;
+
+    private String status; // ONGOING, COMPLETED...
+
+    @Column("distance_km")
+    private Double distanceKm;
+
+    @Column("duration_minutes")
+    private Integer durationMinutes;
+
+    // --- Gestion R2DBC Persistable ---
+    
+    @Transient
+    private boolean isNew = false;
+
+    @Override
+    public boolean isNew() {
+        return isNew || id == null;
+    }
+}```
+
+---
 ### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/persistence/entity/DriverEntity.java`
 ```java
 package com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity;
@@ -9573,18 +9740,10 @@ public class DriverEntity implements Persistable<UUID> {
     private String photoUrl;
 
     @Transient
-    private boolean isNewRecord = false; // Renommé ici
-
-    public void setNewRecord(boolean isNew) { this.isNewRecord = isNew; }
-    @Transient
     private boolean isNew = false;
 
-    // Constructeur pour création
-    public DriverEntity(UUID userId, String licenceNumber, String status, UUID assignedVehicleId) {
-        this.userId = userId;
-        this.licenceNumber = licenceNumber;
-        this.status = status;
-        this.assignedVehicleId = assignedVehicleId;
+    // Méthode utilitaire explicite pour forcer l'INSERT
+    public void markAsNew() {
         this.isNew = true;
     }
 
@@ -9595,6 +9754,7 @@ public class DriverEntity implements Persistable<UUID> {
 
     @Override
     public boolean isNew() {
+        // Si l'ID est null (cas rare ici car on le set manuellement) OU si le flag est true
         return isNew || userId == null;
     }
 }```
@@ -9810,6 +9970,53 @@ public class OperationalParameterEntity {
 }```
 
 ---
+### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/persistence/RedisTelemetryAdapter.java`
+```java
+package com.yowyob.fleet.infrastructure.adapters.outbound.persistence;
+
+import com.yowyob.fleet.domain.model.GeofencePoint;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.ReactiveRedisTemplate;
+import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.time.Duration;
+import java.util.UUID;
+
+@Component
+@RequiredArgsConstructor
+public class RedisTelemetryAdapter {
+
+    private final ReactiveRedisTemplate<String, Object> redisTemplate;
+
+    // Clé : trip:{tripId}:path
+    private String getKey(UUID tripId) {
+        return "trip:" + tripId + ":path";
+    }
+
+    public Mono<Void> addPoint(UUID tripId, Double lat, Double lng) {
+        // On stocke sous forme d'objet simple (sérialisé en JSON par la config Redis)
+        GeofencePoint point = new GeofencePoint(null, lat, lng, null);
+        String key = getKey(tripId);
+        
+        return redisTemplate.opsForList().rightPush(key, point)
+                // On met une expiration de sécurité (24h) pour ne pas polluer Redis si le trip plante
+                .then(redisTemplate.expire(key, Duration.ofHours(24)))
+                .then();
+    }
+
+    public Flux<GeofencePoint> getTripPath(UUID tripId) {
+        return redisTemplate.opsForList().range(getKey(tripId), 0, -1)
+                .cast(GeofencePoint.class);
+    }
+
+    public Mono<Void> clearTripPath(UUID tripId) {
+        return redisTemplate.delete(getKey(tripId)).then();
+    }
+}```
+
+---
 ### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/persistence/FleetPersistenceAdapter.java`
 ```java
 package com.yowyob.fleet.infrastructure.adapters.outbound.persistence;
@@ -9919,6 +10126,27 @@ public interface MaintenanceParameterR2dbcRepository extends ReactiveCrudReposit
      * Fetches maintenance status linked to a specific vehicle ID.
      */
     Mono<MaintenanceParameterEntity> findByVehicleId(UUID vehicleId);
+}```
+
+---
+### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/persistence/repository/TripR2dbcRepository.java`
+```java
+package com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository;
+
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.TripEntity; // Assure-toi que cette entité existe ou est créée
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Mono;
+import java.util.UUID;
+
+@Repository
+public interface TripR2dbcRepository extends ReactiveCrudRepository<TripEntity, UUID> {
+    
+    // Trouver le trajet actif d'un chauffeur
+    Mono<TripEntity> findByDriverIdAndStatus(UUID driverId, String status);
+    
+    // Trouver le trajet actif d'un véhicule (pour vérifier dispo)
+    Mono<TripEntity> findByVehicleIdAndStatus(UUID vehicleId, String status);
 }```
 
 ---
@@ -10156,15 +10384,19 @@ public class DriverPersistenceAdapter implements DriverPersistencePort {
     public Mono<Driver> save(Driver driver) {
         return repository.findById(driver.userId())
                 .map(existing -> {
+                    // Cas UPDATE : On met à jour les champs
                     existing.setLicenceNumber(driver.licenceNumber());
                     existing.setStatus(driver.status());
                     existing.setAssignedVehicleId(driver.assignedVehicleId());
-                    existing.setFleetId(driver.fleetId()); // Ajouté
+                    existing.setFleetId(driver.fleetId());
+                    // Pas besoin de markAsNew(), isNew reste false par défaut -> UPDATE
                     return existing;
                 })
                 .switchIfEmpty(Mono.defer(() -> {
+                    // Cas INSERT : L'entité n'existe pas
                     DriverEntity newEntity = mapper.toEntity(driver);
-                    newEntity.setNewRecord(true);
+                    // CRUCIAL : On force le flag pour dire à R2DBC "C'est un INSERT"
+                    newEntity.markAsNew(); 
                     return Mono.just(newEntity);
                 }))
                 .flatMap(repository::save)
@@ -10176,7 +10408,6 @@ public class DriverPersistenceAdapter implements DriverPersistencePort {
         return repository.findById(userId)
                 .flatMap(entity -> {
                     entity.setAssignedVehicleId(vehicleId);
-                    entity.setNewRecord(false);
                     return repository.save(entity);
                 }).then();
     }
@@ -10186,11 +10417,9 @@ public class DriverPersistenceAdapter implements DriverPersistencePort {
         return repository.findById(driverId)
                 .flatMap(entity -> {
                     entity.setFleetId(fleetId);
-                    // Si on retire de la flotte (fleetId null), on retire aussi le véhicule par sécurité
                     if (fleetId == null) {
                         entity.setAssignedVehicleId(null);
                     }
-                    entity.setNewRecord(false);
                     return repository.save(entity);
                 }).then();
     }
@@ -10703,23 +10932,24 @@ public class DriverController {
     }
     private String getToken(String header) { return header.substring(7); }
 
-    // 1. CRÉATION DIRECTE (Manager)
-    @PostMapping("/drivers")
+    // 1. CRÉATION DIRECTE (Nouvelle Route)
+    @PostMapping("/fleets/{fleetId}/drivers/register")
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('FLEET_MANAGER')")
-    @Operation(summary = "Créer un nouveau Chauffeur", description = "Crée le compte Auth + Profil local + Lien Flotte.")
+    @Operation(summary = "Créer un nouveau Chauffeur", description = "Crée le compte Auth + Profil local.")
     public Mono<Driver> register(
+            @PathVariable UUID fleetId,
             @Valid @RequestBody DriverRegistrationRequest request,
             Authentication auth
     ) {
-        return driverUseCase.registerDriver(request, getUser(auth).id());
+        return driverUseCase.registerDriver(fleetId, request, getUser(auth).id());
     }
 
-    // 2. RECRUTEMENT (Manager)
-    @PostMapping("/fleets/{fleetId}/drivers")
+    // 2. RECRUTEMENT (Route Renommée)
+    @PostMapping("/fleets/{fleetId}/drivers/recruit")
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasRole('FLEET_MANAGER')")
-    @Operation(summary = "Recruter un Chauffeur existant", description = "Recherche par email/username/tel et ajoute à la flotte.")
+    @Operation(summary = "Recruter un Chauffeur existant", description = "Recherche par identifiant et ajoute à la flotte.")
     public Mono<Void> recruit(
             @PathVariable UUID fleetId,
             @Valid @RequestBody RecruitDriverRequest request,
@@ -10729,7 +10959,7 @@ public class DriverController {
         return driverUseCase.recruitDriver(fleetId, request.identifier(), getUser(auth).id(), getToken(authHeader));
     }
 
-    // 3. LISTING (Admin/Manager)
+    // 3. LISTING
     @GetMapping("/drivers")
     @Operation(summary = "Lister les chauffeurs", description = "Admin: Tout. Manager: Requis param 'fleetId'.")
     public Flux<Driver> list(
@@ -10739,11 +10969,11 @@ public class DriverController {
         return driverUseCase.getDrivers(fleetId, getUser(auth).id(), isAdmin(auth));
     }
 
-    // 4. RETRAIT (Manager)
+    // 4. RETRAIT
     @DeleteMapping("/fleets/{fleetId}/drivers/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('FLEET_MANAGER')")
-    @Operation(summary = "Renvoyer un chauffeur", description = "Retire le chauffeur de la flotte (ne supprime pas le compte).")
+    @Operation(summary = "Renvoyer un chauffeur", description = "Retire le chauffeur de la flotte.")
     public Mono<Void> remove(
             @PathVariable UUID fleetId,
             @PathVariable UUID userId,
@@ -10758,7 +10988,7 @@ public class DriverController {
         return driverUseCase.getDriverById(userId);
     }
 
-    // 6. ASSIGNATION VÉHICULE
+    // 6. ASSIGNATION
     @PostMapping("/drivers/{userId}/assign-vehicle")
     public Mono<Void> assign(@PathVariable UUID userId, @RequestBody VehicleAssignRequest req, Authentication auth) {
         return driverUseCase.assignVehicle(userId, req.vehicleId(), getUser(auth).id());
@@ -10770,6 +11000,79 @@ public class DriverController {
     }
 
     public record VehicleAssignRequest(UUID vehicleId) {}
+}```
+
+---
+### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/TripController.java`
+```java
+package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
+
+import com.yowyob.fleet.domain.model.Trip;
+import com.yowyob.fleet.domain.ports.in.ManageTripUseCase;
+import com.yowyob.fleet.domain.ports.out.AuthPort;
+import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.StartTripRequest;
+import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.TelemetryRequest;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
+
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/v1/trips")
+@RequiredArgsConstructor
+@Tag(name = "09. Trips", description = "Gestion des courses et télémétrie")
+@SecurityRequirement(name = "bearerAuth")
+public class TripController {
+
+    private final ManageTripUseCase tripUseCase;
+
+    private UUID getUserId(Authentication auth) {
+        return ((AuthPort.UserDetail) auth.getPrincipal()).id();
+    }
+
+    @PostMapping("/start")
+    @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('FLEET_DRIVER')")
+    @Operation(summary = "Démarrer une course (Driver)")
+    public Mono<Trip> start(@RequestBody StartTripRequest request, Authentication auth) {
+        return tripUseCase.startTrip(getUserId(auth), request.vehicleId());
+    }
+
+    @PostMapping("/{id}/telemetry")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PreAuthorize("hasRole('FLEET_DRIVER')")
+    @Operation(summary = "Envoyer un point GPS (Driver)")
+    public Mono<Void> telemetry(@PathVariable UUID id, @RequestBody TelemetryRequest request) {
+        return tripUseCase.sendTelemetry(id, request.lat(), request.lng(), request.speed());
+    }
+
+    @PostMapping("/{id}/end")
+    @PreAuthorize("hasRole('FLEET_DRIVER')")
+    @Operation(summary = "Terminer une course (Driver)")
+    public Mono<Trip> end(@PathVariable UUID id) {
+        return tripUseCase.endTrip(id);
+    }
+
+    @GetMapping("/current")
+    @PreAuthorize("hasRole('FLEET_DRIVER')")
+    @Operation(summary = "Récupérer ma course en cours (Driver)")
+    public Mono<Trip> getCurrent(Authentication auth) {
+        return tripUseCase.getCurrentTrip(getUserId(auth));
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'FLEET_ADMIN')")
+    @Operation(summary = "Détail d'une course (Manager)")
+    public Mono<Trip> getById(@PathVariable UUID id) {
+        return tripUseCase.getTripById(id);
+    }
 }```
 
 ---
@@ -10797,7 +11100,7 @@ package com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+// import jakarta.validation.constraints.NotNull; // Supprimé car plus utilisé ici
 import java.util.UUID;
 
 /**
@@ -10827,9 +11130,8 @@ public record DriverRegistrationRequest(
     String lastName,
 
     // --- Informations métier (Base locale Fleet) ---
-
-    @NotNull(message = "L'ID de la flotte est obligatoire")
-    UUID fleetId,
+    
+    // fleetId SUPPRIMÉ : Il viendra de l'URL
 
     @NotBlank(message = "Le numéro de permis de conduire est obligatoire")
     String licenceNumber,
@@ -10920,6 +11222,19 @@ public record FleetResponse(
     LocalDate creationDate,
     UUID managerUserId,
     Integer vehicleCount
+) {}```
+
+---
+### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/dto/StartTripRequest.java`
+```java
+package com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.UUID;
+
+public record StartTripRequest(
+    @Schema(description = "ID du véhicule. Optionnel si le chauffeur a déjà un véhicule assigné.", example = "123e4567-e89b-12d3-a456-426614174000")
+    UUID vehicleId
 ) {}```
 
 ---
@@ -11017,6 +11332,27 @@ public record LoginRequest(
     
     @NotBlank(message = "Le mot de passe est obligatoire") 
     String password
+) {}```
+
+---
+### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/dto/TelemetryRequest.java`
+```java
+package com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
+
+public record TelemetryRequest(
+    @NotNull
+    @Schema(description = "Latitude GPS", example = "3.8480")
+    Double lat,
+
+    @NotNull
+    @Schema(description = "Longitude GPS", example = "11.5021")
+    Double lng,
+
+    @Schema(description = "Vitesse instantanée en km/h", example = "45.5")
+    Double speed
 ) {}```
 
 ---
@@ -11818,6 +12154,28 @@ public record Driver(
 ) {}```
 
 ---
+### Fichier : `./src/main/java/com/yowyob/fleet/domain/model/Trip.java`
+```java
+package com.yowyob.fleet.domain.model;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.UUID;
+
+public record Trip(
+    UUID id,
+    UUID vehicleId,
+    UUID driverId,
+    String status,          // SCHEDULED, ONGOING, COMPLETED, CANCELLED
+    LocalDate startDate,
+    LocalTime startTime,
+    LocalDate endDate,
+    LocalTime endTime,
+    Double distanceKm,
+    Integer durationMinutes
+) {}```
+
+---
 ### Fichier : `./src/main/java/com/yowyob/fleet/domain/model/Fleet.java`
 ```java
 package com.yowyob.fleet.domain.model;
@@ -11833,6 +12191,26 @@ public record Fleet(
     Instant createdAt,
     Integer vehicleCount
 ) {}```
+
+---
+### Fichier : `./src/main/java/com/yowyob/fleet/domain/ports/in/ManageTripUseCase.java`
+```java
+package com.yowyob.fleet.domain.ports.in;
+
+import com.yowyob.fleet.domain.model.Trip;
+import reactor.core.publisher.Mono;
+import java.util.UUID;
+
+public interface ManageTripUseCase {
+    // Commandes (Driver)
+    Mono<Trip> startTrip(UUID driverId, UUID vehicleId); // vehicleId optionnel si déjà assigné
+    Mono<Void> sendTelemetry(UUID tripId, Double lat, Double lng, Double speed);
+    Mono<Trip> endTrip(UUID tripId);
+
+    // Requêtes (Getters)
+    Mono<Trip> getCurrentTrip(UUID driverId);
+    Mono<Trip> getTripById(UUID tripId);
+}```
 
 ---
 ### Fichier : `./src/main/java/com/yowyob/fleet/domain/ports/in/AuthUseCase.java`
@@ -11940,8 +12318,8 @@ import reactor.core.publisher.Mono;
 import java.util.UUID;
 
 public interface ManageDriverUseCase {
-    // Création complète (Manager)
-    Mono<Driver> registerDriver(DriverRegistrationRequest request, UUID managerId);
+    // Création complète (Manager) : fleetId passé explicitement
+    Mono<Driver> registerDriver(UUID fleetId, DriverRegistrationRequest request, UUID managerId);
     
     // Recrutement existant (Manager)
     Mono<Void> recruitDriver(UUID fleetId, String identifier, UUID managerId, String token);
@@ -12059,6 +12437,21 @@ public interface VehiclePersistencePort {
      * Deletes all local records associated with a vehicle ID.
      */
     Mono<Void> deleteLocalData(UUID id);
+}```
+
+---
+### Fichier : `./src/main/java/com/yowyob/fleet/domain/ports/out/DistanceCalculatorPort.java`
+```java
+package com.yowyob.fleet.domain.ports.out;
+
+import com.yowyob.fleet.domain.model.GeofencePoint;
+import java.util.List;
+
+public interface DistanceCalculatorPort {
+    /**
+     * Calcule la distance totale en KM à partir d'une liste ordonnée de points GPS.
+     */
+    Double calculateTotalDistanceKm(List<GeofencePoint> points);
 }```
 
 ---
@@ -12373,6 +12766,143 @@ public class AuthService implements AuthUseCase {
 }```
 
 ---
+### Fichier : `./src/main/java/com/yowyob/fleet/application/service/TripService.java`
+```java
+package com.yowyob.fleet.application.service;
+
+import com.yowyob.fleet.domain.model.Trip;
+import com.yowyob.fleet.domain.ports.in.ManageTripUseCase;
+import com.yowyob.fleet.domain.ports.out.DistanceCalculatorPort;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.RedisTelemetryAdapter;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.TripEntity;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.TripR2dbcRepository;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.VehicleLocalR2dbcRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Mono;
+
+import java.time.Instant;
+import java.util.UUID;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class TripService implements ManageTripUseCase {
+
+    private final TripR2dbcRepository tripRepository;
+    private final VehicleLocalR2dbcRepository vehicleRepository;
+    private final RedisTelemetryAdapter redisTelemetry;
+    private final DistanceCalculatorPort distanceCalculator;
+
+    @Override
+    @Transactional
+    public Mono<Trip> startTrip(UUID driverId, UUID vehicleId) {
+        // 1. Vérifications : Chauffeur déjà en course ? Véhicule déjà pris ?
+        return tripRepository.findByDriverIdAndStatus(driverId, "ONGOING")
+            .flatMap(t -> Mono.error(new IllegalStateException("Vous avez déjà une course en cours !")))
+            .switchIfEmpty(
+                vehicleRepository.findById(vehicleId)
+                    .filter(v -> "AVAILABLE".equals(v.getStatus()))
+                    .switchIfEmpty(Mono.error(new IllegalStateException("Véhicule non disponible ou inexistant")))
+            )
+            .then(Mono.defer(() -> {
+                // 2. Création du Trip
+                TripEntity trip = new TripEntity();
+                trip.setId(UUID.randomUUID());
+                trip.setDriverId(driverId);
+                trip.setVehicleId(vehicleId);
+                trip.setStartTime(Instant.now()); // Adapte selon ton Entité (LocalTime vs Instant)
+                trip.setStartDate(java.time.LocalDate.now());
+                trip.setStatus("ONGOING");
+                trip.setNew(true);
+
+                // 3. Mise à jour Véhicule -> ON_TRIP
+                return vehicleRepository.findById(vehicleId)
+                        .flatMap(v -> {
+                            v.setStatus("ON_TRIP");
+                            v.setNew(false);
+                            return vehicleRepository.save(v);
+                        })
+                        .then(tripRepository.save(trip));
+            }))
+            .map(this::mapToDomain); // TODO: Créer mapper ou méthode privée
+    }
+
+    @Override
+    public Mono<Void> sendTelemetry(UUID tripId, Double lat, Double lng, Double speed) {
+        // 1. Mise à jour Redis (Historique pour distance)
+        return redisTelemetry.addPoint(tripId, lat, lng)
+            // 2. TODO: Mise à jour OperationalParams dans Postgres (Dernière position)
+            // Pour l'instant on fait juste Redis pour valider le flux
+            .then();
+    }
+
+    @Override
+    @Transactional
+    public Mono<Trip> endTrip(UUID tripId) {
+        return tripRepository.findById(tripId)
+            .filter(t -> "ONGOING".equals(t.getStatus()))
+            .switchIfEmpty(Mono.error(new IllegalStateException("Trajet introuvable ou déjà terminé")))
+            .flatMap(trip -> {
+                // 1. Calcul Distance via Redis
+                return redisTelemetry.getTripPath(tripId)
+                    .collectList()
+                    .map(points -> distanceCalculator.calculateTotalDistanceKm(points))
+                    .flatMap(distance -> {
+                        // 2. Mise à jour Trip
+                        trip.setEndTime(Instant.now()); // Adapte selon Entité
+                        trip.setEndDate(java.time.LocalDate.now());
+                        trip.setStatus("COMPLETED");
+                        trip.setDistanceKm(distance); // Assure-toi que l'entité a ce champ
+                        trip.setNew(false);
+
+                        // 3. Libération Véhicule
+                        return vehicleRepository.findById(trip.getVehicleId())
+                                .flatMap(v -> {
+                                    v.setStatus("AVAILABLE");
+                                    v.setNew(false);
+                                    return vehicleRepository.save(v);
+                                })
+                                .then(tripRepository.save(trip))
+                                // 4. Nettoyage Redis
+                                .doOnSuccess(t -> redisTelemetry.clearTripPath(tripId).subscribe());
+                    });
+            })
+            .map(this::mapToDomain);
+    }
+
+    @Override
+    public Mono<Trip> getCurrentTrip(UUID driverId) {
+        return tripRepository.findByDriverIdAndStatus(driverId, "ONGOING")
+                .map(this::mapToDomain);
+    }
+
+    @Override
+    public Mono<Trip> getTripById(UUID tripId) {
+        return tripRepository.findById(tripId)
+                .map(this::mapToDomain);
+    }
+
+    // Helper Mapper Rapide
+    private Trip mapToDomain(TripEntity e) {
+        return new Trip(
+            e.getId(), 
+            e.getVehicleId(),
+            e.getDriverId(),
+            e.getStatus(),
+            e.getStartDate(),
+            e.getStartTime(),
+            e.getEndDate(),
+            e.getEndTime(),
+            e.getDistanceKm(),
+            e.getDurationMinutes()
+        );
+    }
+}```
+
+---
 ### Fichier : `./src/main/java/com/yowyob/fleet/application/service/VehicleService.java`
 ```java
 package com.yowyob.fleet.application.service;
@@ -12677,14 +13207,15 @@ public class DriverService implements ManageDriverUseCase {
 
     private final DriverPersistencePort driverPersistencePort;
     private final AuthPort authPort;
-    private final FleetR2dbcRepository fleetRepository; // Pour vérifier la propriété
+    private final FleetR2dbcRepository fleetRepository; 
 
     private static final String SERVICE_NAME = "FLEET_MANAGEMENT";
 
     // --- 1. CRÉATION COMPLÈTE ---
     @Override
-    public Mono<Driver> registerDriver(DriverRegistrationRequest request, UUID managerId) {
-        return checkFleetOwnership(request.fleetId(), managerId)
+    public Mono<Driver> registerDriver(UUID fleetId, DriverRegistrationRequest request, UUID managerId) {
+        // Utilisation du fleetId passé en argument
+        return checkFleetOwnership(fleetId, managerId)
             .then(Mono.defer(() -> {
                 AuthUseCase.RegisterCommand command = new AuthUseCase.RegisterCommand(
                     request.username(), request.password(), request.email(), request.phone(),
@@ -12695,11 +13226,11 @@ public class DriverService implements ManageDriverUseCase {
             .flatMap(authRes -> {
                 Driver localDriver = new Driver(
                     authRes.user().id(),
-                    request.fleetId(),
+                    fleetId, // ID venant de l'URL
                     request.licenceNumber(),
                     "ACTIVE",
                     null,
-                    ""
+                    request.photoUrl() // Assure-toi de mapper la photo si dispo
                 );
                 return driverPersistencePort.save(localDriver);
             });
@@ -12709,10 +13240,10 @@ public class DriverService implements ManageDriverUseCase {
     @Override
     public Mono<Void> recruitDriver(UUID fleetId, String identifier, UUID managerId, String token) {
         return checkFleetOwnership(fleetId, managerId)
-            .thenMany(authPort.getUsersByService(SERVICE_NAME, token)) // Récupère tout
-            .filter(u -> isMatch(u, identifier)) // Filtre localement
-            .filter(u -> u.roles().contains("FLEET_DRIVER")) // Vérifie que c'est un chauffeur
-            .next() // Prend le premier
+            .thenMany(authPort.getUsersByService(SERVICE_NAME, token)) 
+            .filter(u -> isMatch(u, identifier)) 
+            .filter(u -> u.roles().contains("FLEET_DRIVER")) 
+            .next() 
             .switchIfEmpty(Mono.error(new RuntimeException("Aucun chauffeur trouvé avec cet identifiant : " + identifier)))
             .flatMap(user -> driverPersistencePort.updateFleetAssignment(user.id(), fleetId));
     }
@@ -12729,9 +13260,7 @@ public class DriverService implements ManageDriverUseCase {
         if (isAdmin) {
             return fleetId != null ? driverPersistencePort.findAllByFleetId(fleetId) : driverPersistencePort.findAll();
         }
-        // Manager : Doit fournir un fleetId ET posséder la flotte
         if (fleetId == null) {
-            // TODO: On pourrait implémenter "toutes mes flottes" ici, mais on commence simple
             return Flux.error(new IllegalArgumentException("fleetId obligatoire pour les managers"));
         }
         return checkFleetOwnership(fleetId, requesterId)
@@ -12740,7 +13269,6 @@ public class DriverService implements ManageDriverUseCase {
 
     @Override
     public Mono<Driver> getDriverById(UUID userId) {
-        // TODO: Ajouter sécurité (Un manager ne devrait voir que SES chauffeurs)
         return driverPersistencePort.findById(userId);
     }
 
@@ -12753,7 +13281,6 @@ public class DriverService implements ManageDriverUseCase {
 
     @Override
     public Mono<Void> assignVehicle(UUID userId, UUID vehicleId, UUID requesterId) {
-        // TODO: Vérifier que le véhicule appartient bien au manager (via la flotte)
         return driverPersistencePort.updateVehicleAssignment(userId, vehicleId);
     }
 

@@ -24,14 +24,15 @@ public class DriverService implements ManageDriverUseCase {
 
     private final DriverPersistencePort driverPersistencePort;
     private final AuthPort authPort;
-    private final FleetR2dbcRepository fleetRepository; // Pour vérifier la propriété
+    private final FleetR2dbcRepository fleetRepository; 
 
     private static final String SERVICE_NAME = "FLEET_MANAGEMENT";
 
     // --- 1. CRÉATION COMPLÈTE ---
     @Override
-    public Mono<Driver> registerDriver(DriverRegistrationRequest request, UUID managerId) {
-        return checkFleetOwnership(request.fleetId(), managerId)
+    public Mono<Driver> registerDriver(UUID fleetId, DriverRegistrationRequest request, UUID managerId) {
+        // Utilisation du fleetId passé en argument
+        return checkFleetOwnership(fleetId, managerId)
             .then(Mono.defer(() -> {
                 AuthUseCase.RegisterCommand command = new AuthUseCase.RegisterCommand(
                     request.username(), request.password(), request.email(), request.phone(),
@@ -42,11 +43,11 @@ public class DriverService implements ManageDriverUseCase {
             .flatMap(authRes -> {
                 Driver localDriver = new Driver(
                     authRes.user().id(),
-                    request.fleetId(),
+                    fleetId, // ID venant de l'URL
                     request.licenceNumber(),
                     "ACTIVE",
                     null,
-                    ""
+                    request.photoUrl() // Assure-toi de mapper la photo si dispo
                 );
                 return driverPersistencePort.save(localDriver);
             });
@@ -56,10 +57,10 @@ public class DriverService implements ManageDriverUseCase {
     @Override
     public Mono<Void> recruitDriver(UUID fleetId, String identifier, UUID managerId, String token) {
         return checkFleetOwnership(fleetId, managerId)
-            .thenMany(authPort.getUsersByService(SERVICE_NAME, token)) // Récupère tout
-            .filter(u -> isMatch(u, identifier)) // Filtre localement
-            .filter(u -> u.roles().contains("FLEET_DRIVER")) // Vérifie que c'est un chauffeur
-            .next() // Prend le premier
+            .thenMany(authPort.getUsersByService(SERVICE_NAME, token)) 
+            .filter(u -> isMatch(u, identifier)) 
+            .filter(u -> u.roles().contains("FLEET_DRIVER")) 
+            .next() 
             .switchIfEmpty(Mono.error(new RuntimeException("Aucun chauffeur trouvé avec cet identifiant : " + identifier)))
             .flatMap(user -> driverPersistencePort.updateFleetAssignment(user.id(), fleetId));
     }
@@ -76,9 +77,7 @@ public class DriverService implements ManageDriverUseCase {
         if (isAdmin) {
             return fleetId != null ? driverPersistencePort.findAllByFleetId(fleetId) : driverPersistencePort.findAll();
         }
-        // Manager : Doit fournir un fleetId ET posséder la flotte
         if (fleetId == null) {
-            // TODO: On pourrait implémenter "toutes mes flottes" ici, mais on commence simple
             return Flux.error(new IllegalArgumentException("fleetId obligatoire pour les managers"));
         }
         return checkFleetOwnership(fleetId, requesterId)
@@ -87,7 +86,6 @@ public class DriverService implements ManageDriverUseCase {
 
     @Override
     public Mono<Driver> getDriverById(UUID userId) {
-        // TODO: Ajouter sécurité (Un manager ne devrait voir que SES chauffeurs)
         return driverPersistencePort.findById(userId);
     }
 
@@ -100,7 +98,6 @@ public class DriverService implements ManageDriverUseCase {
 
     @Override
     public Mono<Void> assignVehicle(UUID userId, UUID vehicleId, UUID requesterId) {
-        // TODO: Vérifier que le véhicule appartient bien au manager (via la flotte)
         return driverPersistencePort.updateVehicleAssignment(userId, vehicleId);
     }
 
