@@ -79,10 +79,6 @@
     *   *Note : Faire un Controller et un Service dédiés à cette tâche.*
 - [ ] **Tâche 6.2 :** Endpoints Stats Flotte (Fleet Manager) : Km parcourus par flotte, taux d'occupation des véhicules, nombre de chauffeurs, nombre de km parcourus par chauffeur, etc.
 
-#### Module 7 : Gestion Média (Véhicules)
-- [ ] **Tâche 7.1 :** Test et compréhension du service : Se rapprocher de Nathan et comprendre le fonctionnement du service média.
-- [ ] **Tâche 7.2 :** Intégration : Créer les endpoints de base pour consommer le service dans notre projet (Upload photo véhicule).
-
-#### Module 8 : Paiements
+#### Module 7 : Paiements
 - [ ] **Tâche 8.1 :** Test et compréhension du service : Se rapprocher de Nathan et comprendre le fonctionnement du service paiement.
 - [ ] **Tâche 8.2 :** Intégration : Créer les endpoints de base pour consommer le service dans notre projet.
