@@ -1,5 +1,5 @@
 ﻿# Contexte du Projet : Fleet & Geofence API
-GÃ©nÃ©rÃ© le : 01/28/2026 17:11:02
+GÃ©nÃ©rÃ© le : 01/28/2026 17:14:34
 Framework : Spring Boot WebFlux (Reactive)
 
 ## 1. Arborescence du Projet
@@ -13,6 +13,7 @@ C:.
 ª   import_context_window.ps1
 ª   pom.xml
 ª   project_context.txt
+ª   project_context_1.txt
 ª   Readme.md
 ª   reset_db.bat
 ª   reset_db.sh

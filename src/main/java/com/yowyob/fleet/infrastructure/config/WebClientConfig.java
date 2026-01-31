@@ -9,7 +9,8 @@ import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.AuthApiClient;
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.VehicleApiClient;
-import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.GeofenceApiClient; 
+import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.GeofenceApiClient;
+import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.PaymentApiClient; // NOUVEAU
 
 @Configuration
 public class WebClientConfig {
@@ -41,7 +42,12 @@ public class WebClientConfig {
         WebClient webClient = builder.baseUrl(url).build();
         return createProxy(webClient, GeofenceApiClient.class);
     }
-
+    @Bean
+    public PaymentApiClient paymentApiClient(WebClient.Builder builder,
+                                             @Value("${application.external.payment-service-url}") String url) {
+        WebClient webClient = builder.baseUrl(url).build();
+        return createProxy(webClient, PaymentApiClient.class);
+    }
     /**
      * Helper pour éviter la répétition du code de factory
      */
