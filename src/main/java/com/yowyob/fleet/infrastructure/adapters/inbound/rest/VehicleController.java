@@ -26,7 +26,7 @@ public class VehicleController {
 
     @PostMapping("/fleets/{fleetId}/vehicles")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('FLEET_ADMIN') or hasRole('ADMIN')")
     @Operation(summary = "Ajouter un véhicule à une flotte (ADMIN)")
     public Mono<Vehicle> addVehicle(@PathVariable UUID fleetId, @Valid @RequestBody VehicleRegistrationRequest request) {
         Vehicle shell = new Vehicle(request.vehicleId(), fleetId, null, request.vehicleTypeId(), 
@@ -43,7 +43,7 @@ public class VehicleController {
 
     @DeleteMapping("/vehicles/{vehicleId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')  or hasRole('ADMIN')")
     public Mono<Void> delete(@PathVariable UUID vehicleId) {
         return vehicleUseCase.removeVehicleFromFleet(vehicleId);
     }

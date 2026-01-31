@@ -42,7 +42,7 @@ public class DriverController {
     // 1. CRÉATION DIRECTE (Manager)
     @PostMapping("/drivers")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('FLEET_MANAGER')")
+    @PreAuthorize("hasRole('FLEET_MANAGER')  or hasRole('ADMIN')")
     @Operation(summary = "Créer un nouveau Chauffeur", description = "Crée le compte Auth + Profil local + Lien Flotte.")
     public Mono<Driver> register(
             @Valid @RequestBody DriverRegistrationRequest request,
@@ -54,7 +54,7 @@ public class DriverController {
     // 2. RECRUTEMENT (Manager)
     @PostMapping("/fleets/{fleetId}/drivers")
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasRole('FLEET_MANAGER')")
+    @PreAuthorize("hasRole('FLEET_MANAGER')  or hasRole('ADMIN')")
     @Operation(summary = "Recruter un Chauffeur existant", description = "Recherche par email/username/tel et ajoute à la flotte.")
     public Mono<Void> recruit(
             @PathVariable UUID fleetId,
@@ -78,7 +78,7 @@ public class DriverController {
     // 4. RETRAIT (Manager)
     @DeleteMapping("/fleets/{fleetId}/drivers/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('FLEET_MANAGER')")
+    @PreAuthorize("hasRole('FLEET_MANAGER')  or hasRole('ADMIN')")
     @Operation(summary = "Renvoyer un chauffeur", description = "Retire le chauffeur de la flotte (ne supprime pas le compte).")
     public Mono<Void> remove(
             @PathVariable UUID fleetId,
