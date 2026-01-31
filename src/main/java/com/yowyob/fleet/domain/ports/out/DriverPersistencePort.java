@@ -9,10 +9,9 @@ import java.util.UUID;
 public interface DriverPersistencePort {
     Mono<Driver> save(Driver driver);
     Mono<Driver> findById(UUID userId);
+    Mono<Driver> findByAssignedVehicleId(UUID vehicleId); 
     Flux<Driver> findAllByFleetId(UUID fleetId);
     Mono<Void> updateVehicleAssignment(UUID userId, UUID vehicleId);
-    
-    // NOUVEAU : Gérer l'appartenance à une flotte
     Mono<Void> updateFleetAssignment(UUID driverId, UUID fleetId);
-    Flux<Driver> findAll(); // Pour l'admin
+    Flux<Driver> findAll();
 }

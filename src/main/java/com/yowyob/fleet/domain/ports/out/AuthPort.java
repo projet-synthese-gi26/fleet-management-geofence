@@ -1,7 +1,7 @@
 package com.yowyob.fleet.domain.ports.out;
 
 import com.yowyob.fleet.domain.ports.in.AuthUseCase;
-import reactor.core.publisher.Flux; // Import Flux
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.UUID;
@@ -16,12 +16,17 @@ public interface AuthPort {
     Mono<UserDetail> getUserProfile(String token);
     Mono<UserDetail> getUserById(UUID userId, String token);
     
-    // NOUVEAU : Liste complète pour synchro
+    // Listes
     Flux<UserDetail> getUsersByService(String serviceName, String token);
+    Flux<UserDetail> getAllUsers(String token); // Pour Super Admin
 
     Mono<UserDetail> updateUserProfile(UUID userId, String token, AuthUseCase.UpdateProfileCommand command);
     Mono<Void> changePassword(UUID userId, String token, String currentPwd, String newPwd);
     Mono<Void> deleteRemoteAccount(UUID userId, String token);
+    
+    // NOUVEAU : Soft Delete (Changement de service)
+    Mono<Void> moveUserToService(UUID userId, String newServiceName, String token);
+
     Mono<Void> updateProfilePicture(UUID userId, String token, AuthUseCase.FileContent file);
     
     Mono<Boolean> roleExists(String roleName);

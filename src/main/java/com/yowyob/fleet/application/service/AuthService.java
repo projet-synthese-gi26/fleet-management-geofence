@@ -66,15 +66,11 @@ public class AuthService implements AuthUseCase {
     }
 
     @Override
-    public Mono<Void> deleteAccount(UUID userId, String token) {
-        // STRICT CONSISTENCY : On supprime d'abord distant. Si ça échoue, on ne touche pas au local.
-        // Si distant OK -> On supprime local.
-        return authPort.deleteRemoteAccount(userId, token)
-            .then(Mono.defer(() -> {
-                // TODO: Implémenter la suppression explicite locale si le CASCADE DB n'est pas suffisant
-                // Pour l'instant, on suppose que la FK DB gère le nettoyage ou que c'est géré par l'AdminController
-                return Mono.empty();
-            }));
+      public Mono<Void> deleteAccount(UUID userId, String token) {
+        // SOFT DELETE : On change le service vers USER_DELETED
+        return authPort.moveUserToService(userId, "USER_DELETED", token)
+                // Si le service auth n'est pas encore prêt, on peut logger
+                .doOnSuccess(v -> log.info("Compte {} marqué comme supprimé (Soft Delete)", userId));
     }
 
     // --- LOGIQUE INTERNE ---

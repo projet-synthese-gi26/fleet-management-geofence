@@ -34,18 +34,10 @@ public class DriverEntity implements Persistable<UUID> {
     private String photoUrl;
 
     @Transient
-    private boolean isNewRecord = false; // Renommé ici
-
-    public void setNewRecord(boolean isNew) { this.isNewRecord = isNew; }
-    @Transient
     private boolean isNew = false;
 
-    // Constructeur pour création
-    public DriverEntity(UUID userId, String licenceNumber, String status, UUID assignedVehicleId) {
-        this.userId = userId;
-        this.licenceNumber = licenceNumber;
-        this.status = status;
-        this.assignedVehicleId = assignedVehicleId;
+    // Méthode utilitaire explicite pour forcer l'INSERT
+    public void markAsNew() {
         this.isNew = true;
     }
 
@@ -56,6 +48,7 @@ public class DriverEntity implements Persistable<UUID> {
 
     @Override
     public boolean isNew() {
+        // Si l'ID est null (cas rare ici car on le set manuellement) OU si le flag est true
         return isNew || userId == null;
     }
 }

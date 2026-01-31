@@ -8,10 +8,12 @@ import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PostExchange;
 import org.springframework.web.service.annotation.PutExchange;
+import org.springframework.web.service.annotation.PatchExchange; // Ajout
 
 import reactor.core.publisher.Flux; 
 import reactor.core.publisher.Mono;
 import java.util.List;
+import java.util.Map; // Ajout
 import java.util.UUID;
 
 @HttpExchange("/api")
@@ -32,15 +34,21 @@ public interface AuthApiClient {
 
     // --- USERS ---
     
+    @GetExchange("/users")
+    Flux<UserDetailResponse> getAllUsers(@RequestHeader("Authorization") String bearerToken); // Pour Super Admin
+
     @GetExchange("/users/{id}")
     Mono<UserDetailResponse> getUserById(@PathVariable UUID id, @RequestHeader("Authorization") String bearerToken);
 
-    // NOUVEAU : Récupérer les users par service (Retourne un Flux/List)
     @GetExchange("/users/service/{service}")
     Flux<UserDetailResponse> getUsersByService(@PathVariable String service, @RequestHeader("Authorization") String bearerToken);
 
     @PutExchange("/users/{id}")
     Mono<UserDetailResponse> updateUser(@PathVariable UUID id, @RequestBody UpdateUserRequest request);
+
+    // NOUVEAU : Patch générique pour update partiel (ex: service)
+    @PatchExchange("/users/{id}")
+    Mono<UserDetailResponse> patchUser(@PathVariable UUID id, @RequestBody Map<String, Object> updates, @RequestHeader("Authorization") String bearerToken);
 
     @PutExchange("/users/{id}/password")
     Mono<Void> changePassword(@PathVariable UUID id, @RequestBody ChangePasswordRequest request);
@@ -49,7 +57,7 @@ public interface AuthApiClient {
     Mono<Void> deleteUser(@PathVariable UUID id, @RequestHeader("Authorization") String bearerToken);
 
 
-    // DTOs (Inchangés)
+    // DTOs
     record LoginRequest(String identifier, String password) {}
     record RefreshRequest(String refreshToken) {}
     

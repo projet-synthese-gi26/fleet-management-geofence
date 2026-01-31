@@ -1,6 +1,7 @@
 package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
 
 import com.yowyob.fleet.domain.model.Vehicle;
+import com.yowyob.fleet.domain.model.VehicleParameters;
 import com.yowyob.fleet.domain.ports.in.ManageVehicleUseCase;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,25 +27,46 @@ public class VehicleController {
 
     @PostMapping("/fleets/{fleetId}/vehicles")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('FLEET_ADMIN') or hasRole('ADMIN')")
-    @Operation(summary = "Ajouter un véhicule à une flotte (ADMIN)")
-    public Mono<Vehicle> addVehicle(@PathVariable UUID fleetId, @Valid @RequestBody VehicleRegistrationRequest request) {
-        Vehicle shell = new Vehicle(request.vehicleId(), fleetId, null, request.vehicleTypeId(), 
-                                    null, null, null, null, null, null, "AVAILABLE", null, null, null, null);
-        return vehicleUseCase.addVehicleToFleet(shell);
+    @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'FLEET_ADMIN')")
+    public Mono<Vehicle> createVehicle(
+            @PathVariable UUID fleetId, 
+            @Valid @RequestBody VehicleRegistrationRequest request
+    ) {
+        return vehicleUseCase.createVehicle(fleetId, request);
     }
 
     @GetMapping("/vehicles/{vehicleId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'FLEET_MANAGER')")
-    @Operation(summary = "Détails complets aggrégés (Local + Remote)")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FLEET_MANAGER', 'FLEET_DRIVER')")
     public Mono<Vehicle> getVehicle(@PathVariable UUID vehicleId) {
         return vehicleUseCase.getVehicleDetails(vehicleId);
     }
 
     @DeleteMapping("/vehicles/{vehicleId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN')  or hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FLEET_MANAGER')")
     public Mono<Void> delete(@PathVariable UUID vehicleId) {
         return vehicleUseCase.removeVehicleFromFleet(vehicleId);
+    }
+
+    // --- NOUVEAUX ENDPOINTS ---
+
+    @PutMapping("/vehicles/{vehicleId}/financial-parameters")
+    @PreAuthorize("hasRole('FLEET_MANAGER')")
+    @Operation(summary = "Mettre à jour les infos financières (Assurance, Achat)")
+    public Mono<Void> updateFinancial(
+            @PathVariable UUID vehicleId,
+            @RequestBody VehicleParameters.Financial params
+    ) {
+        return vehicleUseCase.updateFinancialParameters(vehicleId, params);
+    }
+
+    @PutMapping("/vehicles/{vehicleId}/maintenance-parameters")
+    @PreAuthorize("hasRole('FLEET_MANAGER')")
+    @Operation(summary = "Mettre à jour les infos maintenance (Révision, État)")
+    public Mono<Void> updateMaintenance(
+            @PathVariable UUID vehicleId,
+            @RequestBody VehicleParameters.Maintenance params
+    ) {
+        return vehicleUseCase.updateMaintenanceParameters(vehicleId, params);
     }
 }

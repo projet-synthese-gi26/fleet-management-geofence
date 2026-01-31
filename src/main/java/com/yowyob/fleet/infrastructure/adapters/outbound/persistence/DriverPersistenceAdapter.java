@@ -26,12 +26,12 @@ public class DriverPersistenceAdapter implements DriverPersistencePort {
                     existing.setLicenceNumber(driver.licenceNumber());
                     existing.setStatus(driver.status());
                     existing.setAssignedVehicleId(driver.assignedVehicleId());
-                    existing.setFleetId(driver.fleetId()); // Ajouté
+                    existing.setFleetId(driver.fleetId());
                     return existing;
                 })
                 .switchIfEmpty(Mono.defer(() -> {
                     DriverEntity newEntity = mapper.toEntity(driver);
-                    newEntity.setNewRecord(true);
+                    newEntity.markAsNew(); 
                     return Mono.just(newEntity);
                 }))
                 .flatMap(repository::save)
@@ -43,7 +43,6 @@ public class DriverPersistenceAdapter implements DriverPersistencePort {
         return repository.findById(userId)
                 .flatMap(entity -> {
                     entity.setAssignedVehicleId(vehicleId);
-                    entity.setNewRecord(false);
                     return repository.save(entity);
                 }).then();
     }
@@ -53,11 +52,9 @@ public class DriverPersistenceAdapter implements DriverPersistencePort {
         return repository.findById(driverId)
                 .flatMap(entity -> {
                     entity.setFleetId(fleetId);
-                    // Si on retire de la flotte (fleetId null), on retire aussi le véhicule par sécurité
                     if (fleetId == null) {
                         entity.setAssignedVehicleId(null);
                     }
-                    entity.setNewRecord(false);
                     return repository.save(entity);
                 }).then();
     }
@@ -65,6 +62,11 @@ public class DriverPersistenceAdapter implements DriverPersistencePort {
     @Override
     public Mono<Driver> findById(UUID userId) {
         return repository.findById(userId).map(mapper::toDomain);
+    }
+
+    @Override
+    public Mono<Driver> findByAssignedVehicleId(UUID vehicleId) {
+        return repository.findByAssignedVehicleId(vehicleId).map(mapper::toDomain);
     }
 
     @Override

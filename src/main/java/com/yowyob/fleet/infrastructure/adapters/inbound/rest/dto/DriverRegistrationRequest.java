@@ -2,16 +2,14 @@ package com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import java.util.UUID;
 
 /**
  * DTO pour la création simultanée d'un utilisateur Auth et d'un profil Chauffeur.
+ * Note : La photo n'est plus demandée ici, le chauffeur doit l'uploader lui-même via /account/picture.
  */
 public record DriverRegistrationRequest(
     
-    // --- Informations pour l'Auth Service (TraMaSys) ---
-    
+    // --- Informations pour l'Auth Service ---
     @NotBlank(message = "Le nom d'utilisateur est obligatoire")
     String username,
 
@@ -31,13 +29,7 @@ public record DriverRegistrationRequest(
     @NotBlank(message = "Le nom est obligatoire")
     String lastName,
 
-    // --- Informations métier (Base locale Fleet) ---
-
-    @NotNull(message = "L'ID de la flotte est obligatoire")
-    UUID fleetId,
-
+    // --- Informations métier ---
     @NotBlank(message = "Le numéro de permis de conduire est obligatoire")
-    String licenceNumber,
-
-    String photoUrl
+    String licenceNumber
 ) {}

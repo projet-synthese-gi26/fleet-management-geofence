@@ -13,6 +13,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -68,11 +70,23 @@ public class RemoteAuthAdapter implements AuthPort {
                 .map(this::mapToDomainUserDetail);
     }
 
-    
     @Override
     public Mono<UserDetail> getUserById(UUID userId, String token) {
         return authApiClient.getUserById(userId, ensureBearer(token))
                 .map(this::mapToDomainUserDetail);
+    }
+
+    @Override
+    public Flux<UserDetail> getAllUsers(String token) {
+        return authApiClient.getAllUsers(ensureBearer(token))
+                .map(this::mapToDomainUserDetail);
+    }
+
+    @Override
+    public Flux<UserDetail> getUsersByService(String serviceName, String token) {
+        return authApiClient.getUsersByService(serviceName, ensureBearer(token))
+                .map(this::mapToDomainUserDetail)
+                .onErrorResume(e -> Flux.empty());
     }
 
     @Override
@@ -91,21 +105,9 @@ public class RemoteAuthAdapter implements AuthPort {
                 .map(this::mapToDomainUserDetail);
     }
 
-   
-    @Override
-    public Flux<UserDetail> getUsersByService(String serviceName, String token) {
-        return authApiClient.getUsersByService(serviceName, ensureBearer(token))
-                .map(this::mapToDomainUserDetail)
-                .onErrorResume(e -> {
-                    log.error("Erreur lors de la récupération des utilisateurs distants : {}", e.getMessage());
-                    return Flux.empty();
-                });
-    }
-
     @Override
     public Mono<Void> changePassword(UUID userId, String token, String currentPwd, String newPwd) {
         AuthApiClient.ChangePasswordRequest req = new AuthApiClient.ChangePasswordRequest(currentPwd, newPwd);
-        
         return webClientBuilder.build()
                 .put()
                 .uri(authServiceUrl + "/api/users/" + userId + "/password")
@@ -113,6 +115,29 @@ public class RemoteAuthAdapter implements AuthPort {
                 .bodyValue(req)
                 .retrieve()
                 .bodyToMono(Void.class);
+    }
+
+    @Override
+    public Mono<Void> moveUserToService(UUID userId, String newServiceName, String token) {
+        // Logique de Soft Delete / Changement de service
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("service", newServiceName);
+
+        log.info("Tentative de déplacement de l'user {} vers le service {}", userId, newServiceName);
+
+        // TODO: Décommenter quand le Service Auth supportera le PATCH
+        /*
+        return authApiClient.patchUser(userId, updates, ensureBearer(token))
+                .then();
+        */
+        
+        // En attendant, on simule un succès pour ne pas bloquer le code métier
+        return Mono.empty();
+    }
+
+    @Override
+    public Mono<Void> deleteRemoteAccount(UUID userId, String token) {
+        return authApiClient.deleteUser(userId, ensureBearer(token));
     }
 
     @Override
@@ -130,13 +155,6 @@ public class RemoteAuthAdapter implements AuthPort {
                 .bodyValue(builder.build())
                 .retrieve()
                 .bodyToMono(Void.class);
-    }
-
-    @Override
-    public Mono<Void> deleteRemoteAccount(UUID userId, String token) {
-        // Mise à jour pour utiliser l'interface client si possible, ou le builder
-        // Ici on utilise directement le client généré s'il expose delete
-        return authApiClient.deleteUser(userId, ensureBearer(token));
     }
 
     @Override

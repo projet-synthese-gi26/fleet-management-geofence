@@ -4,6 +4,7 @@ import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.Driv
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
@@ -20,4 +21,9 @@ public interface DriverR2dbcRepository extends ReactiveCrudRepository<DriverEnti
      * Recherche par statut (actif/inactif).
      */
     Flux<DriverEntity> findByStatus(String status);
+
+    /**
+     * Recherche par ID de véhicule assigné.
+     */
+    Mono<DriverEntity> findByAssignedVehicleId(UUID assignedVehicleId); 
 }
