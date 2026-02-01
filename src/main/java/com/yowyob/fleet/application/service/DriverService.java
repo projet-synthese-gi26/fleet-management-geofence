@@ -6,6 +6,7 @@ import com.yowyob.fleet.domain.ports.in.AuthUseCase;
 import com.yowyob.fleet.domain.ports.in.ManageDriverUseCase;
 import com.yowyob.fleet.domain.ports.out.AuthPort;
 import com.yowyob.fleet.domain.ports.out.DriverPersistencePort;
+import com.yowyob.fleet.domain.ports.out.ExternalVehiclePort;
 import com.yowyob.fleet.domain.ports.out.VehiclePersistencePort;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.DriverRegistrationRequest;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.FleetR2dbcRepository;
@@ -28,7 +29,8 @@ public class DriverService implements ManageDriverUseCase {
     private final DriverPersistencePort driverPersistencePort;
     private final VehiclePersistencePort vehiclePersistencePort;
     private final AuthPort authPort;
-    private final FleetR2dbcRepository fleetRepository; 
+    private final FleetR2dbcRepository fleetRepository;
+    private final ExternalVehiclePort externalVehiclePort;
 
     private static final String SERVICE_NAME = "FLEET_MANAGEMENT";
 
@@ -36,42 +38,41 @@ public class DriverService implements ManageDriverUseCase {
     @Override
     public Mono<Driver> registerDriver(UUID fleetId, DriverRegistrationRequest request, UUID managerId) {
         return checkFleetOwnership(fleetId, managerId)
-            .then(Mono.defer(() -> {
-                AuthUseCase.RegisterCommand command = new AuthUseCase.RegisterCommand(
-                    request.username(), request.password(), request.email(), request.phone(),
-                    request.firstName(), request.lastName(), List.of("FLEET_DRIVER"), null
-                );
-                return authPort.registerInRemote(command);
-            }))
-            .flatMap(authRes -> {
-                Driver localDriver = new Driver(
-                    authRes.user().id(),
-                    fleetId,
-                    request.licenceNumber(),
-                    "ACTIVE",
-                    null,
-                    null
-                );
-                return driverPersistencePort.save(localDriver);
-            });
+                .then(Mono.defer(() -> {
+                    AuthUseCase.RegisterCommand command = new AuthUseCase.RegisterCommand(
+                            request.username(), request.password(), request.email(), request.phone(),
+                            request.firstName(), request.lastName(), List.of("FLEET_DRIVER"), null);
+                    return authPort.registerInRemote(command);
+                }))
+                .flatMap(authRes -> {
+                    Driver localDriver = new Driver(
+                            authRes.user().id(),
+                            fleetId,
+                            request.licenceNumber(),
+                            "ACTIVE",
+                            null,
+                            null);
+                    return driverPersistencePort.save(localDriver);
+                });
     }
 
     // --- 2. RECRUTEMENT ---
     @Override
     public Mono<Void> recruitDriver(UUID fleetId, String identifier, UUID managerId, String token) {
         return checkFleetOwnership(fleetId, managerId)
-            .thenMany(authPort.getUsersByService(SERVICE_NAME, token)) 
-            .filter(u -> isMatch(u, identifier)) 
-            .filter(u -> u.roles().contains("FLEET_DRIVER")) 
-            .next() 
-            .switchIfEmpty(Mono.error(new RuntimeException("Aucun chauffeur trouvé avec cet identifiant : " + identifier)))
-            .flatMap(user -> driverPersistencePort.updateFleetAssignment(user.id(), fleetId));
+                .thenMany(authPort.getUsersByService(SERVICE_NAME, token))
+                .filter(u -> isMatch(u, identifier))
+                .filter(u -> u.roles().contains("FLEET_DRIVER"))
+                .next()
+                .switchIfEmpty(
+                        Mono.error(new RuntimeException("Aucun chauffeur trouvé avec cet identifiant : " + identifier)))
+                .flatMap(user -> driverPersistencePort.updateFleetAssignment(user.id(), fleetId));
     }
 
     private boolean isMatch(AuthPort.UserDetail user, String id) {
-        return id.equalsIgnoreCase(user.email()) || 
-               id.equalsIgnoreCase(user.username()) || 
-               id.equals(user.phone());
+        return id.equalsIgnoreCase(user.email()) ||
+                id.equalsIgnoreCase(user.username()) ||
+                id.equals(user.phone());
     }
 
     // --- 3. LECTURE ---
@@ -102,82 +103,92 @@ public class DriverService implements ManageDriverUseCase {
 
     @Override
     @Transactional
-    public Mono<Void> assignVehicle(UUID driverId, UUID targetVehicleId, UUID requesterId) {
+    public Mono<Void> assignVehicle(UUID driverId, UUID targetVehicleId, UUID requesterId, String token) {
         return vehiclePersistencePort.getLocalDataById(targetVehicleId)
-            .switchIfEmpty(Mono.error(new RuntimeException("Véhicule introuvable")))
-            .flatMap(vehicle -> checkFleetOwnership(vehicle.fleetId(), requesterId).thenReturn(vehicle))
-            .flatMap(targetVehicle -> {
-                Mono<Void> clearOldVehicleOfDriver = driverPersistencePort.findById(driverId)
-                    .flatMap(driver -> {
-                        if (driver.assignedVehicleId() != null && !driver.assignedVehicleId().equals(targetVehicleId)) {
-                            return updateVehicleLink(driver.assignedVehicleId(), null);
-                        }
-                        return Mono.empty();
-                    });
+                .switchIfEmpty(Mono.error(new RuntimeException("Véhicule introuvable")))
+                .flatMap(vehicle -> checkFleetOwnership(vehicle.fleetId(), requesterId).thenReturn(vehicle))
+                .flatMap(targetVehicle -> {
 
-                Mono<Void> clearOldDriverOfVehicle = driverPersistencePort.findByAssignedVehicleId(targetVehicleId)
-                    .flatMap(oldDriver -> {
-                        if (!oldDriver.userId().equals(driverId)) {
-                            return driverPersistencePort.updateVehicleAssignment(oldDriver.userId(), null);
-                        }
-                        return Mono.empty();
-                    });
+                    // 1. Nettoyage local (Driver précédent, etc.)
+                    Mono<Void> clearOldVehicleOfDriver = driverPersistencePort.findById(driverId)
+                            .flatMap(driver -> {
+                                if (driver.assignedVehicleId() != null
+                                        && !driver.assignedVehicleId().equals(targetVehicleId)) {
+                                    return updateVehicleLink(driver.assignedVehicleId(), null);
+                                }
+                                return Mono.empty();
+                            });
 
-                return clearOldVehicleOfDriver
-                        .then(clearOldDriverOfVehicle)
-                        .then(updateVehicleLink(targetVehicleId, driverId))
-                        .then(driverPersistencePort.updateVehicleAssignment(driverId, targetVehicleId));
-            });
+                    Mono<Void> clearOldDriverOfVehicle = driverPersistencePort.findByAssignedVehicleId(targetVehicleId)
+                            .flatMap(oldDriver -> {
+                                if (!oldDriver.userId().equals(driverId)) {
+                                    return driverPersistencePort.updateVehicleAssignment(oldDriver.userId(), null);
+                                }
+                                return Mono.empty();
+                            });
+
+                    // 2. Synchronisation Distante (External API)
+                    // On appelle l'API pour dire "Ce chauffeur conduit maintenant ce véhicule"
+                    Mono<Void> remoteSync = externalVehiclePort.assignDriverRemote(targetVehicleId, driverId, token);
+
+                    // 3. Exécution chainée
+                    return clearOldVehicleOfDriver
+                            .then(clearOldDriverOfVehicle)
+                            .then(remoteSync) // <--- Appel distant ici
+                            .then(updateVehicleLink(targetVehicleId, driverId))
+                            .then(driverPersistencePort.updateVehicleAssignment(driverId, targetVehicleId));
+                });
     }
 
     @Override
     @Transactional
     public Mono<Void> unassignVehicle(UUID driverId, UUID requesterId) {
         return driverPersistencePort.findById(driverId)
-            .flatMap(driver -> {
-                if (driver.assignedVehicleId() == null) return Mono.empty();
-                return updateVehicleLink(driver.assignedVehicleId(), null)
-                        .then(driverPersistencePort.updateVehicleAssignment(driverId, null));
-            });
+                .flatMap(driver -> {
+                    if (driver.assignedVehicleId() == null)
+                        return Mono.empty();
+                    return updateVehicleLink(driver.assignedVehicleId(), null)
+                            .then(driverPersistencePort.updateVehicleAssignment(driverId, null));
+                });
     }
 
     // Helper mis à jour avec le nouveau constructeur Vehicle (23 champs)
     private Mono<Void> updateVehicleLink(UUID vehicleId, UUID driverId) {
         return vehiclePersistencePort.getLocalDataById(vehicleId)
-            .flatMap(v -> {
-                Vehicle updated = new Vehicle(
-                    v.id(), 
-                    v.fleetId(), 
-                    v.managerId(), 
-                    driverId, // Seul champ modifié
-                    v.vehicleTypeId(), 
-                    v.licensePlate(), 
-                    v.vehicleSerialNumber(), 
-                    v.brand(), 
-                    v.model(), 
-                    v.manufacturingYear(), 
-                    v.transmissionType(), 
-                    v.fuelType(), 
-                    v.tankCapacity(), 
-                    v.totalSeatNumber(), 
-                    v.averageFuelConsumption(),
-                    v.color(), 
-                    v.status(), 
-                    v.photoUrl(), 
-                    v.serialNumberPhotoUrl(), 
-                    v.registrationPhotoUrl(),
-                    v.financialParameters(), 
-                    v.maintenanceParameters(), 
-                    null
-                );
-                return vehiclePersistencePort.saveLocalData(updated);
-            }).then();
+                .flatMap(v -> {
+                    Vehicle updated = new Vehicle(
+                            v.id(),
+                            v.fleetId(),
+                            v.managerId(),
+                            driverId, // Seul champ modifié
+                            v.vehicleTypeId(),
+                            v.licensePlate(),
+                            v.vehicleSerialNumber(),
+                            v.brand(),
+                            v.model(),
+                            v.manufacturingYear(),
+                            v.transmissionType(),
+                            v.fuelType(),
+                            v.tankCapacity(),
+                            v.totalSeatNumber(),
+                            v.averageFuelConsumption(),
+                            v.color(),
+                            v.status(),
+                            v.photoUrl(),
+                            v.serialNumberPhotoUrl(),
+                            v.registrationPhotoUrl(),
+                            v.financialParameters(),
+                            v.maintenanceParameters(),
+                            null);
+                    return vehiclePersistencePort.saveLocalData(updated);
+                }).then();
     }
 
     private Mono<Void> checkFleetOwnership(UUID fleetId, UUID managerId) {
         return fleetRepository.existsByIdAndManagerId(fleetId, managerId)
                 .flatMap(exists -> {
-                    if (!exists) return Mono.error(new AccessDeniedException("Cette flotte ne vous appartient pas."));
+                    if (!exists)
+                        return Mono.error(new AccessDeniedException("Cette flotte ne vous appartient pas."));
                     return Mono.empty();
                 });
     }

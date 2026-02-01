@@ -1,4 +1,5 @@
 package com.yowyob.fleet.infrastructure.adapters.outbound.external;
+import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.VehicleOwnershipRequest;
 
 import com.yowyob.fleet.domain.model.Vehicle;
 import com.yowyob.fleet.domain.ports.out.ExternalVehiclePort;
@@ -113,6 +114,36 @@ public class VehicleApiAdapter implements ExternalVehiclePort {
     @Override
     public Mono<Void> deleteImage(String imageId, String token) {
         return apiClient.deleteImage(imageId, ensureBearer(token));
+    }
+
+    // --- LOOKUPS ---
+    @Override
+    public Flux<Map<String, Object>> getReferenceData(String resource, String token) {
+        return apiClient.getLookupList(resource, ensureBearer(token))
+                .onErrorResume(e -> {
+                    log.error("Erreur récupération Lookup {}: {}", resource, e.getMessage());
+                    return Flux.empty();
+                });
+    }
+
+    @Override
+    public Mono<Void> assignDriverRemote(UUID vehicleId, UUID driverId, String token) {
+        VehicleOwnershipRequest req = new VehicleOwnershipRequest(
+            vehicleId,
+            "DRIVER",
+            true, // isPrimary: true remplace le conducteur principal précédent
+            LocalDateTime.now().toString(),
+            driverId // On passe l'ID explicite du chauffeur
+        );
+
+        return apiClient.createOwnership(req, ensureBearer(token))
+            .onErrorResume(e -> {
+                log.error("Erreur assignation distante (Véhicule: {}, Chauffeur: {}): {}", vehicleId, driverId, e.getMessage());
+                // Stratégie : On loggue l'erreur mais on ne bloque pas le flux local pour l'instant (Mode Best Effort)
+                // Ou on propage l'erreur si on veut une cohérence stricte.
+                // Ici, on retourne Empty pour ne pas casser la transaction locale, mais c'est un point à discuter.
+                return Mono.empty(); 
+            });
     }
 
     // --- HELPERS TECHNIQUES ---

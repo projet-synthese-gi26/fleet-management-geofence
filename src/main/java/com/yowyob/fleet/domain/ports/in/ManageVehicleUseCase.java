@@ -6,6 +6,7 @@ import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.VehicleRegistra
 import org.springframework.http.codec.multipart.FilePart;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import java.util.Map;
 import java.util.UUID;
 
 public interface ManageVehicleUseCase {
@@ -31,4 +32,7 @@ public interface ManageVehicleUseCase {
     Mono<Void> updateFinancialParameters(UUID vehicleId, VehicleParameters.Financial params);
     Mono<Void> updateMaintenanceParameters(UUID vehicleId, VehicleParameters.Maintenance params);
     Mono<Void> removeVehicle(UUID vehicleId, String token);
+
+    // --- NOUVEAU ---
+    Flux<Map<String, Object>> getVehicleReferenceData(String resource, String token);
 }

@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException; // <--- AJOUT
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -31,8 +32,8 @@ public class VehicleService implements ManageVehicleUseCase {
     public Mono<Vehicle> getVehicleDetails(UUID vehicleId, String token) {
         return Mono.zip(
                 localPersistencePort.getLocalDataById(vehicleId),
-                externalVehiclePort.getExternalVehicleInfo(vehicleId, token) 
-        ).map(tuple -> merge(tuple.getT1(), tuple.getT2()));
+                externalVehiclePort.getExternalVehicleInfo(vehicleId, token))
+                .map(tuple -> merge(tuple.getT1(), tuple.getT2()));
     }
 
     @Override
@@ -51,64 +52,80 @@ public class VehicleService implements ManageVehicleUseCase {
     }
 
     @Transactional
-    protected Mono<Vehicle> createVehicleInternal(UUID fleetId, VehicleRegistrationRequest req, UUID managerId, String token) {
+    protected Mono<Vehicle> createVehicleInternal(UUID fleetId, VehicleRegistrationRequest req, UUID managerId,
+            String token) {
         // --- 1. VALIDATION PRÉALABLE ---
         // On vérifie que le type existe AVANT d'appeler le service distant
         return vehicleTypeRepository.existsById(req.vehicleTypeId())
-            .flatMap(exists -> {
-                if (!exists) {
-                    return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, 
-                        "Type de véhicule invalide ou inexistant : " + req.vehicleTypeId()));
-                }
-                
-                // --- 2. EXECUTION ---
-                log.info("Création véhicule Distant [Plaque: {}] - Manager: {}", req.registrationNumber(), managerId);
-                
-                return externalVehiclePort.createRemoteVehicleSimplified(req, token)
-                    .flatMap(remoteVehicle -> {
-                        log.info("Véhicule distant créé avec ID: {}", remoteVehicle.id());
-                        
-                        Vehicle localShell = new Vehicle(
-                            remoteVehicle.id(),
-                            fleetId,
-                            managerId,
-                            null, 
-                            req.vehicleTypeId(),
-                            req.registrationNumber(), 
-                            remoteVehicle.vehicleSerialNumber(),
-                            remoteVehicle.brand(),
-                            remoteVehicle.model(),
-                            remoteVehicle.manufacturingYear(),
-                            remoteVehicle.transmissionType(),
-                            remoteVehicle.fuelType(),
-                            remoteVehicle.tankCapacity(),
-                            remoteVehicle.totalSeatNumber(),
-                            remoteVehicle.averageFuelConsumption(),
-                            remoteVehicle.color(),
-                            "AVAILABLE",
-                            remoteVehicle.photoUrl(),
-                            null, null, 
-                            null, null, null 
-                        );
+                .flatMap(exists -> {
+                    if (!exists) {
+                        return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                                "Type de véhicule invalide ou inexistant : " + req.vehicleTypeId()));
+                    }
 
-                        return localPersistencePort.saveLocalData(localShell)
-                                .map(savedLocal -> merge(savedLocal, remoteVehicle));
-                    });
-            });
+                    // --- 2. EXECUTION ---
+                    log.info("Création véhicule Distant [Plaque: {}] - Manager: {}", req.registrationNumber(),
+                            managerId);
+
+                    return externalVehiclePort.createRemoteVehicleSimplified(req, token)
+                            .flatMap(remoteVehicle -> {
+                                log.info("Véhicule distant créé avec ID: {}", remoteVehicle.id());
+
+                                Vehicle localShell = new Vehicle(
+                                        remoteVehicle.id(),
+                                        fleetId,
+                                        managerId,
+                                        null,
+                                        req.vehicleTypeId(),
+                                        req.registrationNumber(),
+                                        remoteVehicle.vehicleSerialNumber(),
+                                        remoteVehicle.brand(),
+                                        remoteVehicle.model(),
+                                        remoteVehicle.manufacturingYear(),
+                                        remoteVehicle.transmissionType(),
+                                        remoteVehicle.fuelType(),
+                                        remoteVehicle.tankCapacity(),
+                                        remoteVehicle.totalSeatNumber(),
+                                        remoteVehicle.averageFuelConsumption(),
+                                        remoteVehicle.color(),
+                                        "AVAILABLE",
+                                        remoteVehicle.photoUrl(),
+                                        null, null,
+                                        null, null, null);
+
+                                return localPersistencePort.saveLocalData(localShell)
+                                        .map(savedLocal -> merge(savedLocal, remoteVehicle));
+                            });
+                });
     }
 
     @Override
     public Mono<Vehicle> updateVehicleInfo(UUID vehicleId, VehicleRegistrationRequest request, String token) {
-        return externalVehiclePort.updateRemoteVehicle(vehicleId, request, token) 
+        return externalVehiclePort.updateRemoteVehicle(vehicleId, request, token)
                 .flatMap(remote -> localPersistencePort.getLocalDataById(vehicleId)
                         .map(local -> merge(local, remote)));
     }
 
     @Override
     public Mono<Vehicle> patchVehicleInfo(UUID vehicleId, String brand, String model, String token) {
-        return externalVehiclePort.patchRemoteVehicle(vehicleId, brand, token) 
+        return externalVehiclePort.patchRemoteVehicle(vehicleId, brand, token)
                 .flatMap(remote -> localPersistencePort.getLocalDataById(vehicleId)
                         .map(local -> merge(local, remote)));
+    }
+
+    @Override
+    public Flux<Map<String, Object>> getVehicleReferenceData(String resource, String token) {
+        // Validation basique pour éviter d'appeler n'importe quoi
+        if (!isValidResource(resource)) {
+            return Flux.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ressource inconnue: " + resource));
+        }
+        return externalVehiclePort.getReferenceData(resource, token);
+    }
+
+    private boolean isValidResource(String res) {
+        return java.util.List.of(
+                "fuel-types", "manufacturers", "transmission-types",
+                "vehicle-makes", "vehicle-models", "vehicle-sizes", "vehicle-types").contains(res);
     }
 
     // --- MEDIAS (Pas de changement) ---
@@ -164,7 +181,7 @@ public class VehicleService implements ManageVehicleUseCase {
 
     @Override
     public Mono<Void> removeVehicle(UUID vehicleId, String token) {
-        return externalVehiclePort.deleteRemoteVehicle(vehicleId, token) 
+        return externalVehiclePort.deleteRemoteVehicle(vehicleId, token)
                 .onErrorResume(e -> Mono.empty())
                 .then(localPersistencePort.deleteLocalData(vehicleId));
     }
@@ -193,18 +210,17 @@ public class VehicleService implements ManageVehicleUseCase {
                 remote.registrationPhotoUrl(),
                 local.financialParameters(),
                 local.maintenanceParameters(),
-                null
-        );
+                null);
     }
 
-    private Mono<Void> saveWithNewParams(Vehicle v, VehicleParameters.Financial fin, VehicleParameters.Maintenance maint) {
+    private Mono<Void> saveWithNewParams(Vehicle v, VehicleParameters.Financial fin,
+            VehicleParameters.Maintenance maint) {
         Vehicle toSave = new Vehicle(
-            v.id(), v.fleetId(), v.managerId(), v.currentDriverId(), v.vehicleTypeId(),
-            v.licensePlate(), v.vehicleSerialNumber(), v.brand(), v.model(), v.manufacturingYear(),
-            v.transmissionType(), v.fuelType(), v.tankCapacity(), v.totalSeatNumber(), v.averageFuelConsumption(),
-            v.color(), v.status(), v.photoUrl(), v.serialNumberPhotoUrl(), v.registrationPhotoUrl(),
-            fin, maint, v.operationalParameters()
-        );
+                v.id(), v.fleetId(), v.managerId(), v.currentDriverId(), v.vehicleTypeId(),
+                v.licensePlate(), v.vehicleSerialNumber(), v.brand(), v.model(), v.manufacturingYear(),
+                v.transmissionType(), v.fuelType(), v.tankCapacity(), v.totalSeatNumber(), v.averageFuelConsumption(),
+                v.color(), v.status(), v.photoUrl(), v.serialNumberPhotoUrl(), v.registrationPhotoUrl(),
+                fin, maint, v.operationalParameters());
         return localPersistencePort.saveLocalData(toSave).then();
     }
 }

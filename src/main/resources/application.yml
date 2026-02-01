@@ -11,8 +11,8 @@ spring:
   # R2DBC (Application Runtime)
   r2dbc:
     url: r2dbc:postgresql://localhost:5432/yowyob_db
-    username: fleet_admin
-    password: fleet_password
+    username: postgres
+    password: password
     pool:
       enabled: true
       initial-size: 2
@@ -23,8 +23,8 @@ spring:
   # JDBC (Liquibase Migration)
   datasource:
     url: jdbc:postgresql://localhost:5432/yowyob_db
-    username: fleet_admin
-    password: fleet_password
+    username: postgres
+    password: password
     driver-class-name: org.postgresql.Driver
 
   # LIQUIBASE

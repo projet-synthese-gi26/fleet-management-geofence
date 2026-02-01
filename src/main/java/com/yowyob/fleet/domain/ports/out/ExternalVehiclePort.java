@@ -5,6 +5,7 @@ import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.VehicleRegistra
 import org.springframework.http.codec.multipart.FilePart;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import java.util.Map;
 import java.util.UUID;
 
 public interface ExternalVehiclePort {
@@ -23,4 +24,9 @@ public interface ExternalVehiclePort {
     Mono<String> addImage(UUID vehicleId, FilePart file, String token);
     Flux<String> getImages(UUID vehicleId, String token); 
     Mono<Void> deleteImage(String imageId, String token); 
+
+    // --- NOUVEAU : Référentiels ---
+    Flux<Map<String, Object>> getReferenceData(String resource, String token);
+
+    Mono<Void> assignDriverRemote(UUID vehicleId, UUID driverId, String token);
 }
