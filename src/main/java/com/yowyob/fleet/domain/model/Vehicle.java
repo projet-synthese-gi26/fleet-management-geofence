@@ -1,37 +1,52 @@
 package com.yowyob.fleet.domain.model;
 
+import java.util.List;
 import java.util.UUID;
 
 public record Vehicle(
     UUID id,
     UUID fleetId,
-    UUID managerId, // Nouveau champ
+    UUID managerId,
     UUID currentDriverId,
     UUID vehicleTypeId,
     
     // Identification
     String licensePlate,
-    String vehicleSerialNumber, // VIN (Nouveau)
+    String vehicleSerialNumber,
     
-    // Caractéristiques Techniques (Nouveaux champs)
+    // Caractéristiques
     String brand,
     String model,
     Integer manufacturingYear,
-    String transmissionType, // ex: Manuelle, Auto
-    String fuelType,         // ex: Diesel
+    String transmissionType,
+    String fuelType,
     Double tankCapacity,
     Integer totalSeatNumber,
     Double averageFuelConsumption,
     
-    // Visuel & Docs
+    // Visuel
     String color,
-    String status, // AVAILABLE, ON_TRIP, MAINTENANCE
-    String photoUrl, // Photo principale (avant)
-    String serialNumberPhotoUrl, // Photo VIN
-    String registrationPhotoUrl, // Photo Carte Grise
+    String status,
+    
+    // URLs stockées
+    String photoUrl,
+    String serialNumberPhotoUrl,
+    String registrationPhotoUrl,
+    
+    // Galerie (1-N)
+    List<String> illustrationImages,
     
     // Sous-objets
     VehicleParameters.Financial financialParameters,
     VehicleParameters.Maintenance maintenanceParameters,
     VehicleParameters.Operational operationalParameters
-) {}
+) {
+    // Helper pour ajouter des images de galerie
+    public Vehicle withGallery(List<String> images) {
+        return new Vehicle(id, fleetId, managerId, currentDriverId, vehicleTypeId, licensePlate, 
+            vehicleSerialNumber, brand, model, manufacturingYear, transmissionType, fuelType, 
+            tankCapacity, totalSeatNumber, averageFuelConsumption, color, status, photoUrl, 
+            serialNumberPhotoUrl, registrationPhotoUrl, images, financialParameters, 
+            maintenanceParameters, operationalParameters);
+    }
+}

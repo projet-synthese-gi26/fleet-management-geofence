@@ -70,8 +70,20 @@ CREATE TABLE IF NOT EXISTS fleet.vehicles (
   manufacturing_year INT,
   color VARCHAR(50),
   status VARCHAR(50) DEFAULT 'AVAILABLE' CHECK (status IN ('AVAILABLE', 'ON_TRIP', 'MAINTENANCE')),
-  photo_url VARCHAR(255)
+ 
+  -- Stockage local des URLs
+  photo_url VARCHAR(255),
+  serial_number_photo_url VARCHAR(255),
+  registration_photo_url VARCHAR(255)
 );
+
+-- 9. GÉOMÉTRIE / DÉTAILS
+CREATE TABLE IF NOT EXISTS fleet.vehicle_illustration_images (
+  id UUID PRIMARY KEY,
+  vehicle_id UUID NOT NULL REFERENCES fleet.vehicles(id) ON DELETE CASCADE,
+  image_path VARCHAR(255) NOT NULL
+);
+
 -- Optionnel mais recommandé pour la robustesse :
 ALTER TABLE fleet.vehicles 
 ADD CONSTRAINT fk_vehicle_current_driver 

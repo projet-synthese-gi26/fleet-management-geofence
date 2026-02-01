@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.domain.Persistable;
 import org.springframework.data.relational.core.mapping.Table;
 import org.springframework.data.relational.core.mapping.Column;
 import java.time.LocalDate;
@@ -11,7 +13,7 @@ import java.util.UUID;
 
 @Table(name = "maintenance_parameters", schema = "fleet")
 @Data @NoArgsConstructor @AllArgsConstructor
-public class MaintenanceParameterEntity {
+public class MaintenanceParameterEntity implements Persistable<UUID> {
     @Id
     private UUID id;
     
@@ -28,8 +30,20 @@ public class MaintenanceParameterEntity {
     private String engineStatus; 
     
     @Column("battery_health")
-    private String batteryHealth; // Converti en String car l'entité attend ça (ou Integer selon mapping)
-    
+    private Integer batteryHealth; // FIX : Changé de String à Integer
+
     @Column("maintenance_status")
     private String maintenanceStatus;
+
+    @Transient
+    private boolean isNew = false;
+
+    @Override
+    public boolean isNew() {
+        return isNew || id == null;
+    }
+
+    public void setNew(boolean isNew) {
+        this.isNew = isNew;
+    }
 }

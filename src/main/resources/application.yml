@@ -11,8 +11,8 @@ spring:
   # R2DBC (Application Runtime)
   r2dbc:
     url: r2dbc:postgresql://localhost:5432/yowyob_db
-    username: postgres
-    password: password
+    username: fleet_admin
+    password: fleet_password
     pool:
       enabled: true
       initial-size: 2
@@ -23,8 +23,8 @@ spring:
   # JDBC (Liquibase Migration)
   datasource:
     url: jdbc:postgresql://localhost:5432/yowyob_db
-    username: postgres
-    password: password
+    username: fleet_admin
+    password: fleet_password
     driver-class-name: org.postgresql.Driver
 
   # LIQUIBASE
@@ -68,7 +68,14 @@ application:
   auth:
     mode: remote
     url: https://auth-service.pynfi.com
-
+  bootstrap:
+    admin:
+      username: "superadmin123"
+      email: "superadmin123@transens.com"
+      password: "password123" 
+      phone: "+23761213141516"
+      firstname: "System"
+      lastname: "Administrator"
   # Kafka topics
   kafka:
     topics:

@@ -1,5 +1,5 @@
 # Contexte du Projet : Fleet & Geofence API
-Généré le : Sat Jan 31 01:05:11 PM WAT 2026
+Généré le : Sun Feb  1 11:32:12 AM WAT 2026
 Framework : Spring Boot WebFlux (Reactive)
 
 ## 1. Arborescence du Projet
@@ -34,8 +34,6 @@ Framework : Spring Boot WebFlux (Reactive)
 │   └── remarks_of_conception.md
 ├── .gitattributes
 ├── .github
-│   ├── appmod
-│   │   └── appcat
 │   └── workflows
 │       └── ci-cd.yml
 ├── .gitignore
@@ -64,7 +62,8 @@ Framework : Spring Boot WebFlux (Reactive)
 │   │   │               │       ├── FleetService.java
 │   │   │               │       ├── GeofenceService.java
 │   │   │               │       ├── TripService.java
-│   │   │               │       └── VehicleService.java
+│   │   │               │       ├── VehicleService.java
+│   │   │               │       └── VehicleTypeService.java
 │   │   │               ├── domain
 │   │   │               │   ├── model
 │   │   │               │   │   ├── Driver.java
@@ -101,6 +100,7 @@ Framework : Spring Boot WebFlux (Reactive)
 │   │   │                   │   │   └── rest
 │   │   │                   │   │       ├── AccountController.java
 │   │   │                   │   │       ├── AdminManagerController.java
+│   │   │                   │   │       ├── AdminReferenceController.java
 │   │   │                   │   │       ├── AdminUserController.java
 │   │   │                   │   │       ├── AuthController.java
 │   │   │                   │   │       ├── DriverController.java
@@ -119,13 +119,17 @@ Framework : Spring Boot WebFlux (Reactive)
 │   │   │                   │   │       │   ├── TelemetryRequest.java
 │   │   │                   │   │       │   ├── UpdateManagerRequest.java
 │   │   │                   │   │       │   ├── UpdateProfileRequest.java
-│   │   │                   │   │       │   └── VehicleRegistrationRequest.java
+│   │   │                   │   │       │   ├── VehicleOwnershipRequest.java
+│   │   │                   │   │       │   ├── VehicleRegistrationRequest.java
+│   │   │                   │   │       │   └── VehicleTypeRequest.java
 │   │   │                   │   │       ├── FleetController.java
 │   │   │                   │   │       ├── GeofenceController.java
 │   │   │                   │   │       ├── GlobalExceptionHandler.java
 │   │   │                   │   │       ├── HealthCheckController.java
+│   │   │                   │   │       ├── ReferenceController.java
 │   │   │                   │   │       ├── TripController.java
-│   │   │                   │   │       └── VehicleController.java
+│   │   │                   │   │       ├── VehicleController.java
+│   │   │                   │   │       └── VehicleLookupController.java
 │   │   │                   │   └── outbound
 │   │   │                   │       ├── external
 │   │   │                   │       │   ├── client
@@ -151,7 +155,8 @@ Framework : Spring Boot WebFlux (Reactive)
 │   │   │                   │           │   ├── MaintenanceParameterEntity.java
 │   │   │                   │           │   ├── OperationalParameterEntity.java
 │   │   │                   │           │   ├── TripEntity.java
-│   │   │                   │           │   └── VehicleLocalEntity.java
+│   │   │                   │           │   ├── VehicleLocalEntity.java
+│   │   │                   │           │   └── VehicleTypeEntity.java
 │   │   │                   │           ├── FleetManagerPersistenceAdapter.java
 │   │   │                   │           ├── FleetPersistenceAdapter.java
 │   │   │                   │           ├── GeofencePersistenceAdapter.java
@@ -165,7 +170,8 @@ Framework : Spring Boot WebFlux (Reactive)
 │   │   │                   │           │   ├── GeofenceR2dbcRepository.java
 │   │   │                   │           │   ├── MaintenanceParameterR2dbcRepository.java
 │   │   │                   │           │   ├── TripR2dbcRepository.java
-│   │   │                   │           │   └── VehicleLocalR2dbcRepository.java
+│   │   │                   │           │   ├── VehicleLocalR2dbcRepository.java
+│   │   │                   │           │   └── VehicleTypeR2dbcRepository.java
 │   │   │                   │           └── VehiclePersistenceAdapter.java
 │   │   │                   ├── config
 │   │   │                   │   ├── AuthConfig.java
@@ -209,7 +215,7 @@ Framework : Spring Boot WebFlux (Reactive)
 ├── test_profile.jpg
 └── todo.md
 
-48 directories, 155 files
+46 directories, 163 files
 ```
 ## 2. Contenu des Fichiers
 
@@ -7964,159 +7970,7 @@ La roadmap est suivie dans `todo.md`.
 
 
 ### Premiere mission
-je suis en train de debugger la fonctionnalite vehicles,il y'a pas mal de buggs au omnet de l'insertion apres creation sur le serveur distant. ta premiere tache sera de dianostiquer mon code et me dire qulles sont les causes possibles : ": Véhicule distant créé avec ID: 6b7c1f4a-b1a7-46b7-ba27-a284548a3e30
-2026-01-31T12:53:50.866+01:00 ERROR 170120 --- [fleet-management] [tor-tcp-epoll-1] a.w.r.e.AbstractErrorWebExceptionHandler : [5d50d22a-2]  500 Server Error for HTTP POST "/api/v1/vehicles"
-
-org.springframework.dao.DataIntegrityViolationException: executeMany; SQL [INSERT INTO fleet.vehicles (id, manager_id, vehicle_type_id, license_plate, brand, model, status, photo_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)]; insert or update on table "vehicles" violates foreign key constraint "vehicles_vehicle_type_id_fkey"
-	at org.springframework.r2dbc.connection.ConnectionFactoryUtils.convertR2dbcException(ConnectionFactoryUtils.java:247) ~[spring-r2dbc-6.1.8.jar:6.1.8]
-	Suppressed: reactor.core.publisher.FluxOnAssembly$OnAssemblyException: 
-Error has been observed at the following site(s):
-	*__checkpoint ⇢ Handler com.yowyob.fleet.infrastructure.adapters.inbound.rest.VehicleController#createIndependent(VehicleRegistrationRequest, Authentication, String) [DispatcherHandler]
-	*__checkpoint ⇢ AuthorizationWebFilter [DefaultWebFilterChain]
-	*__checkpoint ⇢ ExceptionTranslationWebFilter [DefaultWebFilterChain]
-	*__checkpoint ⇢ LogoutWebFilter [DefaultWebFilterChain]
-	*__checkpoint ⇢ ServerRequestCacheWebFilter [DefaultWebFilterChain]
-	*__checkpoint ⇢ SecurityContextServerWebExchangeWebFilter [DefaultWebFilterChain]
-	*__checkpoint ⇢ AuthenticationWebFilter [DefaultWebFilterChain]
-	*__checkpoint ⇢ ReactorContextWebFilter [DefaultWebFilterChain]
-	*__checkpoint ⇢ HttpHeaderWriterWebFilter [DefaultWebFilterChain]
-	*__checkpoint ⇢ ServerWebExchangeReactorContextWebFilter [DefaultWebFilterChain]
-	*__checkpoint ⇢ org.springframework.security.web.server.WebFilterChainProxy [DefaultWebFilterChain]
-	*__checkpoint ⇢ HTTP POST "/api/v1/vehicles" [ExceptionHandlingWebHandler]
-Original Stack Trace:
-		at org.springframework.r2dbc.connection.ConnectionFactoryUtils.convertR2dbcException(ConnectionFactoryUtils.java:247) ~[spring-r2dbc-6.1.8.jar:6.1.8]
-		at org.springframework.r2dbc.core.DefaultDatabaseClient.lambda$inConnectionMany$8(DefaultDatabaseClient.java:156) ~[spring-r2dbc-6.1.8.jar:6.1.8]
-		at reactor.core.publisher.Flux.lambda$onErrorMap$28(Flux.java:7302) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.Flux.lambda$onErrorResume$29(Flux.java:7355) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxOnErrorResume$ResumeSubscriber.onError(FluxOnErrorResume.java:94) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxUsingWhen$UsingWhenSubscriber.deferredError(FluxUsingWhen.java:403) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxUsingWhen$RollbackInner.onComplete(FluxUsingWhen.java:480) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.Operators$MultiSubscriptionSubscriber.onComplete(Operators.java:2231) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.MonoIgnoreElements$IgnoreElementsSubscriber.onComplete(MonoIgnoreElements.java:89) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxMap$MapSubscriber.onComplete(FluxMap.java:144) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxFilter$FilterSubscriber.onComplete(FluxFilter.java:166) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxFilter$FilterConditionalSubscriber.onComplete(FluxFilter.java:300) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxMap$MapConditionalSubscriber.onComplete(FluxMap.java:275) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.Operators$ScalarSubscription.request(Operators.java:2573) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxMap$MapConditionalSubscriber.request(FluxMap.java:295) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxFilter$FilterConditionalSubscriber.request(FluxFilter.java:321) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxFilter$FilterSubscriber.request(FluxFilter.java:186) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxMap$MapSubscriber.request(FluxMap.java:164) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.MonoIgnoreElements$IgnoreElementsSubscriber.onSubscribe(MonoIgnoreElements.java:72) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxMap$MapSubscriber.onSubscribe(FluxMap.java:92) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxFilter$FilterSubscriber.onSubscribe(FluxFilter.java:85) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxFilter$FilterConditionalSubscriber.onSubscribe(FluxFilter.java:219) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxMap$MapConditionalSubscriber.onSubscribe(FluxMap.java:194) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.MonoJust.subscribe(MonoJust.java:55) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.MonoDeferContextual.subscribe(MonoDeferContextual.java:55) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.InternalMonoOperator.subscribe(InternalMonoOperator.java:76) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.MonoDefer.subscribe(MonoDefer.java:53) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.Mono.subscribe(Mono.java:4568) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxUsingWhen$UsingWhenSubscriber.onError(FluxUsingWhen.java:368) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxFlatMap$FlatMapMain.checkTerminated(FluxFlatMap.java:846) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxFlatMap$FlatMapMain.drainLoop(FluxFlatMap.java:612) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxFlatMap$FlatMapMain.drain(FluxFlatMap.java:592) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxFlatMap$FlatMapMain.innerError(FluxFlatMap.java:867) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxFlatMap$FlatMapInner.onError(FluxFlatMap.java:994) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxHandle$HandleSubscriber.onError(FluxHandle.java:213) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.MonoFlatMapMany$FlatMapManyInner.onError(MonoFlatMapMany.java:256) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxHandleFuseable$HandleFuseableSubscriber.onNext(FluxHandleFuseable.java:201) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxFilterFuseable$FilterFuseableConditionalSubscriber.onNext(FluxFilterFuseable.java:337) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxContextWrite$ContextWriteSubscriber.onNext(FluxContextWrite.java:107) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxPeekFuseable$PeekConditionalSubscriber.onNext(FluxPeekFuseable.java:854) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxPeekFuseable$PeekConditionalSubscriber.onNext(FluxPeekFuseable.java:854) ~[reactor-core-3.6.6.jar:3.6.6]
-		at io.r2dbc.postgresql.util.FluxDiscardOnCancel$FluxDiscardOnCancelSubscriber.onNext(FluxDiscardOnCancel.java:91) ~[r2dbc-postgresql-1.0.5.RELEASE.jar:1.0.5.RELEASE]
-		at reactor.core.publisher.FluxDoFinally$DoFinallySubscriber.onNext(FluxDoFinally.java:113) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxHandle$HandleSubscriber.onNext(FluxHandle.java:129) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxCreate$BufferAsyncSink.drain(FluxCreate.java:880) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxCreate$BufferAsyncSink.next(FluxCreate.java:805) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxCreate$SerializedFluxSink.next(FluxCreate.java:163) ~[reactor-core-3.6.6.jar:3.6.6]
-		at io.r2dbc.postgresql.client.ReactorNettyClient$Conversation.emit(ReactorNettyClient.java:684) ~[r2dbc-postgresql-1.0.5.RELEASE.jar:1.0.5.RELEASE]
-		at io.r2dbc.postgresql.client.ReactorNettyClient$BackendMessageSubscriber.emit(ReactorNettyClient.java:936) ~[r2dbc-postgresql-1.0.5.RELEASE.jar:1.0.5.RELEASE]
-		at io.r2dbc.postgresql.client.ReactorNettyClient$BackendMessageSubscriber.onNext(ReactorNettyClient.java:810) ~[r2dbc-postgresql-1.0.5.RELEASE.jar:1.0.5.RELEASE]
-		at io.r2dbc.postgresql.client.ReactorNettyClient$BackendMessageSubscriber.onNext(ReactorNettyClient.java:716) ~[r2dbc-postgresql-1.0.5.RELEASE.jar:1.0.5.RELEASE]
-		at reactor.core.publisher.FluxHandle$HandleSubscriber.onNext(FluxHandle.java:129) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxPeekFuseable$PeekConditionalSubscriber.onNext(FluxPeekFuseable.java:854) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxMap$MapConditionalSubscriber.onNext(FluxMap.java:224) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.core.publisher.FluxMap$MapConditionalSubscriber.onNext(FluxMap.java:224) ~[reactor-core-3.6.6.jar:3.6.6]
-		at reactor.netty.channel.FluxReceive.drainReceiver(FluxReceive.java:294) ~[reactor-netty-core-1.1.19.jar:1.1.19]
-		at reactor.netty.channel.FluxReceive.onInboundNext(FluxReceive.java:403) ~[reactor-netty-core-1.1.19.jar:1.1.19]
-		at reactor.netty.channel.ChannelOperations.onInboundNext(ChannelOperations.java:426) ~[reactor-netty-core-1.1.19.jar:1.1.19]
-		at reactor.netty.channel.ChannelOperationsHandler.channelRead(ChannelOperationsHandler.java:114) ~[reactor-netty-core-1.1.19.jar:1.1.19]
-		at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:444) ~[netty-transport-4.1.110.Final.jar:4.1.110.Final]
-		at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420) ~[netty-transport-4.1.110.Final.jar:4.1.110.Final]
-		at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:412) ~[netty-transport-4.1.110.Final.jar:4.1.110.Final]
-		at io.netty.handler.codec.ByteToMessageDecoder.fireChannelRead(ByteToMessageDecoder.java:346) ~[netty-codec-4.1.110.Final.jar:4.1.110.Final]
-		at io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:318) ~[netty-codec-4.1.110.Final.jar:4.1.110.Final]
-		at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:444) ~[netty-transport-4.1.110.Final.jar:4.1.110.Final]
-		at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420) ~[netty-transport-4.1.110.Final.jar:4.1.110.Final]
-		at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:412) ~[netty-transport-4.1.110.Final.jar:4.1.110.Final]
-		at io.netty.channel.DefaultChannelPipeline$HeadContext.channelRead(DefaultChannelPipeline.java:1407) ~[netty-transport-4.1.110.Final.jar:4.1.110.Final]
-		at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:440) ~[netty-transport-4.1.110.Final.jar:4.1.110.Final]
-		at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420) ~[netty-transport-4.1.110.Final.jar:4.1.110.Final]
-		at io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:918) ~[netty-transport-4.1.110.Final.jar:4.1.110.Final]
-		at io.netty.channel.epoll.AbstractEpollStreamChannel$EpollStreamUnsafe.epollInReady(AbstractEpollStreamChannel.java:799) ~[netty-transport-classes-epoll-4.1.110.Final.jar:4.1.110.Final]
-		at io.netty.channel.epoll.EpollEventLoop.processReady(EpollEventLoop.java:501) ~[netty-transport-classes-epoll-4.1.110.Final.jar:4.1.110.Final]
-		at io.netty.channel.epoll.EpollEventLoop.run(EpollEventLoop.java:399) ~[netty-transport-classes-epoll-4.1.110.Final.jar:4.1.110.Final]
-		at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:994) ~[netty-common-4.1.110.Final.jar:4.1.110.Final]
-		at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74) ~[netty-common-4.1.110.Final.jar:4.1.110.Final]
-		at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30) ~[netty-common-4.1.110.Final.jar:4.1.110.Final]
-		at java.base/java.lang.Thread.run(Thread.java:1583) ~[na:na]
-Caused by: io.r2dbc.postgresql.ExceptionFactory$PostgresqlDataIntegrityViolationException: insert or update on table "vehicles" violates foreign key constraint "vehicles_vehicle_type_id_fkey"
-	at io.r2dbc.postgresql.ExceptionFactory.createException(ExceptionFactory.java:102) ~[r2dbc-postgresql-1.0.5.RELEASE.jar:1.0.5.RELEASE]
-	at io.r2dbc.postgresql.ExceptionFactory.createException(ExceptionFactory.java:65) ~[r2dbc-postgresql-1.0.5.RELEASE.jar:1.0.5.RELEASE]
-	at io.r2dbc.postgresql.ExceptionFactory.handleErrorResponse(ExceptionFactory.java:132) ~[r2dbc-postgresql-1.0.5.RELEASE.jar:1.0.5.RELEASE]
-	at reactor.core.publisher.FluxHandleFuseable$HandleFuseableSubscriber.onNext(FluxHandleFuseable.java:179) ~[reactor-core-3.6.6.jar:3.6.6]
-	at reactor.core.publisher.FluxFilterFuseable$FilterFuseableConditionalSubscriber.onNext(FluxFilterFuseable.java:337) ~[reactor-core-3.6.6.jar:3.6.6]
-	at reactor.core.publisher.FluxContextWrite$ContextWriteSubscriber.onNext(FluxContextWrite.java:107) ~[reactor-core-3.6.6.jar:3.6.6]
-	at reactor.core.publisher.FluxPeekFuseable$PeekConditionalSubscriber.onNext(FluxPeekFuseable.java:854) ~[reactor-core-3.6.6.jar:3.6.6]
-	at reactor.core.publisher.FluxPeekFuseable$PeekConditionalSubscriber.onNext(FluxPeekFuseable.java:854) ~[reactor-core-3.6.6.jar:3.6.6]
-	at io.r2dbc.postgresql.util.FluxDiscardOnCancel$FluxDiscardOnCancelSubscriber.onNext(FluxDiscardOnCancel.java:91) ~[r2dbc-postgresql-1.0.5.RELEASE.jar:1.0.5.RELEASE]
-	at reactor.core.publisher.FluxDoFinally$DoFinallySubscriber.onNext(FluxDoFinally.java:113) ~[reactor-core-3.6.6.jar:3.6.6]
-	at reactor.core.publisher.FluxHandle$HandleSubscriber.onNext(FluxHandle.java:129) ~[reactor-core-3.6.6.jar:3.6.6]
-	at reactor.core.publisher.FluxCreate$BufferAsyncSink.drain(FluxCreate.java:880) ~[reactor-core-3.6.6.jar:3.6.6]
-	at reactor.core.publisher.FluxCreate$BufferAsyncSink.next(FluxCreate.java:805) ~[reactor-core-3.6.6.jar:3.6.6]
-	at reactor.core.publisher.FluxCreate$SerializedFluxSink.next(FluxCreate.java:163) ~[reactor-core-3.6.6.jar:3.6.6]
-	at io.r2dbc.postgresql.client.ReactorNettyClient$Conversation.emit(ReactorNettyClient.java:684) ~[r2dbc-postgresql-1.0.5.RELEASE.jar:1.0.5.RELEASE]
-	at io.r2dbc.postgresql.client.ReactorNettyClient$BackendMessageSubscriber.emit(ReactorNettyClient.java:936) ~[r2dbc-postgresql-1.0.5.RELEASE.jar:1.0.5.RELEASE]
-	at io.r2dbc.postgresql.client.ReactorNettyClient$BackendMessageSubscriber.onNext(ReactorNettyClient.java:810) ~[r2dbc-postgresql-1.0.5.RELEASE.jar:1.0.5.RELEASE]
-	at io.r2dbc.postgresql.client.ReactorNettyClient$BackendMessageSubscriber.onNext(ReactorNettyClient.java:716) ~[r2dbc-postgresql-1.0.5.RELEASE.jar:1.0.5.RELEASE]
-	at reactor.core.publisher.FluxHandle$HandleSubscriber.onNext(FluxHandle.java:129) ~[reactor-core-3.6.6.jar:3.6.6]
-	at reactor.core.publisher.FluxPeekFuseable$PeekConditionalSubscriber.onNext(FluxPeekFuseable.java:854) ~[reactor-core-3.6.6.jar:3.6.6]
-	at reactor.core.publisher.FluxMap$MapConditionalSubscriber.onNext(FluxMap.java:224) ~[reactor-core-3.6.6.jar:3.6.6]
-	at reactor.core.publisher.FluxMap$MapConditionalSubscriber.onNext(FluxMap.java:224) ~[reactor-core-3.6.6.jar:3.6.6]
-	at reactor.netty.channel.FluxReceive.drainReceiver(FluxReceive.java:294) ~[reactor-netty-core-1.1.19.jar:1.1.19]
-	at reactor.netty.channel.FluxReceive.onInboundNext(FluxReceive.java:403) ~[reactor-netty-core-1.1.19.jar:1.1.19]
-	at reactor.netty.channel.ChannelOperations.onInboundNext(ChannelOperations.java:426) ~[reactor-netty-core-1.1.19.jar:1.1.19]
-	at reactor.netty.channel.ChannelOperationsHandler.channelRead(ChannelOperationsHandler.java:114) ~[reactor-netty-core-1.1.19.jar:1.1.19]
-	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:444) ~[netty-transport-4.1.110.Final.jar:4.1.110.Final]
-	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420) ~[netty-transport-4.1.110.Final.jar:4.1.110.Final]
-	at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:412) ~[netty-transport-4.1.110.Final.jar:4.1.110.Final]
-	at io.netty.handler.codec.ByteToMessageDecoder.fireChannelRead(ByteToMessageDecoder.java:346) ~[netty-codec-4.1.110.Final.jar:4.1.110.Final]
-	at io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:318) ~[netty-codec-4.1.110.Final.jar:4.1.110.Final]
-	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:444) ~[netty-transport-4.1.110.Final.jar:4.1.110.Final]
-	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420) ~[netty-transport-4.1.110.Final.jar:4.1.110.Final]
-	at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:412) ~[netty-transport-4.1.110.Final.jar:4.1.110.Final]
-	at io.netty.channel.DefaultChannelPipeline$HeadContext.channelRead(DefaultChannelPipeline.java:1407) ~[netty-transport-4.1.110.Final.jar:4.1.110.Final]
-	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:440) ~[netty-transport-4.1.110.Final.jar:4.1.110.Final]
-	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420) ~[netty-transport-4.1.110.Final.jar:4.1.110.Final]
-	at io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:918) ~[netty-transport-4.1.110.Final.jar:4.1.110.Final]
-	at io.netty.channel.epoll.AbstractEpollStreamChannel$EpollStreamUnsafe.epollInReady(AbstractEpollStreamChannel.java:799) ~[netty-transport-classes-epoll-4.1.110.Final.jar:4.1.110.Final]
-	at io.netty.channel.epoll.EpollEventLoop.processReady(EpollEventLoop.java:501) ~[netty-transport-classes-epoll-4.1.110.Final.jar:4.1.110.Final]
-	at io.netty.channel.epoll.EpollEventLoop.run(EpollEventLoop.java:399) ~[netty-transport-classes-epoll-4.1.110.Final.jar:4.1.110.Final]
-	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:994) ~[netty-common-4.1.110.Final.jar:4.1.110.Final]
-	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74) ~[netty-common-4.1.110.Final.jar:4.1.110.Final]
-	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30) ~[netty-common-4.1.110.Final.jar:4.1.110.Final]
-	at java.base/java.lang.Thread.run(Thread.java:1583) ~[na:na]
-
-^C[INFO] ------------------------------------------------------------------------
-[INFO] BUILD SUCCESS
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time:  03:36 min
-[INFO] Finished at: 2026-01-31T12:54:13+01:00
-[INFO] ------------------------------------------------------------------------
-gabriel@gabriel-pc:~/Documents/projects/ecole/5GI/projet-synthese/fleet-management/code$ 
-
+je suis en train de debugger la fonctionnalite vehicles,je susi gabriel,j'ai fait mes taches et je suis juste en train de yetster,je commence par vehciuleses-tu pret a recevoir le premier bugg ?
 "```
 
 ---
@@ -8352,8 +8206,8 @@ spring:
   # R2DBC (Application Runtime)
   r2dbc:
     url: r2dbc:postgresql://localhost:5432/yowyob_db
-    username: fleet_admin
-    password: fleet_password
+    username: postgres
+    password: password
     pool:
       enabled: true
       initial-size: 2
@@ -8364,8 +8218,8 @@ spring:
   # JDBC (Liquibase Migration)
   datasource:
     url: jdbc:postgresql://localhost:5432/yowyob_db
-    username: fleet_admin
-    password: fleet_password
+    username: postgres
+    password: password
     driver-class-name: org.postgresql.Driver
 
   # LIQUIBASE
@@ -9585,6 +9439,7 @@ public interface AuthApiClient {
 ### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/external/client/VehicleApiClient.java`
 ```java
 package com.yowyob.fleet.infrastructure.adapters.outbound.external.client;
+import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.VehicleOwnershipRequest;
 
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.VehicleRegistrationRequest;
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.dto.VehicleExternalResponse;
@@ -9627,18 +9482,33 @@ public interface VehicleApiClient {
     Mono<Void> delete(@PathVariable UUID id, @RequestHeader("Authorization") String token);
 
     // Documents
+    @PutExchange("/{id}/documents/serial") // CORRECTION: Spec dit PUT pour upload
+    Mono<Void> uploadSerialDoc(@PathVariable UUID id, @RequestBody Object multipartData, @RequestHeader("Authorization") String token); // Note: Le type Object sera géré par l'adapter
+
     @DeleteExchange("/{id}/documents/serial")
     Mono<Void> deleteSerialDoc(@PathVariable UUID id, @RequestHeader("Authorization") String token);
+
+    @PutExchange("/{id}/documents/registration") // Correction PUT selon spec
+    Mono<Void> uploadRegistrationDoc(@PathVariable UUID id, @RequestBody Object multipartData, @RequestHeader("Authorization") String token);
 
     @DeleteExchange("/{id}/documents/registration")
     Mono<Void> deleteRegistrationDoc(@PathVariable UUID id, @RequestHeader("Authorization") String token);
 
     // Images
+    @PostExchange("/{id}/images") // POST pour ajout image
+    Mono<Map<String, Object>> addImage(@PathVariable UUID id, @RequestBody Object multipartData, @RequestHeader("Authorization") String token);
+
     @GetExchange("/{id}/images")
     Flux<Map<String, Object>> getImages(@PathVariable UUID id, @RequestHeader("Authorization") String token);
 
     @DeleteExchange("/images/{imageId}")
     Mono<Void> deleteImage(@PathVariable String imageId, @RequestHeader("Authorization") String token);
+
+    @GetExchange("/lookup/{resource}")
+    Flux<Map<String, Object>> getLookupList(@PathVariable String resource, @RequestHeader("Authorization") String token);
+
+    @PostExchange("/ownerships")
+    Mono<Void> createOwnership(@RequestBody VehicleOwnershipRequest request, @RequestHeader("Authorization") String token);
 }```
 
 ---
@@ -9679,6 +9549,7 @@ public interface GeofenceApiClient {
 ### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/external/VehicleApiAdapter.java`
 ```java
 package com.yowyob.fleet.infrastructure.adapters.outbound.external;
+import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.VehicleOwnershipRequest;
 
 import com.yowyob.fleet.domain.model.Vehicle;
 import com.yowyob.fleet.domain.ports.out.ExternalVehiclePort;
@@ -9793,6 +9664,36 @@ public class VehicleApiAdapter implements ExternalVehiclePort {
     @Override
     public Mono<Void> deleteImage(String imageId, String token) {
         return apiClient.deleteImage(imageId, ensureBearer(token));
+    }
+
+    // --- LOOKUPS ---
+    @Override
+    public Flux<Map<String, Object>> getReferenceData(String resource, String token) {
+        return apiClient.getLookupList(resource, ensureBearer(token))
+                .onErrorResume(e -> {
+                    log.error("Erreur récupération Lookup {}: {}", resource, e.getMessage());
+                    return Flux.empty();
+                });
+    }
+
+    @Override
+    public Mono<Void> assignDriverRemote(UUID vehicleId, UUID driverId, String token) {
+        VehicleOwnershipRequest req = new VehicleOwnershipRequest(
+            vehicleId,
+            "DRIVER",
+            true, // isPrimary: true remplace le conducteur principal précédent
+            LocalDateTime.now().toString(),
+            driverId // On passe l'ID explicite du chauffeur
+        );
+
+        return apiClient.createOwnership(req, ensureBearer(token))
+            .onErrorResume(e -> {
+                log.error("Erreur assignation distante (Véhicule: {}, Chauffeur: {}): {}", vehicleId, driverId, e.getMessage());
+                // Stratégie : On loggue l'erreur mais on ne bloque pas le flux local pour l'instant (Mode Best Effort)
+                // Ou on propage l'erreur si on veut une cohérence stricte.
+                // Ici, on retourne Empty pour ne pas casser la transaction locale, mais c'est un point à discuter.
+                return Mono.empty(); 
+            });
     }
 
     // --- HELPERS TECHNIQUES ---
@@ -10353,6 +10254,43 @@ public class GeofenceZoneEntity {
 }```
 
 ---
+### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/persistence/entity/VehicleTypeEntity.java`
+```java
+package com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.domain.Persistable;
+import org.springframework.data.relational.core.mapping.Table;
+
+import java.util.UUID;
+
+@Table(name = "vehicle_types", schema = "fleet")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class VehicleTypeEntity implements Persistable<UUID> {
+
+    @Id
+    private UUID id;
+
+    private String code;       // ex: CAR
+    private String label;      // ex: Voiture
+    private String description;
+
+    @Transient
+    private boolean isNew = false;
+
+    @Override
+    public boolean isNew() {
+        return isNew || id == null;
+    }
+}```
+
+---
 ### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/persistence/entity/FleetManagerEntity.java`
 ```java
 package com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity;
@@ -10693,6 +10631,21 @@ public interface FinancialParameterR2dbcRepository extends ReactiveCrudRepositor
 }```
 
 ---
+### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/persistence/repository/VehicleTypeR2dbcRepository.java`
+```java
+package com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository;
+
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.VehicleTypeEntity;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import org.springframework.stereotype.Repository;
+import java.util.UUID;
+
+@Repository
+public interface VehicleTypeR2dbcRepository extends ReactiveCrudRepository<VehicleTypeEntity, UUID> {
+    // On pourra ajouter findByCode(String code) si besoin plus tard
+}```
+
+---
 ### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/persistence/repository/GeofenceR2dbcRepository.java`
 ```java
 package com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository;
@@ -10926,6 +10879,47 @@ public class DriverPersistenceAdapter implements DriverPersistencePort {
     @Override
     public Flux<Driver> findAll() {
         return repository.findAll().map(mapper::toDomain);
+    }
+}```
+
+---
+### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/VehicleLookupController.java`
+```java
+package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
+
+import com.yowyob.fleet.domain.ports.in.ManageVehicleUseCase;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/v1/vehicles/lookup")
+@RequiredArgsConstructor
+@Tag(name = "06. Vehicles", description = "Gestion complète du parc automobile")
+@SecurityRequirement(name = "bearerAuth")
+public class VehicleLookupController {
+
+    private final ManageVehicleUseCase vehicleUseCase;
+
+    @GetMapping("/{resource}")
+    @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'FLEET_ADMIN')")
+    @Operation(
+        summary = "Récupérer des listes de référence (Proxy)", 
+        description = "Ressources dispos: fuel-types, manufacturers, transmission-types, vehicle-makes, vehicle-models, vehicle-sizes, vehicle-types"
+    )
+    public Flux<Map<String, Object>> getReferenceList(
+            @PathVariable String resource,
+            @Parameter(hidden = true) @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader
+    ) {
+        return vehicleUseCase.getVehicleReferenceData(resource, authHeader);
     }
 }```
 
@@ -11176,6 +11170,37 @@ public class GeofenceController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
     ) {
         return geofenceService.getEvents(vehicleId, zoneId, type, date);
+    }
+}```
+
+---
+### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/ReferenceController.java`
+```java
+package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
+
+import com.yowyob.fleet.application.service.VehicleTypeService;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.VehicleTypeEntity;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Flux;
+
+@RestController
+@RequestMapping("/api/v1/references")
+@RequiredArgsConstructor
+@Tag(name = "10. Références", description = "Données statiques (Types de véhicules, etc.)")
+public class ReferenceController {
+
+    private final VehicleTypeService vehicleTypeService;
+
+    @GetMapping("/vehicle-types")
+    @Operation(summary = "Lister les types de véhicules disponibles", 
+               description = "Utilisez l'ID retourné ici pour créer un véhicule.")
+    public Flux<VehicleTypeEntity> getVehicleTypes() {
+        return vehicleTypeService.getAllTypes();
     }
 }```
 
@@ -11705,9 +11730,14 @@ public class DriverController {
     }
 
     @PostMapping("/drivers/{userId}/assign-vehicle")
-    @Operation(summary = "Assigner un véhicule (Smart Swap)", description = "Assigne le véhicule et gère automatiquement le détachement des précédents conducteurs/véhicules.")
-    public Mono<Void> assign(@PathVariable UUID userId, @RequestBody VehicleAssignRequest req, Authentication auth) {
-        return driverUseCase.assignVehicle(userId, req.vehicleId(), getUser(auth).id());
+    @Operation(summary = "Assigner un véhicule (Smart Swap)", description = "Assigne le véhicule et gère automatiquement le détachement.")
+    public Mono<Void> assign(
+            @PathVariable UUID userId, 
+            @RequestBody VehicleAssignRequest req, 
+            Authentication auth,
+            @Parameter(hidden = true) @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader // Ajout
+    ) {
+        return driverUseCase.assignVehicle(userId, req.vehicleId(), getUser(auth).id(), getToken(authHeader));
     }
 
     @PostMapping("/drivers/{userId}/unassign-vehicle")
@@ -11716,6 +11746,57 @@ public class DriverController {
     }
 
     public record VehicleAssignRequest(UUID vehicleId) {}
+}```
+
+---
+### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/AdminReferenceController.java`
+```java
+package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
+
+import com.yowyob.fleet.application.service.VehicleTypeService;
+import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.VehicleTypeRequest;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.VehicleTypeEntity;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
+
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/v1/admin/references")
+@RequiredArgsConstructor
+@Tag(name = "00. Super Admin", description = "Configuration du système")
+@SecurityRequirement(name = "bearerAuth")
+@PreAuthorize("hasRole('FLEET_ADMIN')")
+public class AdminReferenceController {
+
+    private final VehicleTypeService vehicleTypeService;
+
+    @PostMapping("/vehicle-types")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Ajouter un type de véhicule")
+    public Mono<VehicleTypeEntity> createType(@Valid @RequestBody VehicleTypeRequest request) {
+        return vehicleTypeService.createType(request);
+    }
+
+    @PutMapping("/vehicle-types/{id}")
+    @Operation(summary = "Modifier un type de véhicule")
+    public Mono<VehicleTypeEntity> updateType(@PathVariable UUID id, @Valid @RequestBody VehicleTypeRequest request) {
+        return vehicleTypeService.updateType(id, request);
+    }
+
+    @DeleteMapping("/vehicle-types/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Supprimer un type", description = "Impossible si des véhicules utilisent ce type.")
+    public Mono<Void> deleteType(@PathVariable UUID id) {
+        return vehicleTypeService.deleteType(id);
+    }
 }```
 
 ---
@@ -12062,6 +12143,21 @@ public record MaintenanceUpdateRequest(
 ) {}```
 
 ---
+### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/dto/VehicleOwnershipRequest.java`
+```java
+package com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto;
+
+import java.util.UUID;
+
+public record VehicleOwnershipRequest(
+    UUID vehicleId,
+    String usageRole, // "OWNER", "DRIVER", "LOGISTICS", "FLEET"
+    boolean isPrimary,
+    String validFrom,
+    UUID partyId // Ajout explicite pour désigner le chauffeur
+) {}```
+
+---
 ### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/dto/FleetRequest.java`
 ```java
 package com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto;
@@ -12076,6 +12172,23 @@ public record FleetRequest(
     
     @Schema(description = "Numéro du Dispatching / Contact d'urgence pour cette flotte", example = "+237699000000")
     String phoneNumber
+) {}```
+
+---
+### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/dto/VehicleTypeRequest.java`
+```java
+package com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto;
+
+import jakarta.validation.constraints.NotBlank;
+
+public record VehicleTypeRequest(
+    @NotBlank(message = "Le code technique est obligatoire (ex: HEAVY_TRUCK)")
+    String code,
+    
+    @NotBlank(message = "Le libellé est obligatoire (ex: Poids Lourd)")
+    String label,
+    
+    String description
 ) {}```
 
 ---
@@ -13130,7 +13243,7 @@ public interface ManageDriverUseCase {
     Flux<Driver> getDrivers(UUID fleetId, UUID requesterId, boolean isAdmin);
     
     // Gestion Véhicule
-    Mono<Void> assignVehicle(UUID userId, UUID vehicleId, UUID requesterId);
+    Mono<Void> assignVehicle(UUID userId, UUID vehicleId, UUID requesterId, String token);
     Mono<Void> unassignVehicle(UUID userId, UUID requesterId);
     
     // Retrait de la flotte (Manager)
@@ -13148,6 +13261,7 @@ import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.VehicleRegistra
 import org.springframework.http.codec.multipart.FilePart;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import java.util.Map;
 import java.util.UUID;
 
 public interface ManageVehicleUseCase {
@@ -13173,6 +13287,9 @@ public interface ManageVehicleUseCase {
     Mono<Void> updateFinancialParameters(UUID vehicleId, VehicleParameters.Financial params);
     Mono<Void> updateMaintenanceParameters(UUID vehicleId, VehicleParameters.Maintenance params);
     Mono<Void> removeVehicle(UUID vehicleId, String token);
+
+    // --- NOUVEAU ---
+    Flux<Map<String, Object>> getVehicleReferenceData(String resource, String token);
 }```
 
 ---
@@ -13298,6 +13415,7 @@ import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.VehicleRegistra
 import org.springframework.http.codec.multipart.FilePart;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import java.util.Map;
 import java.util.UUID;
 
 public interface ExternalVehiclePort {
@@ -13316,6 +13434,11 @@ public interface ExternalVehiclePort {
     Mono<String> addImage(UUID vehicleId, FilePart file, String token);
     Flux<String> getImages(UUID vehicleId, String token); 
     Mono<Void> deleteImage(String imageId, String token); 
+
+    // --- NOUVEAU : Référentiels ---
+    Flux<Map<String, Object>> getReferenceData(String resource, String token);
+
+    Mono<Void> assignDriverRemote(UUID vehicleId, UUID driverId, String token);
 }```
 
 ---
@@ -13746,6 +13869,66 @@ public class TripService implements ManageTripUseCase {
 }```
 
 ---
+### Fichier : `./src/main/java/com/yowyob/fleet/application/service/VehicleTypeService.java`
+```java
+package com.yowyob.fleet.application.service;
+
+import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.VehicleTypeRequest;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.VehicleTypeEntity;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.VehicleTypeR2dbcRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+public class VehicleTypeService {
+
+    private final VehicleTypeR2dbcRepository repository;
+
+    // --- Lecture (Public / Auth) ---
+    public Flux<VehicleTypeEntity> getAllTypes() {
+        return repository.findAll();
+    }
+
+    public Mono<VehicleTypeEntity> getTypeById(UUID id) {
+        return repository.findById(id);
+    }
+
+    // --- Écriture (Admin) ---
+    public Mono<VehicleTypeEntity> createType(VehicleTypeRequest request) {
+        VehicleTypeEntity entity = new VehicleTypeEntity(
+                UUID.randomUUID(),
+                request.code().toUpperCase(),
+                request.label(),
+                request.description(),
+                true // isNew force l'INSERT
+        );
+        return repository.save(entity);
+    }
+
+    public Mono<VehicleTypeEntity> updateType(UUID id, VehicleTypeRequest request) {
+        return repository.findById(id)
+                .flatMap(existing -> {
+                    existing.setCode(request.code().toUpperCase());
+                    existing.setLabel(request.label());
+                    existing.setDescription(request.description());
+                    existing.setNew(false); // Update
+                    return repository.save(existing);
+                });
+    }
+
+    public Mono<Void> deleteType(UUID id) {
+        // Note : PostgreSQL renverra une erreur si ce type est utilisé par des véhicules (FK Constraint).
+        // C'est le comportement voulu pour la sécurité des données.
+        return repository.deleteById(id);
+    }
+}```
+
+---
 ### Fichier : `./src/main/java/com/yowyob/fleet/application/service/VehicleService.java`
 ```java
 package com.yowyob.fleet.application.service;
@@ -13756,13 +13939,17 @@ import com.yowyob.fleet.domain.ports.in.ManageVehicleUseCase;
 import com.yowyob.fleet.domain.ports.out.ExternalVehiclePort;
 import com.yowyob.fleet.domain.ports.out.VehiclePersistencePort;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.VehicleRegistrationRequest;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.VehicleTypeR2dbcRepository; // <--- AJOUT
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException; // <--- AJOUT
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -13772,13 +13959,14 @@ public class VehicleService implements ManageVehicleUseCase {
 
     private final VehiclePersistencePort localPersistencePort;
     private final ExternalVehiclePort externalVehiclePort;
+    private final VehicleTypeR2dbcRepository vehicleTypeRepository; // <--- INJECTION
 
     @Override
     public Mono<Vehicle> getVehicleDetails(UUID vehicleId, String token) {
         return Mono.zip(
                 localPersistencePort.getLocalDataById(vehicleId),
-                externalVehiclePort.getExternalVehicleInfo(vehicleId, token) // + token
-        ).map(tuple -> merge(tuple.getT1(), tuple.getT2()));
+                externalVehiclePort.getExternalVehicleInfo(vehicleId, token))
+                .map(tuple -> merge(tuple.getT1(), tuple.getT2()));
     }
 
     @Override
@@ -13797,65 +13985,87 @@ public class VehicleService implements ManageVehicleUseCase {
     }
 
     @Transactional
-    protected Mono<Vehicle> createVehicleInternal(UUID fleetId, VehicleRegistrationRequest req, UUID managerId, String token) {
-        log.info("Création véhicule Distant [Plaque: {}] - Manager: {}", req.registrationNumber(), managerId);
-        
-        return externalVehiclePort.createRemoteVehicleSimplified(req, token)
-            .flatMap(remoteVehicle -> {
-                log.info("Véhicule distant créé avec ID: {}", remoteVehicle.id());
-                
-                Vehicle localShell = new Vehicle(
-                    remoteVehicle.id(),
-                    fleetId,
-                    managerId,
-                    null, 
-                    req.vehicleTypeId(),
-                    
-                    // --- CORRECTION ICI ---
-                    // On utilise req.registrationNumber() (garanti non null)
-                    // au lieu de remoteVehicle.licensePlate() (qui semble arriver null)
-                    req.registrationNumber(), 
-                    
-                    remoteVehicle.vehicleSerialNumber(),
-                    remoteVehicle.brand(),
-                    remoteVehicle.model(),
-                    remoteVehicle.manufacturingYear(),
-                    remoteVehicle.transmissionType(),
-                    remoteVehicle.fuelType(),
-                    remoteVehicle.tankCapacity(),
-                    remoteVehicle.totalSeatNumber(),
-                    remoteVehicle.averageFuelConsumption(),
-                    remoteVehicle.color(),
-                    "AVAILABLE",
-                    remoteVehicle.photoUrl(),
-                    null, null, 
-                    null, null, null 
-                );
+    protected Mono<Vehicle> createVehicleInternal(UUID fleetId, VehicleRegistrationRequest req, UUID managerId,
+            String token) {
+        // --- 1. VALIDATION PRÉALABLE ---
+        // On vérifie que le type existe AVANT d'appeler le service distant
+        return vehicleTypeRepository.existsById(req.vehicleTypeId())
+                .flatMap(exists -> {
+                    if (!exists) {
+                        return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                                "Type de véhicule invalide ou inexistant : " + req.vehicleTypeId()));
+                    }
 
-                return localPersistencePort.saveLocalData(localShell)
-                        .map(savedLocal -> merge(savedLocal, remoteVehicle));
-            });
+                    // --- 2. EXECUTION ---
+                    log.info("Création véhicule Distant [Plaque: {}] - Manager: {}", req.registrationNumber(),
+                            managerId);
+
+                    return externalVehiclePort.createRemoteVehicleSimplified(req, token)
+                            .flatMap(remoteVehicle -> {
+                                log.info("Véhicule distant créé avec ID: {}", remoteVehicle.id());
+
+                                Vehicle localShell = new Vehicle(
+                                        remoteVehicle.id(),
+                                        fleetId,
+                                        managerId,
+                                        null,
+                                        req.vehicleTypeId(),
+                                        req.registrationNumber(),
+                                        remoteVehicle.vehicleSerialNumber(),
+                                        remoteVehicle.brand(),
+                                        remoteVehicle.model(),
+                                        remoteVehicle.manufacturingYear(),
+                                        remoteVehicle.transmissionType(),
+                                        remoteVehicle.fuelType(),
+                                        remoteVehicle.tankCapacity(),
+                                        remoteVehicle.totalSeatNumber(),
+                                        remoteVehicle.averageFuelConsumption(),
+                                        remoteVehicle.color(),
+                                        "AVAILABLE",
+                                        remoteVehicle.photoUrl(),
+                                        null, null,
+                                        null, null, null);
+
+                                return localPersistencePort.saveLocalData(localShell)
+                                        .map(savedLocal -> merge(savedLocal, remoteVehicle));
+                            });
+                });
     }
 
     @Override
     public Mono<Vehicle> updateVehicleInfo(UUID vehicleId, VehicleRegistrationRequest request, String token) {
-        return externalVehiclePort.updateRemoteVehicle(vehicleId, request, token) // + token
+        return externalVehiclePort.updateRemoteVehicle(vehicleId, request, token)
                 .flatMap(remote -> localPersistencePort.getLocalDataById(vehicleId)
                         .map(local -> merge(local, remote)));
     }
 
     @Override
     public Mono<Vehicle> patchVehicleInfo(UUID vehicleId, String brand, String model, String token) {
-        return externalVehiclePort.patchRemoteVehicle(vehicleId, brand, token) // + token
+        return externalVehiclePort.patchRemoteVehicle(vehicleId, brand, token)
                 .flatMap(remote -> localPersistencePort.getLocalDataById(vehicleId)
                         .map(local -> merge(local, remote)));
     }
 
-    // --- MEDIAS ---
+    @Override
+    public Flux<Map<String, Object>> getVehicleReferenceData(String resource, String token) {
+        // Validation basique pour éviter d'appeler n'importe quoi
+        if (!isValidResource(resource)) {
+            return Flux.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ressource inconnue: " + resource));
+        }
+        return externalVehiclePort.getReferenceData(resource, token);
+    }
+
+    private boolean isValidResource(String res) {
+        return java.util.List.of(
+                "fuel-types", "manufacturers", "transmission-types",
+                "vehicle-makes", "vehicle-models", "vehicle-sizes", "vehicle-types").contains(res);
+    }
+
+    // --- MEDIAS (Pas de changement) ---
 
     @Override
     public Mono<Void> uploadVinPhoto(UUID vehicleId, FilePart file, String token) {
-        return externalVehiclePort.uploadDocument(vehicleId, "serial", file, token); // + token
+        return externalVehiclePort.uploadDocument(vehicleId, "serial", file, token);
     }
 
     @Override
@@ -13888,7 +14098,7 @@ public class VehicleService implements ManageVehicleUseCase {
         return externalVehiclePort.deleteImage(imageId.toString(), token);
     }
 
-    // --- INTERNE ---
+    // --- INTERNE (Pas de changement) ---
 
     @Override
     public Mono<Void> updateFinancialParameters(UUID vehicleId, VehicleParameters.Financial params) {
@@ -13904,7 +14114,7 @@ public class VehicleService implements ManageVehicleUseCase {
 
     @Override
     public Mono<Void> removeVehicle(UUID vehicleId, String token) {
-        return externalVehiclePort.deleteRemoteVehicle(vehicleId, token) // + token
+        return externalVehiclePort.deleteRemoteVehicle(vehicleId, token)
                 .onErrorResume(e -> Mono.empty())
                 .then(localPersistencePort.deleteLocalData(vehicleId));
     }
@@ -13933,18 +14143,17 @@ public class VehicleService implements ManageVehicleUseCase {
                 remote.registrationPhotoUrl(),
                 local.financialParameters(),
                 local.maintenanceParameters(),
-                null
-        );
+                null);
     }
 
-    private Mono<Void> saveWithNewParams(Vehicle v, VehicleParameters.Financial fin, VehicleParameters.Maintenance maint) {
+    private Mono<Void> saveWithNewParams(Vehicle v, VehicleParameters.Financial fin,
+            VehicleParameters.Maintenance maint) {
         Vehicle toSave = new Vehicle(
-            v.id(), v.fleetId(), v.managerId(), v.currentDriverId(), v.vehicleTypeId(),
-            v.licensePlate(), v.vehicleSerialNumber(), v.brand(), v.model(), v.manufacturingYear(),
-            v.transmissionType(), v.fuelType(), v.tankCapacity(), v.totalSeatNumber(), v.averageFuelConsumption(),
-            v.color(), v.status(), v.photoUrl(), v.serialNumberPhotoUrl(), v.registrationPhotoUrl(),
-            fin, maint, v.operationalParameters()
-        );
+                v.id(), v.fleetId(), v.managerId(), v.currentDriverId(), v.vehicleTypeId(),
+                v.licensePlate(), v.vehicleSerialNumber(), v.brand(), v.model(), v.manufacturingYear(),
+                v.transmissionType(), v.fuelType(), v.tankCapacity(), v.totalSeatNumber(), v.averageFuelConsumption(),
+                v.color(), v.status(), v.photoUrl(), v.serialNumberPhotoUrl(), v.registrationPhotoUrl(),
+                fin, maint, v.operationalParameters());
         return localPersistencePort.saveLocalData(toSave).then();
     }
 }```
@@ -14149,6 +14358,7 @@ import com.yowyob.fleet.domain.ports.in.AuthUseCase;
 import com.yowyob.fleet.domain.ports.in.ManageDriverUseCase;
 import com.yowyob.fleet.domain.ports.out.AuthPort;
 import com.yowyob.fleet.domain.ports.out.DriverPersistencePort;
+import com.yowyob.fleet.domain.ports.out.ExternalVehiclePort;
 import com.yowyob.fleet.domain.ports.out.VehiclePersistencePort;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.DriverRegistrationRequest;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.FleetR2dbcRepository;
@@ -14171,7 +14381,8 @@ public class DriverService implements ManageDriverUseCase {
     private final DriverPersistencePort driverPersistencePort;
     private final VehiclePersistencePort vehiclePersistencePort;
     private final AuthPort authPort;
-    private final FleetR2dbcRepository fleetRepository; 
+    private final FleetR2dbcRepository fleetRepository;
+    private final ExternalVehiclePort externalVehiclePort;
 
     private static final String SERVICE_NAME = "FLEET_MANAGEMENT";
 
@@ -14179,42 +14390,41 @@ public class DriverService implements ManageDriverUseCase {
     @Override
     public Mono<Driver> registerDriver(UUID fleetId, DriverRegistrationRequest request, UUID managerId) {
         return checkFleetOwnership(fleetId, managerId)
-            .then(Mono.defer(() -> {
-                AuthUseCase.RegisterCommand command = new AuthUseCase.RegisterCommand(
-                    request.username(), request.password(), request.email(), request.phone(),
-                    request.firstName(), request.lastName(), List.of("FLEET_DRIVER"), null
-                );
-                return authPort.registerInRemote(command);
-            }))
-            .flatMap(authRes -> {
-                Driver localDriver = new Driver(
-                    authRes.user().id(),
-                    fleetId,
-                    request.licenceNumber(),
-                    "ACTIVE",
-                    null,
-                    null
-                );
-                return driverPersistencePort.save(localDriver);
-            });
+                .then(Mono.defer(() -> {
+                    AuthUseCase.RegisterCommand command = new AuthUseCase.RegisterCommand(
+                            request.username(), request.password(), request.email(), request.phone(),
+                            request.firstName(), request.lastName(), List.of("FLEET_DRIVER"), null);
+                    return authPort.registerInRemote(command);
+                }))
+                .flatMap(authRes -> {
+                    Driver localDriver = new Driver(
+                            authRes.user().id(),
+                            fleetId,
+                            request.licenceNumber(),
+                            "ACTIVE",
+                            null,
+                            null);
+                    return driverPersistencePort.save(localDriver);
+                });
     }
 
     // --- 2. RECRUTEMENT ---
     @Override
     public Mono<Void> recruitDriver(UUID fleetId, String identifier, UUID managerId, String token) {
         return checkFleetOwnership(fleetId, managerId)
-            .thenMany(authPort.getUsersByService(SERVICE_NAME, token)) 
-            .filter(u -> isMatch(u, identifier)) 
-            .filter(u -> u.roles().contains("FLEET_DRIVER")) 
-            .next() 
-            .switchIfEmpty(Mono.error(new RuntimeException("Aucun chauffeur trouvé avec cet identifiant : " + identifier)))
-            .flatMap(user -> driverPersistencePort.updateFleetAssignment(user.id(), fleetId));
+                .thenMany(authPort.getUsersByService(SERVICE_NAME, token))
+                .filter(u -> isMatch(u, identifier))
+                .filter(u -> u.roles().contains("FLEET_DRIVER"))
+                .next()
+                .switchIfEmpty(
+                        Mono.error(new RuntimeException("Aucun chauffeur trouvé avec cet identifiant : " + identifier)))
+                .flatMap(user -> driverPersistencePort.updateFleetAssignment(user.id(), fleetId));
     }
 
     private boolean isMatch(AuthPort.UserDetail user, String id) {
-        return id.equalsIgnoreCase(user.email()) || 
-               id.equalsIgnoreCase(user.username()) || 
-               id.equals(user.phone());
+        return id.equalsIgnoreCase(user.email()) ||
+                id.equalsIgnoreCase(user.username()) ||
+                id.equals(user.phone());
     }
 
     // --- 3. LECTURE ---
@@ -14245,82 +14455,92 @@ public class DriverService implements ManageDriverUseCase {
 
     @Override
     @Transactional
-    public Mono<Void> assignVehicle(UUID driverId, UUID targetVehicleId, UUID requesterId) {
+    public Mono<Void> assignVehicle(UUID driverId, UUID targetVehicleId, UUID requesterId, String token) {
         return vehiclePersistencePort.getLocalDataById(targetVehicleId)
-            .switchIfEmpty(Mono.error(new RuntimeException("Véhicule introuvable")))
-            .flatMap(vehicle -> checkFleetOwnership(vehicle.fleetId(), requesterId).thenReturn(vehicle))
-            .flatMap(targetVehicle -> {
-                Mono<Void> clearOldVehicleOfDriver = driverPersistencePort.findById(driverId)
-                    .flatMap(driver -> {
-                        if (driver.assignedVehicleId() != null && !driver.assignedVehicleId().equals(targetVehicleId)) {
-                            return updateVehicleLink(driver.assignedVehicleId(), null);
-                        }
-                        return Mono.empty();
-                    });
+                .switchIfEmpty(Mono.error(new RuntimeException("Véhicule introuvable")))
+                .flatMap(vehicle -> checkFleetOwnership(vehicle.fleetId(), requesterId).thenReturn(vehicle))
+                .flatMap(targetVehicle -> {
 
-                Mono<Void> clearOldDriverOfVehicle = driverPersistencePort.findByAssignedVehicleId(targetVehicleId)
-                    .flatMap(oldDriver -> {
-                        if (!oldDriver.userId().equals(driverId)) {
-                            return driverPersistencePort.updateVehicleAssignment(oldDriver.userId(), null);
-                        }
-                        return Mono.empty();
-                    });
+                    // 1. Nettoyage local (Driver précédent, etc.)
+                    Mono<Void> clearOldVehicleOfDriver = driverPersistencePort.findById(driverId)
+                            .flatMap(driver -> {
+                                if (driver.assignedVehicleId() != null
+                                        && !driver.assignedVehicleId().equals(targetVehicleId)) {
+                                    return updateVehicleLink(driver.assignedVehicleId(), null);
+                                }
+                                return Mono.empty();
+                            });
 
-                return clearOldVehicleOfDriver
-                        .then(clearOldDriverOfVehicle)
-                        .then(updateVehicleLink(targetVehicleId, driverId))
-                        .then(driverPersistencePort.updateVehicleAssignment(driverId, targetVehicleId));
-            });
+                    Mono<Void> clearOldDriverOfVehicle = driverPersistencePort.findByAssignedVehicleId(targetVehicleId)
+                            .flatMap(oldDriver -> {
+                                if (!oldDriver.userId().equals(driverId)) {
+                                    return driverPersistencePort.updateVehicleAssignment(oldDriver.userId(), null);
+                                }
+                                return Mono.empty();
+                            });
+
+                    // 2. Synchronisation Distante (External API)
+                    // On appelle l'API pour dire "Ce chauffeur conduit maintenant ce véhicule"
+                    Mono<Void> remoteSync = externalVehiclePort.assignDriverRemote(targetVehicleId, driverId, token);
+
+                    // 3. Exécution chainée
+                    return clearOldVehicleOfDriver
+                            .then(clearOldDriverOfVehicle)
+                            .then(remoteSync) // <--- Appel distant ici
+                            .then(updateVehicleLink(targetVehicleId, driverId))
+                            .then(driverPersistencePort.updateVehicleAssignment(driverId, targetVehicleId));
+                });
     }
 
     @Override
     @Transactional
     public Mono<Void> unassignVehicle(UUID driverId, UUID requesterId) {
         return driverPersistencePort.findById(driverId)
-            .flatMap(driver -> {
-                if (driver.assignedVehicleId() == null) return Mono.empty();
-                return updateVehicleLink(driver.assignedVehicleId(), null)
-                        .then(driverPersistencePort.updateVehicleAssignment(driverId, null));
-            });
+                .flatMap(driver -> {
+                    if (driver.assignedVehicleId() == null)
+                        return Mono.empty();
+                    return updateVehicleLink(driver.assignedVehicleId(), null)
+                            .then(driverPersistencePort.updateVehicleAssignment(driverId, null));
+                });
     }
 
     // Helper mis à jour avec le nouveau constructeur Vehicle (23 champs)
     private Mono<Void> updateVehicleLink(UUID vehicleId, UUID driverId) {
         return vehiclePersistencePort.getLocalDataById(vehicleId)
-            .flatMap(v -> {
-                Vehicle updated = new Vehicle(
-                    v.id(), 
-                    v.fleetId(), 
-                    v.managerId(), 
-                    driverId, // Seul champ modifié
-                    v.vehicleTypeId(), 
-                    v.licensePlate(), 
-                    v.vehicleSerialNumber(), 
-                    v.brand(), 
-                    v.model(), 
-                    v.manufacturingYear(), 
-                    v.transmissionType(), 
-                    v.fuelType(), 
-                    v.tankCapacity(), 
-                    v.totalSeatNumber(), 
-                    v.averageFuelConsumption(),
-                    v.color(), 
-                    v.status(), 
-                    v.photoUrl(), 
-                    v.serialNumberPhotoUrl(), 
-                    v.registrationPhotoUrl(),
-                    v.financialParameters(), 
-                    v.maintenanceParameters(), 
-                    null
-                );
-                return vehiclePersistencePort.saveLocalData(updated);
-            }).then();
+                .flatMap(v -> {
+                    Vehicle updated = new Vehicle(
+                            v.id(),
+                            v.fleetId(),
+                            v.managerId(),
+                            driverId, // Seul champ modifié
+                            v.vehicleTypeId(),
+                            v.licensePlate(),
+                            v.vehicleSerialNumber(),
+                            v.brand(),
+                            v.model(),
+                            v.manufacturingYear(),
+                            v.transmissionType(),
+                            v.fuelType(),
+                            v.tankCapacity(),
+                            v.totalSeatNumber(),
+                            v.averageFuelConsumption(),
+                            v.color(),
+                            v.status(),
+                            v.photoUrl(),
+                            v.serialNumberPhotoUrl(),
+                            v.registrationPhotoUrl(),
+                            v.financialParameters(),
+                            v.maintenanceParameters(),
+                            null);
+                    return vehiclePersistencePort.saveLocalData(updated);
+                }).then();
     }
 
     private Mono<Void> checkFleetOwnership(UUID fleetId, UUID managerId) {
         return fleetRepository.existsByIdAndManagerId(fleetId, managerId)
                 .flatMap(exists -> {
-                    if (!exists) return Mono.error(new AccessDeniedException("Cette flotte ne vous appartient pas."));
+                    if (!exists)
+                        return Mono.error(new AccessDeniedException("Cette flotte ne vous appartient pas."));
                     return Mono.empty();
                 });
     }

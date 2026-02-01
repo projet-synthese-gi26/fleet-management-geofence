@@ -153,36 +153,39 @@ public class DriverService implements ManageDriverUseCase {
     }
 
     // Helper mis à jour avec le nouveau constructeur Vehicle (23 champs)
-    private Mono<Void> updateVehicleLink(UUID vehicleId, UUID driverId) {
-        return vehiclePersistencePort.getLocalDataById(vehicleId)
-                .flatMap(v -> {
-                    Vehicle updated = new Vehicle(
-                            v.id(),
-                            v.fleetId(),
-                            v.managerId(),
-                            driverId, // Seul champ modifié
-                            v.vehicleTypeId(),
-                            v.licensePlate(),
-                            v.vehicleSerialNumber(),
-                            v.brand(),
-                            v.model(),
-                            v.manufacturingYear(),
-                            v.transmissionType(),
-                            v.fuelType(),
-                            v.tankCapacity(),
-                            v.totalSeatNumber(),
-                            v.averageFuelConsumption(),
-                            v.color(),
-                            v.status(),
-                            v.photoUrl(),
-                            v.serialNumberPhotoUrl(),
-                            v.registrationPhotoUrl(),
-                            v.financialParameters(),
-                            v.maintenanceParameters(),
-                            null);
-                    return vehiclePersistencePort.saveLocalData(updated);
-                }).then();
-    }
+    // ... dans DriverService.java, méthode updateVehicleLink
+
+private Mono<Void> updateVehicleLink(UUID vehicleId, UUID driverId) {
+    return vehiclePersistencePort.getLocalDataById(vehicleId)
+            .flatMap(v -> {
+                Vehicle updated = new Vehicle(
+                        v.id(),
+                        v.fleetId(),
+                        v.managerId(),
+                        driverId, // Seul champ modifié
+                        v.vehicleTypeId(),
+                        v.licensePlate(),
+                        v.vehicleSerialNumber(),
+                        v.brand(),
+                        v.model(),
+                        v.manufacturingYear(),
+                        v.transmissionType(),
+                        v.fuelType(),
+                        v.tankCapacity(),
+                        v.totalSeatNumber(),
+                        v.averageFuelConsumption(),
+                        v.color(),
+                        v.status(),
+                        v.photoUrl(),
+                        v.serialNumberPhotoUrl(),
+                        v.registrationPhotoUrl(),
+                        v.illustrationImages(), 
+                        v.financialParameters(),
+                        v.maintenanceParameters(),
+                        null);
+                return vehiclePersistencePort.saveLocalData(updated);
+            }).then();
+}
 
     private Mono<Void> checkFleetOwnership(UUID fleetId, UUID managerId) {
         return fleetRepository.existsByIdAndManagerId(fleetId, managerId)

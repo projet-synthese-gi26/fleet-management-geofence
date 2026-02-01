@@ -2,6 +2,7 @@ package com.yowyob.fleet.domain.ports.out;
 
 import com.yowyob.fleet.domain.model.Vehicle;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux; // Import Flux
 import java.util.UUID;
 
 public interface VehiclePersistencePort {
@@ -23,6 +24,15 @@ public interface VehiclePersistencePort {
     /**
      * Retrieves all vehicles associated with a manager ID.
      */
-    reactor.core.publisher.Flux<Vehicle> getVehiclesByManager(java.util.UUID managerId);
+    Flux<Vehicle> getVehiclesByManager(UUID managerId);
 
+    /**
+     * Retrieves ALL vehicles in the system (For Admin).
+     */
+    Flux<Vehicle> getAllVehicles();
+
+    /**
+     * Updates the photo URLs for a vehicle.
+     */
+    Mono<Void> updateVehiclePhotos(UUID vehicleId, String photoUrl, String vinPhotoUrl, String regPhotoUrl);
 }
