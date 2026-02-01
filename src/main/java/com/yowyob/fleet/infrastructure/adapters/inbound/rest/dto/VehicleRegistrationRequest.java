@@ -6,33 +6,59 @@ import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 public record VehicleRegistrationRequest(
-    // --- CHAMPS TECHNIQUES (Pour le service distant) ---
+    // --- Body pour POST /vehicles/simplified ---
+    
+    @NotBlank(message = "La marque est obligatoire")
+    @Schema(example = "Hyundai")
+    String makeName,
 
-    @NotBlank(message = "La marque est obligatoire (ex: Toyota)")
-    @Schema(example = "Toyota", description = "Marque du constructeur")
-    String brand,
+    @NotBlank(message = "Le modèle est obligatoire")
+    @Schema(example = "Tucson N-Line")
+    String modelName,
 
-    @NotBlank(message = "Le modèle est obligatoire (ex: Yaris)")
-    @Schema(example = "Yaris", description = "Modèle du véhicule")
-    String model,
-
-    @NotBlank(message = "L'immatriculation est obligatoire")
-    @Schema(example = "LT-123-AB", description = "Plaque d'immatriculation unique")
-    String licensePlate,
-
-    @NotBlank(message = "Le type de carburant est obligatoire")
-    @Schema(example = "Essence", description = "Essence, Diesel, Hybride, Electrique")
-    String fuelType,
-
-    @Schema(example = "Manuelle", defaultValue = "Manuelle", description = "Manuelle ou Automatique")
+    @Schema(example = "DCT-7", description = "Type de transmission")
     String transmissionType,
 
-    // --- CHAMPS LOCAUX (Pour notre base Fleet) ---
+    @Schema(example = "Hyundai Motor Group")
+    String manufacturerName,
 
-    @NotNull(message = "Le type de véhicule (Catégorie) est obligatoire")
-    @Schema(description = "ID de la catégorie locale (ex: ID pour 'Poids Lourd')", example = "11111111-1111-1111-1111-111111111111")
+    @Schema(example = "SUV Compact")
+    String sizeName,
+
+    @Schema(example = "Personnel")
+    String typeName,
+
+    @NotBlank(message = "Le type de carburant est obligatoire")
+    @Schema(example = "Hybride Essence")
+    String fuelTypeName,
+
+    @Schema(example = "KMH-TEST-8293-X92", description = "Numéro de série (VIN)")
+    String vehicleSerialNumber,
+
+    // URLs des photos (Si déjà hébergées, sinon uploadées après via les endpoints dédiés)
+    String vehicleSerialPhoto, 
+    String registrationPhoto,
+
+    @NotBlank(message = "L'immatriculation est obligatoire")
+    @Schema(example = "CM-TEST-882-AB")
+    String registrationNumber,
+
+    @Schema(example = "2028-06-15T12:00:00")
+    String registrationExpiryDate,
+
+    // Données techniques
+    Double tankCapacity,
+    Integer luggageMaxCapacity,
+    Integer totalSeatNumber,
+    Double averageFuelConsumptionPerKm,
+    Double mileageAtStart,
+    Double mileageSinceCommissioning,
+    Integer vehicleAgeAtStart,
+    
+    // --- Champs Locaux (Non envoyés au distant) ---
+    @NotNull(message = "La catégorie locale est obligatoire")
     UUID vehicleTypeId,
-
-    @Schema(description = "URL de la photo (facultatif)", example = "https://images.com/mycar.jpg")
-    String photoUrl
+    
+    // redondance pour compatibilité si nécessaire
+    String brand 
 ) {}

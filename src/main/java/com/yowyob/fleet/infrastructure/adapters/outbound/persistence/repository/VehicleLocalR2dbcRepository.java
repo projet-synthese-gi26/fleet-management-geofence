@@ -10,6 +10,7 @@ import java.util.UUID;
 public interface VehicleLocalR2dbcRepository extends ReactiveCrudRepository<VehicleLocalEntity, UUID> {
 
     Flux<VehicleLocalEntity> findByFleetId(UUID fleetId);
+    Flux<VehicleLocalEntity> findByManagerId(UUID managerId); // Nouveau
     Flux<VehicleLocalEntity> findByStatus(String status);
     Flux<VehicleLocalEntity> findByCurrentDriverId(UUID currentDriverId);
 }

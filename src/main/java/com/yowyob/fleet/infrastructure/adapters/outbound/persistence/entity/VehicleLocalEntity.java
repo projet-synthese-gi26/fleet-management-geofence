@@ -19,11 +19,30 @@ public class VehicleLocalEntity implements Persistable<UUID> {
     @Column("fleet_id")
     private UUID fleetId;
 
+    @Column("manager_id")
+    private UUID managerId;
+
     @Column("current_driver_id")
     private UUID currentDriverId;
 
     @Column("vehicle_type_id")
     private UUID vehicleTypeId;
+
+    // --- CHAMPS AJOUTÉS (Manquaient pour le mapping) ---
+    
+    @Column("license_plate")
+    private String licensePlate;
+
+    private String brand;
+
+    private String model;
+
+    @Column("manufacturing_year")
+    private Integer manufacturingYear;
+
+    private String color;
+
+    // ---------------------------------------------------
 
     private String status; // AVAILABLE, ON_TRIP, MAINTENANCE
     

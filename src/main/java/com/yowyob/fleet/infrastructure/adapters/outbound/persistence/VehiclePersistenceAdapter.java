@@ -12,6 +12,8 @@ import com.yowyob.fleet.infrastructure.mappers.VehicleLocalMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
@@ -28,33 +30,42 @@ public class VehiclePersistenceAdapter implements VehiclePersistencePort {
     @Override
     @Transactional
     public Mono<Vehicle> saveLocalData(Vehicle vehicle) {
-        // Préparation de l'entité pivot
-        VehicleLocalEntity vEntity = mapper.toVehicleEntity(vehicle);
-        
-        // On vérifie si c'est une création pour mettre le flag isNew
-        return vehicleRepo.findById(vehicle.id())
-                .map(existing -> {
-                    vEntity.setNew(false);
-                    return existing;
+        // 1. On vérifie d'abord si le véhicule existe déjà localement
+        return vehicleRepo.existsById(vehicle.id())
+                .flatMap(exists -> {
+                    VehicleLocalEntity vEntity = mapper.toVehicleEntity(vehicle);
+                    
+                    // C'EST ICI LE FIX : 
+                    // Si existe = false -> isNew = true (Force INSERT)
+                    // Si existe = true  -> isNew = false (Fait UPDATE)
+                    vEntity.setNew(!exists); 
+                    
+                    return vehicleRepo.save(vEntity);
                 })
-                .switchIfEmpty(Mono.defer(() -> {
-                    vEntity.setNew(true);
-                    return Mono.empty();
-                }))
-                .then(vehicleRepo.save(vEntity))
                 .flatMap(savedV -> {
-                    // Initialisation forcée des 1:1 si non existants
+                    // Gestion des tables 1-1 (Financial & Maintenance)
+                    // On utilise une logique similaire ou on force l'ID s'il est null
                     FinancialParameterEntity fin = mapper.toFinancialEntity(vehicle);
-                    fin.setId(fin.getId() == null ? UUID.randomUUID() : fin.getId());
+                    if (fin.getId() == null) fin.setId(UUID.randomUUID()); 
                     fin.setVehicleId(savedV.getId());
 
                     MaintenanceParameterEntity maint = mapper.toMaintenanceEntity(vehicle);
-                    maint.setId(maint.getId() == null ? UUID.randomUUID() : maint.getId());
+                    if (maint.getId() == null) maint.setId(UUID.randomUUID());
                     maint.setVehicleId(savedV.getId());
 
+                    // On sauvegarde les paramètres
+                    // Note: Pour être 100% robuste sur les params, on pourrait aussi faire un check, 
+                    // mais comme ils sont liés au cycle de vie du véhicule, le save/update cascade souvent bien.
                     return Mono.zip(
-                            financialRepo.save(fin),
-                            maintenanceRepo.save(maint)
+                            financialRepo.findByVehicleId(savedV.getId())
+                                .map(existing -> { fin.setId(existing.getId()); return fin; })
+                                .defaultIfEmpty(fin)
+                                .flatMap(financialRepo::save),
+                            
+                            maintenanceRepo.findByVehicleId(savedV.getId())
+                                .map(existing -> { maint.setId(existing.getId()); return maint; })
+                                .defaultIfEmpty(maint)
+                                .flatMap(maintenanceRepo::save)
                     ).thenReturn(savedV);
                 })
                 .map(v -> mapper.toDomain(v, null, null));
@@ -72,5 +83,16 @@ public class VehiclePersistenceAdapter implements VehiclePersistencePort {
     @Override
     public Mono<Void> deleteLocalData(UUID id) {
         return vehicleRepo.deleteById(id);
+    }
+    
+    @Override
+    public Flux<Vehicle> getVehiclesByManager(UUID managerId) {
+        return vehicleRepo.findByManagerId(managerId)
+                .flatMap(v -> Mono.zip(
+                    Mono.just(v),
+                    financialRepo.findByVehicleId(v.getId()).defaultIfEmpty(new FinancialParameterEntity()),
+                    maintenanceRepo.findByVehicleId(v.getId()).defaultIfEmpty(new MaintenanceParameterEntity())
+                ))
+                .map(tuple -> mapper.toDomain(tuple.getT1(), tuple.getT2(), tuple.getT3()));
     }
 }

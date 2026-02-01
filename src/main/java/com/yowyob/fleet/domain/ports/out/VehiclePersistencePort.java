@@ -19,4 +19,10 @@ public interface VehiclePersistencePort {
      * Deletes all local records associated with a vehicle ID.
      */
     Mono<Void> deleteLocalData(UUID id);
+
+    /**
+     * Retrieves all vehicles associated with a manager ID.
+     */
+    reactor.core.publisher.Flux<Vehicle> getVehiclesByManager(java.util.UUID managerId);
+
 }
