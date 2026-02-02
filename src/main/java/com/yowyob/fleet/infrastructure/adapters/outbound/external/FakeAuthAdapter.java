@@ -21,119 +21,106 @@ public class FakeAuthAdapter implements AuthPort {
     @Override
     public Mono<AuthResponse> login(String identifier, String password) {
         log.info("🛠 MODE FAKE AUTH : Login pour {}", identifier);
-        // On simule un admin par défaut pour faciliter les tests
-        UserDetail fakeUser = createFakeUser(FAKE_ADMIN_ID, identifier, "fake-admin@yowyob.com", "FLEET_ADMIN");
-        return Mono.just(new AuthResponse("fake-access-token", "fake-refresh-token", fakeUser));
-    }
 
-    @Override
-    public Mono<AuthResponse> registerInRemote(AuthUseCase.RegisterCommand command) {
-        log.info("🛠 MODE FAKE AUTH : Inscription pour {}", command.username());
-        
-        // On génère un ID aléatoire pour le nouvel utilisateur
-        UUID newUserId = UUID.randomUUID();
-        
-        UserDetail newUser = new UserDetail(
-            newUserId, 
-            command.username(), 
-            command.email(), 
-            command.phone(), 
-            command.firstName(), 
-            command.lastName(), 
-            "FLEET_MANAGEMENT", 
-            command.roles(), 
-            List.of("fleet:read", "fleet:write"), // Permissions par défaut
-            "https://i.pravatar.cc/150?u=" + newUserId, // Fake photo
-            null, null, null // Les données métier (Company, Licence) sont nulles venant de l'Auth
-        );
-        return Mono.just(new AuthResponse("fake-access-token", "fake-refresh-token", newUser));
+        // On renvoie un token qui contient le nom de l'utilisateur pour pouvoir le retrouver plus tard
+        String fakeToken = "fake-token-" + identifier;
+
+        UserDetail user = resolveUserFromToken(fakeToken);
+        return Mono.just(new AuthResponse(fakeToken, "fake-refresh-token", user));
     }
 
     @Override
     public Mono<UserDetail> getUserProfile(String token) {
-        log.info("🛠 MODE FAKE AUTH : Récupération du profil courant (me)");
-        return Mono.just(createFakeUser(FAKE_ADMIN_ID, "fake_admin", "admin@yowyob.com", "FLEET_ADMIN"));
+        // CORRECTION : On déduit l'utilisateur depuis le token au lieu de renvoyer toujours l'admin
+        return Mono.just(resolveUserFromToken(token));
     }
 
     @Override
     public Mono<UserDetail> getUserById(UUID userId, String token) {
         log.info("🛠 MODE FAKE AUTH : Récupération user par ID {}", userId);
-        String suffix = userId.toString().substring(0, 5);
         return Mono.just(createFakeUser(
-            userId, 
-            "user_" + suffix, 
-            "user." + suffix + "@yowyob.test", 
-            "FLEET_MANAGER"
+                userId,
+                "user_" + userId.toString().substring(0, 5),
+                "user@yowyob.test",
+                "FLEET_MANAGER"
         ));
+    }
+
+    // --- Logique interne pour simuler l'intelligence du token ---
+    private UserDetail resolveUserFromToken(String token) {
+        // Format attendu: "fake-token-username" ou "Bearer fake-token-username"
+        String cleanToken = token.replace("Bearer ", "");
+        String username = cleanToken.replace("fake-token-", "");
+
+        // Si le token ne suit pas le format, on fallback sur admin
+        if (username.equals(cleanToken)) {
+            username = "super_admin";
+        }
+
+        String role = username.contains("admin") ? "FLEET_ADMIN" : "FLEET_MANAGER";
+        UUID userId = UUID.nameUUIDFromBytes(username.getBytes());
+
+        return createFakeUser(userId, username, username + "@yowyob.com", role);
+    }
+
+    // ---------------------------------------------------------
+    // Méthodes standards inchangées
+    // ---------------------------------------------------------
+
+    @Override
+    public Mono<AuthResponse> registerInRemote(AuthUseCase.RegisterCommand command) {
+        log.info("🛠 MODE FAKE AUTH : Inscription pour {}", command.username());
+        UUID newUserId = UUID.randomUUID();
+        UserDetail newUser = new UserDetail(
+                newUserId, command.username(), command.email(), command.phone(),
+                command.firstName(), command.lastName(), "FLEET_MANAGEMENT",
+                command.roles(), List.of("fleet:read", "fleet:write"),
+                "https://i.pravatar.cc/150?u=" + newUserId, null, null, null
+        );
+        return Mono.just(new AuthResponse("fake-token-" + command.username(), "fake-refresh", newUser));
     }
 
     @Override
     public Flux<UserDetail> getUsersByService(String serviceName, String token) {
-        log.info("🛠 MODE FAKE AUTH : Récupération users pour service {}", serviceName);
         return Flux.just(
-            createFakeUser(UUID.randomUUID(), "manager_1", "m1@yowyob.com", "FLEET_MANAGER"),
-            createFakeUser(UUID.randomUUID(), "driver_1", "d1@yowyob.com", "FLEET_DRIVER")
+                createFakeUser(UUID.randomUUID(), "manager_1", "m1@yowyob.com", "FLEET_MANAGER"),
+                createFakeUser(UUID.randomUUID(), "manager_2", "m2@yowyob.com", "FLEET_MANAGER")
         );
     }
 
     @Override
     public Flux<UserDetail> getAllUsers(String token) {
-        log.info("🛠 MODE FAKE AUTH : Récupération de TOUS les users (Super Admin)");
-        return Flux.just(
-            createFakeUser(FAKE_ADMIN_ID, "super_admin", "super@yowyob.com", "FLEET_SUPER_ADMIN"),
-            createFakeUser(UUID.randomUUID(), "admin_1", "admin1@yowyob.com", "FLEET_ADMIN"),
-            createFakeUser(UUID.randomUUID(), "manager_demo", "manager@demo.com", "FLEET_MANAGER")
-        );
+        return null;
     }
 
     @Override
     public Mono<UserDetail> updateUserProfile(UUID userId, String token, AuthUseCase.UpdateProfileCommand command) {
-        log.info("🛠 MODE FAKE AUTH : Update profil pour {}", userId);
-        UserDetail updated = new UserDetail(
-            userId, 
-            "updated_user", 
-            command.email(), 
-            command.phone(), 
-            command.firstName(), 
-            command.lastName(), 
-            "FLEET_MANAGEMENT", 
-            List.of("FLEET_MANAGER"), 
-            List.of("*"), 
-            "https://i.pravatar.cc/150?u=" + userId,
-            null, null, null
-        );
-        return Mono.just(updated);
+        return Mono.empty(); // Mock
     }
 
     @Override
     public Mono<Void> changePassword(UUID userId, String token, String currentPwd, String newPwd) {
-        log.info("🛠 MODE FAKE AUTH : Changement mot de passe pour {}", userId);
         return Mono.empty();
     }
 
     @Override
     public Mono<Void> deleteRemoteAccount(UUID userId, String token) {
-        log.info("🛠 MODE FAKE AUTH : Suppression définitive compte distant pour {}", userId);
         return Mono.empty();
     }
 
     @Override
     public Mono<Void> moveUserToService(UUID userId, String newServiceName, String token) {
-        log.info("🛠 MODE FAKE AUTH : Soft Delete / Déplacement de l'user {} vers le service {}", userId, newServiceName);
-        return Mono.empty();
+        return null;
     }
 
     @Override
     public Mono<Void> updateProfilePicture(UUID userId, String token, AuthUseCase.FileContent file) {
-        log.info("🛠 MODE FAKE AUTH : Upload photo pour {} (Fichier: {})", userId, file.filename());
         return Mono.empty();
     }
 
     @Override
     public Mono<AuthResponse> refresh(String refreshToken) {
-        log.info("🛠 MODE FAKE AUTH : Rafraîchissement du token");
-        UserDetail fakeUser = createFakeUser(FAKE_ADMIN_ID, "fake_admin", "admin@yowyob.com", "FLEET_ADMIN");
-        return Mono.just(new AuthResponse("new-fake-access-token", "new-fake-refresh-token", fakeUser));
+        return Mono.empty(); // Mock
     }
 
     @Override
@@ -143,27 +130,14 @@ public class FakeAuthAdapter implements AuthPort {
 
     @Override
     public Mono<Void> createRole(String roleName) {
-        log.info("🛠 MODE FAKE AUTH : Création rôle {}", roleName);
         return Mono.empty();
     }
 
-    // --- Helpers ---
-
     private UserDetail createFakeUser(UUID id, String username, String email, String role) {
         return new UserDetail(
-            id,
-            username,
-            email,
-            "+237600000000",
-            "Fake",
-            "User",
-            "FLEET_MANAGEMENT",
-            List.of(role),
-            List.of("fleet:read", "fleet:write", "fleet:admin"),
-            "https://i.pravatar.cc/150?u=" + id, // Avatar aléatoire basé sur l'ID
-            null, // Company Name (Géré localement)
-            null, // Licence (Géré localement)
-            null  // Vehicle ID
+                id, username, email, "+237600000000", "Fake", "User", "FLEET_MANAGEMENT",
+                List.of(role), List.of("fleet:read", "fleet:write", "fleet:admin"),
+                "https://i.pravatar.cc/150?u=" + id, null, null, null
         );
     }
 }

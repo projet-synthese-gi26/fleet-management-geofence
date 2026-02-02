@@ -81,9 +81,9 @@ springdoc:
 # CONFIG METIER
 application:
   external:
-    vehicle-service-url: https://vehicule-service.pynfi.com
-    # FIX: Ajout de la clé manquante qui faisait planter le démarrage
-    geofence-service-url: https://geofence-service.pynfi.com 
+    vehicle-service-url:  https://vehicule-service.pynfi.com
+    geofence-service-url: https://geofence-service.pynfi.com
+    payment-service-url:  https://payment-service.pynfi.com
   auth:
     mode: remote 
     url: https://auth-service.pynfi.com

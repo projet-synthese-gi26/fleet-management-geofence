@@ -9,22 +9,23 @@ spring:
     active: local
 
   # R2DBC (Application Runtime)
+  # ✅ CORRECTION: Utiliser yowyob_db au lieu de yowyob
   r2dbc:
     url: r2dbc:postgresql://localhost:5432/yowyob_db
-    username: fleet_admin
-    password: fleet_password
+    username: postgres
+    password: root
     pool:
       enabled: true
       initial-size: 2
       max-size: 10
-      validation-query: "SELECT 1" # Vérifie que la connexion est vivante avant usage
-      max-idle-time: 10m   
+      validation-query: "SELECT 1"
+      max-idle-time: 10m
 
   # JDBC (Liquibase Migration)
   datasource:
     url: jdbc:postgresql://localhost:5432/yowyob_db
-    username: fleet_admin
-    password: fleet_password
+    username: postgres
+    password: root
     driver-class-name: org.postgresql.Driver
 
   # LIQUIBASE
@@ -40,7 +41,7 @@ spring:
     redis:
       host: localhost
       port: 6379
-      password: "" 
+      password: ""
 
   # KAFKA
   kafka:
@@ -63,11 +64,11 @@ spring:
 # CONFIG METIER
 application:
   external:
-    vehicle-service-url: https://vehicule-service.pynfi.com
-    # geofence-service-url: https://geofence-service.pynfi.com 
-    geofence-service-url: http://localhost:8081
+    vehicle-service-url:  https://vehicule-service.pynfi.com
+    geofence-service-url: https://geofence-service.pynfi.com
+    payment-service-url:  https://payment-service.pynfi.com
   auth:
-    mode: remote
+    mode: fake
     url: https://auth-service.pynfi.com
   bootstrap:
     admin:
@@ -80,8 +81,7 @@ application:
   # Kafka topics
   kafka:
     topics:
-      # product-events removed
-      geofence-alerts: geofence-alerts-topic # Anticipation pour le futur
+      geofence-alerts: geofence-alerts-topic
 
 # MONITORING
 management:
@@ -99,7 +99,7 @@ management:
       prometheus:
         enabled: true
 
-# Resilience4j nettoyé (plus de stock-service)
+# Resilience4j
 resilience4j:
   circuitbreaker:
     instances: {}

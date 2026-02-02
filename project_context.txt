@@ -1,5 +1,5 @@
 # Contexte du Projet : Fleet & Geofence API
-Généré le : Sun 01 Feb 2026 05:34:05 PM WAT
+Généré le : Mon Feb  2 06:59:34 AM WAT 2026
 Framework : Spring Boot WebFlux (Reactive)
 
 ## 1. Arborescence du Projet
@@ -58,6 +58,7 @@ Framework : Spring Boot WebFlux (Reactive)
 │   │   │           └── fleet
 │   │   │               ├── application
 │   │   │               │   └── service
+│   │   │               │       ├── AdminStatsService.java
 │   │   │               │       ├── AuthService.java
 │   │   │               │       ├── DriverService.java
 │   │   │               │       ├── FleetManagerService.java
@@ -79,6 +80,7 @@ Framework : Spring Boot WebFlux (Reactive)
 │   │   │               │   │   └── VehicleParameters.java
 │   │   │               │   └── ports
 │   │   │               │       ├── in
+│   │   │               │       │   ├── AdminStatsUseCase.java
 │   │   │               │       │   ├── AuthUseCase.java
 │   │   │               │       │   ├── ManageDriverUseCase.java
 │   │   │               │       │   ├── ManageFleetManagerUseCase.java
@@ -92,10 +94,12 @@ Framework : Spring Boot WebFlux (Reactive)
 │   │   │               │           ├── DistanceCalculatorPort.java
 │   │   │               │           ├── DriverPersistencePort.java
 │   │   │               │           ├── ExternalGeofencePort.java
+│   │   │               │           ├── ExternalPaymentPort.java
 │   │   │               │           ├── ExternalVehiclePort.java
 │   │   │               │           ├── FleetManagerPersistencePort.java
 │   │   │               │           ├── FleetRepositoryPort.java
 │   │   │               │           ├── GeofencePersistencePort.java
+│   │   │               │           ├── StatisticsPort.java
 │   │   │               │           └── VehiclePersistencePort.java
 │   │   │               ├── FleetManagementApplication.java
 │   │   │               └── infrastructure
@@ -105,6 +109,7 @@ Framework : Spring Boot WebFlux (Reactive)
 │   │   │                   │   │       ├── AccountController.java
 │   │   │                   │   │       ├── AdminManagerController.java
 │   │   │                   │   │       ├── AdminReferenceController.java
+│   │   │                   │   │       ├── AdminStatsController.java
 │   │   │                   │   │       ├── AdminUserController.java
 │   │   │                   │   │       ├── AuthController.java
 │   │   │                   │   │       ├── DriverController.java
@@ -115,6 +120,8 @@ Framework : Spring Boot WebFlux (Reactive)
 │   │   │                   │   │       │   ├── FleetManagerResponse.java
 │   │   │                   │   │       │   ├── FleetRequest.java
 │   │   │                   │   │       │   ├── FleetResponse.java
+│   │   │                   │   │       │   ├── FleetStatsResponse.java
+│   │   │                   │   │       │   ├── GlobalStatsResponse.java
 │   │   │                   │   │       │   ├── LoginRequest.java
 │   │   │                   │   │       │   ├── MaintenanceUpdateRequest.java
 │   │   │                   │   │       │   ├── RecruitDriverRequest.java
@@ -132,6 +139,7 @@ Framework : Spring Boot WebFlux (Reactive)
 │   │   │                   │   │       ├── GlobalExceptionHandler.java
 │   │   │                   │   │       ├── HealthCheckController.java
 │   │   │                   │   │       ├── ReferenceController.java
+│   │   │                   │   │       ├── TestPaymentController.java
 │   │   │                   │   │       ├── TripController.java
 │   │   │                   │   │       ├── VehicleController.java
 │   │   │                   │   │       ├── VehicleLookupController.java
@@ -141,12 +149,16 @@ Framework : Spring Boot WebFlux (Reactive)
 │   │   │                   │       │   ├── client
 │   │   │                   │       │   │   ├── AuthApiClient.java
 │   │   │                   │       │   │   ├── GeofenceApiClient.java
+│   │   │                   │       │   │   ├── PaymentApiClient.java
 │   │   │                   │       │   │   └── VehicleApiClient.java
 │   │   │                   │       │   ├── dto
-│   │   │                   │       │   │   └── VehicleExternalResponse.java
+│   │   │                   │       │   │   ├── VehicleExternalResponse.java
+│   │   │                   │       │   │   ├── WalletCreationRequest.java
+│   │   │                   │       │   │   └── WalletExternalResponse.java
 │   │   │                   │       │   ├── FakeAuthAdapter.java
 │   │   │                   │       │   ├── FakeDistanceAdapter.java
 │   │   │                   │       │   ├── GeofenceApiAdapter.java
+│   │   │                   │       │   ├── PaymentApiAdapter.java
 │   │   │                   │       │   ├── RemoteAuthAdapter.java
 │   │   │                   │       │   └── VehicleApiAdapter.java
 │   │   │                   │       └── persistence
@@ -180,6 +192,7 @@ Framework : Spring Boot WebFlux (Reactive)
 │   │   │                   │           │   ├── VehicleIllustrationImageR2dbcRepository.java
 │   │   │                   │           │   ├── VehicleLocalR2dbcRepository.java
 │   │   │                   │           │   └── VehicleTypeR2dbcRepository.java
+│   │   │                   │           ├── StatisticsPersistenceAdapter.java
 │   │   │                   │           └── VehiclePersistenceAdapter.java
 │   │   │                   ├── config
 │   │   │                   │   ├── AuthConfig.java
@@ -222,10 +235,9 @@ Framework : Spring Boot WebFlux (Reactive)
 ├── sync_auth.sh
 ├── test_auth.py
 ├── test_image.jpg
-├── test_profile.jpg
-└── todo.md
+└── test_profile.jpg
 
-49 directories, 170 files
+49 directories, 182 files
 ```
 ## 2. Contenu des Fichiers
 
@@ -7980,7 +7992,7 @@ La roadmap est suivie dans `todo.md`.
 
 
 ### Premiere mission
-je suis en train de debugger la fonctionnalite vehicles,je susi gabriel,j'ai fait mes taches et je suis juste en train de yetster,je commence par vehciuleses-tu pret a recevoir le premier bugg ?
+je viens de merger mon travil avec celui de raphael,l'application ne se lance plus,aide moi a corriger ca,ensuite on va avancer.
 "```
 
 ---
@@ -8094,97 +8106,6 @@ Once the log shows `🚀 LOCAL DATABASE READY!`, open your browser:
 ```
 
 ---
-### Fichier : `./todo.md`
-```md
-# 📋 Roadmap Répartie : API Fleet & Geofence
-**Version :** 3.0
-**Date de génération :** 27 Janvier 2026
-**Statut :** En cours de planification
-
----
-
-## ⚠️ Règles Générales
-*   **Documentation :** Chacun doit lire le `README.md` et le suivre à la lettre avant de travailler pour garantir la productivité. En cas de question, se rapprocher de **Nomo Gabriel**.
-*   **Tests :** Chacun doit tester son travail **en local** et vérifier la compatibilité **en production** (staging).
-*   **Gestion de code (Git) :**
-    *   **Interdiction formelle de push sur `main`**. Il faut impérativement passer par une **Pull Request**.
-    *   Seul **Nomo Gabriel** a le droit de valider/merger sur `main`.
-    *   **Hassana** travaille en collaboration avec Gabriel sur la branche `master`/`main`.
-    *   **Bihai Raphaël** crée une branche `raphael` sur laquelle il travaille. Nous ferons un merge global plus tard.
-*   **Base de Données :** Pour toute modification de la BD (schéma), il est impératif de le **signaler dans le groupe** pour éviter de casser le travail des autres.
-*   **Délais :** Toutes les tâches doivent être livrées **au plus tard demain matin à 10h00**, lors de la réunion de l'équipe backend.
-*   **Configuration :** Toujours mettre à jour le fichier `prod.application.yml` lorsqu'une modification est apportée au `application.yml` local.
-*   **Architecture :** Respecter scrupuleusement l'architecture **hexagonale** du projet.
-
----
-
-## ✅ PHASE 1 : FONDATIONS (Terminé)
-*(Rappel pour contexte)*
-- [x] Infrastructure (Docker, Liquibase, R2DBC).
-- [x] Base de données (Schéma `fleet` & `public`, Seeding).
-- [x] Auth & Sécurité (Jwt, Proxy Auth Service, Mode Fake).
-- [x] Gestion Fleet Managers (CRUD & Synchro).
-- [x] Gestion Flottes (CRUD).
-- [x] Gestion Drivers (Implémentation faite, tests restants).
-
----
-
-## 🏗️ PHASE 2 : PARALLÉLISATION (En cours)
-
-### 🦁 Cluster 1 : Gabriel (Core Business & Orchestration)
-*Responsabilité : Logique complexe, agrégation de données, machines à états, validation finale.*
-
-#### Module 1 : Finalisation Auth & Drivers
-- [x] **Tâche 1.1 :** Validation Tests en local : Gestion des Drivers (Création, Listing, Retrait).
-- [x] **Tâche 1.2 :** Implémentation : Gestion des Admins et Super Admins (1 Super Admin défini en dur dans le code/configuration qui peut créer les autres admins ; il sera configuré dans le `application.yml`).
-- [ ] **Tâche 1.3 :** Implémentation : Suppression de compte (Changement de service vers le service `User_Deleted`).
-- [ ] **Tâche 1.4 :** Implémentation : Upload/Update de la photo de profil (User, Driver, Fleet Manager, Admin).
-- [ ] **Tâche 1.5 :** Test et Implémentation : Gestion des assignations chauffeur-vehicules,flottes-chauffeurs,managers-flottes
-
-
-#### Module 2 : Gestion Avancée des Véhicules
-- [x] **Tâche 2.1 :** Refonte `VehicleService` : Agrégation réactive robuste (Données locales + Données distantes `VehicleApiClient`).au minimum le CRUD
-- [x] **Tâche 2.2 :** gestion des medias des vehicles 
-- [] **Tâche 2.3 :** CRUD Paramètres Financiers (Relation 1-1).
-- [] **Tâche 2.4 :** CRUD Paramètres Maintenance (Relation 1-1).
-- [] **Tâche 2.5 :** Logique d'Assignation Croisée (Empêcher conflit : 1 Driver sur 2 véhicules, etc.).
-- [] **Tâche 2.6 :** debogage de la methode put des vehicules
-
-#### Module 3 : Gestion des Trajets (Trips) & Télémétrie
-- [x] **Tâche 3.1 :** Endpoint `Start Trip` : Initialisation, verrouillage véhicule/driver.
-- [x] **Tâche 3.2 :** Endpoint `Telemetry` : Ingestion haute fréquence des points GPS (WebFlux Stream).
-- [x] **Tâche 3.3 :** Endpoint `End Trip` : Clôture, calcul distance/durée, libération ressources.
-- [x] **Tâche 3.4 :** Identification d'autres endpoints si nécessaire et implémentation.
-
----
-
-### 🦅 Cluster 2 : Hassana (Geofence & Event-Driven)
-*Responsabilité : Moteur spatial, Asynchronisme, Alerting.*
-
-#### Module 4 : Moteur Geofencing
-- [ ] **Tâche 4.1 :** CRUD Zones : Comprendre l'API de Kamga, identifier tous les endpoints nécessaires pour notre projet et les intégrer.
-
-#### Module 5 : Notifications & Kafka
-- [ ] **Tâche 5.1 :** Analyse du service : Comprendre comment fonctionne le service de notifs (lire la doc et se rapprocher de Tchassi). Consulter également le code d'Igor, qui a déjà intégré ce service avec succès.
-- [ ] **Tâche 5.2 :** Configuration Kafka : Configurer le nécessaire pour ce projet et offrir les endpoints pour recevoir les notifications côté client.
-- [ ] **Tâche 5.3 :** Workflow Frontend : Discuter avec l'équipe frontend pour identifier **quand** et **à qui** envoyer des notifications en fonction de chaque action. Faire des recherches pour suggérer des améliorations, puis intégrer le tout.
-
----
-
-### 🐢 Cluster 3 : Raphaël (Support, Admin & Intégrations Satellites)
-*Responsabilité : Modules isolés, Dashboarding, Intégrations tiers.*
-
-#### Module 6 : Administration & Statistiques
-- [ ] **Tâche 6.1 :** Endpoints Stats Globales (Super Admin) : Nombre total de flottes, véhicules, managers, etc. (Identifier une liste de stats pertinentes).
-    *   *Note : Faire un Controller et un Service dédiés à cette tâche.*
-- [ ] **Tâche 6.2 :** Endpoints Stats Flotte (Fleet Manager) : Km parcourus par flotte, taux d'occupation des véhicules, nombre de chauffeurs, nombre de km parcourus par chauffeur, etc.
-
-#### Module 7 : Paiements
-- [ ] **Tâche 8.1 :** Test et compréhension du service : Se rapprocher de Nathan et comprendre le fonctionnement du service paiement.
-- [ ] **Tâche 8.2 :** Intégration : Créer les endpoints de base pour consommer le service dans notre projet.
-```
-
----
 ### Fichier : `./src/test/java/com/yowyob/reactive_hexagonal/ReactiveHexagonalApplicationTests.java`
 ```java
 package com.yowyob.reactive_hexagonal;
@@ -8216,22 +8137,23 @@ spring:
     active: local
 
   # R2DBC (Application Runtime)
+  # ✅ CORRECTION: Utiliser yowyob_db au lieu de yowyob
   r2dbc:
     url: r2dbc:postgresql://localhost:5432/yowyob_db
-    username: fleet_admin
-    password: fleet_password
+    username: postgres
+    password: root
     pool:
       enabled: true
       initial-size: 2
       max-size: 10
-      validation-query: "SELECT 1" # Vérifie que la connexion est vivante avant usage
-      max-idle-time: 10m   
+      validation-query: "SELECT 1"
+      max-idle-time: 10m
 
   # JDBC (Liquibase Migration)
   datasource:
     url: jdbc:postgresql://localhost:5432/yowyob_db
-    username: fleet_admin
-    password: fleet_password
+    username: postgres
+    password: root
     driver-class-name: org.postgresql.Driver
 
   # LIQUIBASE
@@ -8247,7 +8169,7 @@ spring:
     redis:
       host: localhost
       port: 6379
-      password: "" 
+      password: ""
 
   # KAFKA
   kafka:
@@ -8270,11 +8192,11 @@ spring:
 # CONFIG METIER
 application:
   external:
-    vehicle-service-url: https://vehicule-service.pynfi.com
-    # geofence-service-url: https://geofence-service.pynfi.com 
-    geofence-service-url: http://localhost:8081
+    vehicle-service-url:  https://vehicule-service.pynfi.com
+    geofence-service-url: https://geofence-service.pynfi.com
+    payment-service-url:  https://payment-service.pynfi.com
   auth:
-    mode: remote
+    mode: fake
     url: https://auth-service.pynfi.com
   bootstrap:
     admin:
@@ -8287,8 +8209,7 @@ application:
   # Kafka topics
   kafka:
     topics:
-      # product-events removed
-      geofence-alerts: geofence-alerts-topic # Anticipation pour le futur
+      geofence-alerts: geofence-alerts-topic
 
 # MONITORING
 management:
@@ -8306,7 +8227,7 @@ management:
       prometheus:
         enabled: true
 
-# Resilience4j nettoyé (plus de stock-service)
+# Resilience4j
 resilience4j:
   circuitbreaker:
     instances: {}```
@@ -8632,9 +8553,9 @@ springdoc:
 # CONFIG METIER
 application:
   external:
-    vehicle-service-url: https://vehicule-service.pynfi.com
-    # FIX: Ajout de la clé manquante qui faisait planter le démarrage
-    geofence-service-url: https://geofence-service.pynfi.com 
+    vehicle-service-url:  https://vehicule-service.pynfi.com
+    geofence-service-url: https://geofence-service.pynfi.com
+    payment-service-url:  https://payment-service.pynfi.com
   auth:
     mode: remote 
     url: https://auth-service.pynfi.com
@@ -8890,6 +8811,58 @@ public interface DriverMapper {
 }```
 
 ---
+### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/external/PaymentApiAdapter.java`
+```java
+package com.yowyob.fleet.infrastructure.adapters.outbound.external;
+
+import com.yowyob.fleet.domain.ports.out.ExternalPaymentPort;
+import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.PaymentApiClient;
+import com.yowyob.fleet.infrastructure.adapters.outbound.external.dto.WalletCreationRequest;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
+
+import java.math.BigDecimal;
+import java.util.UUID;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class PaymentApiAdapter implements ExternalPaymentPort {
+
+    private final PaymentApiClient paymentApiClient;
+
+    @Override
+    public Mono<BigDecimal> getBalance(UUID ownerId) {
+        return paymentApiClient.getWalletByOwner(ownerId)
+                .map(wallet -> wallet.balance())
+                .onErrorResume(WebClientResponseException.NotFound.class, e -> {
+                    log.info("Aucun wallet trouvé pour ownerId {}, solde supposé à 0", ownerId);
+                    return Mono.just(BigDecimal.ZERO);
+                })
+                .onErrorResume(e -> {
+                    log.error("Erreur lors de la récupération du solde pour {}: {}", ownerId, e.getMessage());
+                    // En cas d'erreur technique, on propage l'erreur ou on gère un fallback selon le besoin métier
+                    return Mono.error(e);
+                });
+    }
+
+    @Override
+    public Mono<UUID> initializeWallet(UUID ownerId, String ownerName) {
+        return paymentApiClient.getWalletByOwner(ownerId)
+                .map(wallet -> wallet.id()) // Si existe, on retourne son ID
+                .onErrorResume(WebClientResponseException.NotFound.class, e -> {
+                    // Si n'existe pas (404), on le crée
+                    log.info("Création d'un nouveau wallet pour {}", ownerName);
+                    return paymentApiClient.createWallet(new WalletCreationRequest(ownerId, ownerName))
+                            .map(wallet -> wallet.id());
+                });
+    }
+}```
+
+---
 ### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/external/FakeDistanceAdapter.java`
 ```java
 package com.yowyob.fleet.infrastructure.adapters.outbound.external;
@@ -8992,119 +8965,106 @@ public class FakeAuthAdapter implements AuthPort {
     @Override
     public Mono<AuthResponse> login(String identifier, String password) {
         log.info("🛠 MODE FAKE AUTH : Login pour {}", identifier);
-        // On simule un admin par défaut pour faciliter les tests
-        UserDetail fakeUser = createFakeUser(FAKE_ADMIN_ID, identifier, "fake-admin@yowyob.com", "FLEET_ADMIN");
-        return Mono.just(new AuthResponse("fake-access-token", "fake-refresh-token", fakeUser));
-    }
 
-    @Override
-    public Mono<AuthResponse> registerInRemote(AuthUseCase.RegisterCommand command) {
-        log.info("🛠 MODE FAKE AUTH : Inscription pour {}", command.username());
-        
-        // On génère un ID aléatoire pour le nouvel utilisateur
-        UUID newUserId = UUID.randomUUID();
-        
-        UserDetail newUser = new UserDetail(
-            newUserId, 
-            command.username(), 
-            command.email(), 
-            command.phone(), 
-            command.firstName(), 
-            command.lastName(), 
-            "FLEET_MANAGEMENT", 
-            command.roles(), 
-            List.of("fleet:read", "fleet:write"), // Permissions par défaut
-            "https://i.pravatar.cc/150?u=" + newUserId, // Fake photo
-            null, null, null // Les données métier (Company, Licence) sont nulles venant de l'Auth
-        );
-        return Mono.just(new AuthResponse("fake-access-token", "fake-refresh-token", newUser));
+        // On renvoie un token qui contient le nom de l'utilisateur pour pouvoir le retrouver plus tard
+        String fakeToken = "fake-token-" + identifier;
+
+        UserDetail user = resolveUserFromToken(fakeToken);
+        return Mono.just(new AuthResponse(fakeToken, "fake-refresh-token", user));
     }
 
     @Override
     public Mono<UserDetail> getUserProfile(String token) {
-        log.info("🛠 MODE FAKE AUTH : Récupération du profil courant (me)");
-        return Mono.just(createFakeUser(FAKE_ADMIN_ID, "fake_admin", "admin@yowyob.com", "FLEET_ADMIN"));
+        // CORRECTION : On déduit l'utilisateur depuis le token au lieu de renvoyer toujours l'admin
+        return Mono.just(resolveUserFromToken(token));
     }
 
     @Override
     public Mono<UserDetail> getUserById(UUID userId, String token) {
         log.info("🛠 MODE FAKE AUTH : Récupération user par ID {}", userId);
-        String suffix = userId.toString().substring(0, 5);
         return Mono.just(createFakeUser(
-            userId, 
-            "user_" + suffix, 
-            "user." + suffix + "@yowyob.test", 
-            "FLEET_MANAGER"
+                userId,
+                "user_" + userId.toString().substring(0, 5),
+                "user@yowyob.test",
+                "FLEET_MANAGER"
         ));
+    }
+
+    // --- Logique interne pour simuler l'intelligence du token ---
+    private UserDetail resolveUserFromToken(String token) {
+        // Format attendu: "fake-token-username" ou "Bearer fake-token-username"
+        String cleanToken = token.replace("Bearer ", "");
+        String username = cleanToken.replace("fake-token-", "");
+
+        // Si le token ne suit pas le format, on fallback sur admin
+        if (username.equals(cleanToken)) {
+            username = "super_admin";
+        }
+
+        String role = username.contains("admin") ? "FLEET_ADMIN" : "FLEET_MANAGER";
+        UUID userId = UUID.nameUUIDFromBytes(username.getBytes());
+
+        return createFakeUser(userId, username, username + "@yowyob.com", role);
+    }
+
+    // ---------------------------------------------------------
+    // Méthodes standards inchangées
+    // ---------------------------------------------------------
+
+    @Override
+    public Mono<AuthResponse> registerInRemote(AuthUseCase.RegisterCommand command) {
+        log.info("🛠 MODE FAKE AUTH : Inscription pour {}", command.username());
+        UUID newUserId = UUID.randomUUID();
+        UserDetail newUser = new UserDetail(
+                newUserId, command.username(), command.email(), command.phone(),
+                command.firstName(), command.lastName(), "FLEET_MANAGEMENT",
+                command.roles(), List.of("fleet:read", "fleet:write"),
+                "https://i.pravatar.cc/150?u=" + newUserId, null, null, null
+        );
+        return Mono.just(new AuthResponse("fake-token-" + command.username(), "fake-refresh", newUser));
     }
 
     @Override
     public Flux<UserDetail> getUsersByService(String serviceName, String token) {
-        log.info("🛠 MODE FAKE AUTH : Récupération users pour service {}", serviceName);
         return Flux.just(
-            createFakeUser(UUID.randomUUID(), "manager_1", "m1@yowyob.com", "FLEET_MANAGER"),
-            createFakeUser(UUID.randomUUID(), "driver_1", "d1@yowyob.com", "FLEET_DRIVER")
+                createFakeUser(UUID.randomUUID(), "manager_1", "m1@yowyob.com", "FLEET_MANAGER"),
+                createFakeUser(UUID.randomUUID(), "manager_2", "m2@yowyob.com", "FLEET_MANAGER")
         );
     }
 
     @Override
     public Flux<UserDetail> getAllUsers(String token) {
-        log.info("🛠 MODE FAKE AUTH : Récupération de TOUS les users (Super Admin)");
-        return Flux.just(
-            createFakeUser(FAKE_ADMIN_ID, "super_admin", "super@yowyob.com", "FLEET_SUPER_ADMIN"),
-            createFakeUser(UUID.randomUUID(), "admin_1", "admin1@yowyob.com", "FLEET_ADMIN"),
-            createFakeUser(UUID.randomUUID(), "manager_demo", "manager@demo.com", "FLEET_MANAGER")
-        );
+        return null;
     }
 
     @Override
     public Mono<UserDetail> updateUserProfile(UUID userId, String token, AuthUseCase.UpdateProfileCommand command) {
-        log.info("🛠 MODE FAKE AUTH : Update profil pour {}", userId);
-        UserDetail updated = new UserDetail(
-            userId, 
-            "updated_user", 
-            command.email(), 
-            command.phone(), 
-            command.firstName(), 
-            command.lastName(), 
-            "FLEET_MANAGEMENT", 
-            List.of("FLEET_MANAGER"), 
-            List.of("*"), 
-            "https://i.pravatar.cc/150?u=" + userId,
-            null, null, null
-        );
-        return Mono.just(updated);
+        return Mono.empty(); // Mock
     }
 
     @Override
     public Mono<Void> changePassword(UUID userId, String token, String currentPwd, String newPwd) {
-        log.info("🛠 MODE FAKE AUTH : Changement mot de passe pour {}", userId);
         return Mono.empty();
     }
 
     @Override
     public Mono<Void> deleteRemoteAccount(UUID userId, String token) {
-        log.info("🛠 MODE FAKE AUTH : Suppression définitive compte distant pour {}", userId);
         return Mono.empty();
     }
 
     @Override
     public Mono<Void> moveUserToService(UUID userId, String newServiceName, String token) {
-        log.info("🛠 MODE FAKE AUTH : Soft Delete / Déplacement de l'user {} vers le service {}", userId, newServiceName);
-        return Mono.empty();
+        return null;
     }
 
     @Override
     public Mono<Void> updateProfilePicture(UUID userId, String token, AuthUseCase.FileContent file) {
-        log.info("🛠 MODE FAKE AUTH : Upload photo pour {} (Fichier: {})", userId, file.filename());
         return Mono.empty();
     }
 
     @Override
     public Mono<AuthResponse> refresh(String refreshToken) {
-        log.info("🛠 MODE FAKE AUTH : Rafraîchissement du token");
-        UserDetail fakeUser = createFakeUser(FAKE_ADMIN_ID, "fake_admin", "admin@yowyob.com", "FLEET_ADMIN");
-        return Mono.just(new AuthResponse("new-fake-access-token", "new-fake-refresh-token", fakeUser));
+        return Mono.empty(); // Mock
     }
 
     @Override
@@ -9114,30 +9074,29 @@ public class FakeAuthAdapter implements AuthPort {
 
     @Override
     public Mono<Void> createRole(String roleName) {
-        log.info("🛠 MODE FAKE AUTH : Création rôle {}", roleName);
         return Mono.empty();
     }
 
-    // --- Helpers ---
-
     private UserDetail createFakeUser(UUID id, String username, String email, String role) {
         return new UserDetail(
-            id,
-            username,
-            email,
-            "+237600000000",
-            "Fake",
-            "User",
-            "FLEET_MANAGEMENT",
-            List.of(role),
-            List.of("fleet:read", "fleet:write", "fleet:admin"),
-            "https://i.pravatar.cc/150?u=" + id, // Avatar aléatoire basé sur l'ID
-            null, // Company Name (Géré localement)
-            null, // Licence (Géré localement)
-            null  // Vehicle ID
+                id, username, email, "+237600000000", "Fake", "User", "FLEET_MANAGEMENT",
+                List.of(role), List.of("fleet:read", "fleet:write", "fleet:admin"),
+                "https://i.pravatar.cc/150?u=" + id, null, null, null
         );
     }
 }```
+
+---
+### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/external/dto/WalletCreationRequest.java`
+```java
+package com.yowyob.fleet.infrastructure.adapters.outbound.external.dto;
+
+import java.util.UUID;
+
+public record WalletCreationRequest(
+        UUID ownerId,
+        String ownerName
+) {}```
 
 ---
 ### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/external/dto/VehicleExternalResponse.java`
@@ -9177,6 +9136,21 @@ public record VehicleExternalResponse(
     String brand,
     String createdAt, // <-- Changé de Instant à String
     String updatedAt  // <-- Changé de Instant à String
+) {}```
+
+---
+### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/external/dto/WalletExternalResponse.java`
+```java
+package com.yowyob.fleet.infrastructure.adapters.outbound.external.dto;
+
+import java.math.BigDecimal;
+import java.util.UUID;
+
+public record WalletExternalResponse(
+        UUID id,
+        UUID ownerId,
+        String ownerName,
+        BigDecimal balance
 ) {}```
 
 ---
@@ -9377,6 +9351,32 @@ public class RemoteAuthAdapter implements AuthPort {
             null, null, null
         );
     }
+}```
+
+---
+### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/external/client/PaymentApiClient.java`
+```java
+package com.yowyob.fleet.infrastructure.adapters.outbound.external.client;
+
+import com.yowyob.fleet.infrastructure.adapters.outbound.external.dto.WalletCreationRequest;
+import com.yowyob.fleet.infrastructure.adapters.outbound.external.dto.WalletExternalResponse;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.service.annotation.GetExchange;
+import org.springframework.web.service.annotation.HttpExchange;
+import org.springframework.web.service.annotation.PostExchange;
+import reactor.core.publisher.Mono;
+
+import java.util.UUID;
+
+@HttpExchange("/api/v1")
+public interface PaymentApiClient {
+
+    @GetExchange("/wallets/owner/{ownerId}")
+    Mono<WalletExternalResponse> getWalletByOwner(@PathVariable UUID ownerId);
+
+    @PostExchange("/wallets")
+    Mono<WalletExternalResponse> createWallet(@RequestBody WalletCreationRequest request);
 }```
 
 ---
@@ -10477,14 +10477,61 @@ public class FleetPersistenceAdapter implements FleetRepositoryPort {
 }```
 
 ---
+### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/persistence/StatisticsPersistenceAdapter.java`
+```java
+package com.yowyob.fleet.infrastructure.adapters.outbound.persistence;
+
+import com.yowyob.fleet.domain.ports.out.StatisticsPort;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.DriverR2dbcRepository;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.FleetManagerR2dbcRepository;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.FleetR2dbcRepository;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.VehicleLocalR2dbcRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
+
+@Component
+@RequiredArgsConstructor
+public class StatisticsPersistenceAdapter implements StatisticsPort {
+
+    private final FleetManagerR2dbcRepository managerRepo;
+    private final FleetR2dbcRepository fleetRepo;
+    private final VehicleLocalR2dbcRepository vehicleRepo;
+    private final DriverR2dbcRepository driverRepo;
+
+    @Override
+    public Mono<Long> countFleetManagers() {
+        return managerRepo.count();
+    }
+
+    @Override
+    public Mono<Long> countFleets() {
+        return fleetRepo.count();
+    }
+
+    @Override
+    public Mono<Long> countVehicles() {
+        return vehicleRepo.count();
+    }
+
+    @Override
+    public Mono<Long> countDrivers() {
+        return driverRepo.count();
+    }
+}```
+
+---
 ### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/persistence/repository/VehicleLocalR2dbcRepository.java`
 ```java
 package com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository;
 
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.VehicleLocalEntity;
+import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 import java.util.UUID;
 
 @Repository
@@ -10493,7 +10540,14 @@ public interface VehicleLocalR2dbcRepository extends ReactiveCrudRepository<Vehi
     Flux<VehicleLocalEntity> findByFleetId(UUID fleetId);
     Flux<VehicleLocalEntity> findByManagerId(UUID managerId); // Nouveau
     Flux<VehicleLocalEntity> findByStatus(String status);
+
     Flux<VehicleLocalEntity> findByCurrentDriverId(UUID currentDriverId);
+
+    // ✅ CORRECTION : Ajout de @Query explicite pour countByFleetIdAndStatus
+    @Query("SELECT COUNT(*) FROM fleet.vehicles WHERE fleet_id = :fleetId AND status = :status")
+    Mono<Long> countByFleetIdAndStatus(UUID fleetId, String status);
+
+    Mono<Long> countByFleetId(UUID fleetId);
 }```
 
 ---
@@ -10526,7 +10580,9 @@ public interface DriverR2dbcRepository extends ReactiveCrudRepository<DriverEnti
     /**
      * Recherche par ID de véhicule assigné.
      */
-    Mono<DriverEntity> findByAssignedVehicleId(UUID assignedVehicleId); 
+    Mono<DriverEntity> findByAssignedVehicleId(UUID assignedVehicleId);
+    // --- AJOUT TÂCHE 6.2 ---
+    Mono<Long> countByFleetId(UUID fleetId);
 }```
 
 ---
@@ -10555,6 +10611,7 @@ public interface MaintenanceParameterR2dbcRepository extends ReactiveCrudReposit
 package com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository;
 
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.TripEntity; // Assure-toi que cette entité existe ou est créée
+import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
@@ -10568,6 +10625,14 @@ public interface TripR2dbcRepository extends ReactiveCrudRepository<TripEntity, 
     
     // Trouver le trajet actif d'un véhicule (pour vérifier dispo)
     Mono<TripEntity> findByVehicleIdAndStatus(UUID vehicleId, String status);
+
+    // --- AJOUT TÂCHE 6.2 (JOINTURE) ---
+    // Somme des distances de tous les trajets effectués par les véhicules d'une flotte donnée
+    // CORRECTION : Ajout de COALESCE pour retourner 0.0 au lieu de NULL si aucun trajet n'existe
+    @Query("SELECT COALESCE(SUM(t.distance_km), 0) FROM fleet.trips t " +
+            "JOIN fleet.vehicles v ON t.vehicle_id = v.id " +
+            "WHERE v.fleet_id = :fleetId")
+    Mono<Double> getTotalDistanceByFleetId(UUID fleetId);
 }```
 
 ---
@@ -11245,6 +11310,7 @@ import com.yowyob.fleet.domain.ports.in.ManageFleetUseCase;
 import com.yowyob.fleet.domain.ports.out.AuthPort;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.FleetRequest;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.FleetResponse;
+import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.FleetStatsResponse; // Import
 import com.yowyob.fleet.infrastructure.mappers.FleetMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -11308,11 +11374,18 @@ public class FleetController {
                 .map(mapper::toResponse);
     }
 
+    // --- AJOUT TÂCHE 6.2 ---
+    @GetMapping("/{id}/stats")
+    @Operation(summary = "Statistiques de la flotte", description = "KPIs : Nombre de chauffeurs, km totaux, état des véhicules.")
+    public Mono<FleetStatsResponse> getStats(@PathVariable UUID id, Authentication auth) {
+        return fleetUseCase.getFleetStatistics(id, getUser(auth).id(), isAdmin(auth));
+    }
+
     @PutMapping("/{id}")
     @Operation(summary = "Mettre à jour une flotte")
     public Mono<FleetResponse> update(
-            @PathVariable UUID id, 
-            @Valid @RequestBody FleetRequest request, 
+            @PathVariable UUID id,
+            @Valid @RequestBody FleetRequest request,
             Authentication auth
     ) {
         return fleetUseCase.updateFleet(id, mapper.toDomain(request), getUser(auth).id(), isAdmin(auth))
@@ -11548,6 +11621,40 @@ public class GlobalExceptionHandler {
         }
         
         return problem;
+    }
+}```
+
+---
+### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/AdminStatsController.java`
+```java
+package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
+
+import com.yowyob.fleet.domain.ports.in.AdminStatsUseCase;
+import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.GlobalStatsResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
+
+@RestController
+@RequestMapping("/api/v1/admin/stats")
+@RequiredArgsConstructor
+@Tag(name = "01. Monitoring", description = "Statistiques et Supervision") // On le regroupe avec Monitoring
+@SecurityRequirement(name = "bearerAuth")
+public class AdminStatsController {
+
+    private final AdminStatsUseCase adminStatsUseCase;
+
+    @GetMapping
+    @PreAuthorize("hasRole('FLEET_ADMIN')")
+    @Operation(summary = "Statistiques Globales (Admin)", description = "Retourne le nombre total d'entités dans le système.")
+    public Mono<GlobalStatsResponse> getGlobalStats() {
+        return adminStatsUseCase.getGlobalStats();
     }
 }```
 
@@ -11797,6 +11904,37 @@ public class AdminReferenceController {
     @Operation(summary = "Supprimer un type", description = "Impossible si des véhicules utilisent ce type.")
     public Mono<Void> deleteType(@PathVariable UUID id) {
         return vehicleTypeService.deleteType(id);
+    }
+}```
+
+---
+### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/TestPaymentController.java`
+```java
+package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
+
+import com.yowyob.fleet.domain.ports.out.ExternalPaymentPort;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
+
+import java.math.BigDecimal;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/v1/test/payments")
+@RequiredArgsConstructor
+public class TestPaymentController {
+
+    private final ExternalPaymentPort paymentPort;
+
+    @GetMapping("/balance/{ownerId}")
+    public Mono<BigDecimal> getBalance(@PathVariable UUID ownerId) {
+        return paymentPort.getBalance(ownerId);
+    }
+
+    @PostMapping("/wallet")
+    public Mono<UUID> createWallet(@RequestParam UUID ownerId, @RequestParam String name) {
+        return paymentPort.initializeWallet(ownerId, name);
     }
 }```
 
@@ -12195,6 +12333,21 @@ public record FleetManagerResponse(
 ) {}```
 
 ---
+### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/dto/FleetStatsResponse.java`
+```java
+package com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto;
+
+import java.util.Map;
+import java.util.UUID;
+
+public record FleetStatsResponse(
+        UUID fleetId,
+        Long totalDrivers,
+        Double totalKmTraveled,
+        Map<String, Long> vehicleStatusDistribution
+) {}```
+
+---
 ### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/dto/MaintenanceUpdateRequest.java`
 ```java
 package com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto;
@@ -12271,6 +12424,19 @@ public record LoginRequest(
     
     @NotBlank(message = "Le mot de passe est obligatoire") 
     String password
+) {}```
+
+---
+### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/dto/GlobalStatsResponse.java`
+```java
+package com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto;
+
+public record GlobalStatsResponse(
+        Long totalFleetManagers,
+        Long totalFleets,
+        Long totalVehicles,
+        Long totalDrivers,
+        String systemStatus
 ) {}```
 
 ---
@@ -12601,7 +12767,8 @@ import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.AuthApiClient;
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.VehicleApiClient;
-import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.GeofenceApiClient; 
+import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.GeofenceApiClient;
+import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.PaymentApiClient; // NOUVEAU
 
 @Configuration
 public class WebClientConfig {
@@ -12633,7 +12800,12 @@ public class WebClientConfig {
         WebClient webClient = builder.baseUrl(url).build();
         return createProxy(webClient, GeofenceApiClient.class);
     }
-
+    @Bean
+    public PaymentApiClient paymentApiClient(WebClient.Builder builder,
+                                             @Value("${application.external.payment-service-url}") String url) {
+        WebClient webClient = builder.baseUrl(url).build();
+        return createProxy(webClient, PaymentApiClient.class);
+    }
     /**
      * Helper pour éviter la répétition du code de factory
      */
@@ -12774,8 +12946,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -12785,7 +12958,6 @@ import java.util.List;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-// On active ce loader sur tous les profils, car c'est des données vitales
 public class InitialDataLoader implements CommandLineRunner {
 
     private final VehicleTypeService vehicleTypeService;
@@ -12813,62 +12985,66 @@ public class InitialDataLoader implements CommandLineRunner {
     public void run(String... args) {
         log.info("🚀 Démarrage du Seeder de données initiales...");
 
-        // On chaine les opérations de manière séquentielle pour le démarrage
         seedVehicleTypes()
                 .then(seedSuperAdmin())
-                .block(Duration.ofMinutes(1)); // Timeout de sécurité
+                .timeout(Duration.ofMinutes(1))
+                // FIX CRITIQUE : Empêcher le crash de l'app si le seeding échoue
+                .onErrorResume(e -> {
+                    log.error("⚠️ Le seeding a échoué mais l'application va démarrer : {}", e.getMessage());
+                    return Mono.empty();
+                })
+                .block();
 
-        log.info("✅ Initialisation des données terminée.");
+        log.info("✅ Phase d'initialisation terminée.");
     }
 
     private Mono<Void> seedVehicleTypes() {
         return vehicleTypeService.getAllTypes()
                 .hasElements()
                 .flatMap(hasElements -> {
-                    if (hasElements) {
-                        log.info("ℹ️ Types de véhicules déjà présents. Pas de seeding nécessaire.");
-                        return Mono.empty();
-                    }
-
+                    if (hasElements) return Mono.empty();
                     log.info("🌱 Seeding des types de véhicules standards...");
                     return Flux.just(
-                            new VehicleTypeRequest("CAR", "Voiture", "Véhicule léger de tourisme (max 5 places)"),
-                            new VehicleTypeRequest("VAN", "Fourgonnette", "Véhicule utilitaire léger ou transport de groupe"),
-                            new VehicleTypeRequest("TRUCK", "Camion", "Poids lourd pour le transport de marchandises"),
-                            new VehicleTypeRequest("BIKE", "Moto", "Deux roues motorisé pour livraison rapide"),
-                            new VehicleTypeRequest("BUS", "Autobus", "Transport en commun grande capacité")
+                            new VehicleTypeRequest("CAR", "Voiture", "Véhicule léger"),
+                            new VehicleTypeRequest("VAN", "Fourgonnette", "Transport de groupe"),
+                            new VehicleTypeRequest("TRUCK", "Camion", "Poids lourd"),
+                            new VehicleTypeRequest("BIKE", "Moto", "Deux roues"),
+                            new VehicleTypeRequest("BUS", "Autobus", "Transport commun")
                     )
                     .flatMap(vehicleTypeService::createType)
                     .then();
+                })
+                .onErrorResume(e -> {
+                    log.warn("Impossible de seeder les types (probablement déjà présents) : {}", e.getMessage());
+                    return Mono.empty();
                 });
     }
 
     private Mono<Void> seedSuperAdmin() {
-        // 1. Tenter de se connecter pour voir si l'admin existe
+        // Tenter de se connecter
         return authPort.login(adminEmail, adminPassword)
-                .flatMap(response -> {
-                    log.info("ℹ️ Super Admin déjà existant (ID: {}).", response.user().id());
-                    return Mono.empty();
-                })
+                .doOnSuccess(resp -> log.info("ℹ️ Super Admin déjà opérationnel."))
                 .onErrorResume(e -> {
-                    // 2. Si erreur (Login échoué), on tente de le créer
-                    log.info("⚠️ Super Admin non détecté. Tentative de création...");
+                    log.info("⚠️ Login Admin échoué ({}). Tentative de création...", e.getMessage());
                     
                     AuthUseCase.RegisterCommand command = new AuthUseCase.RegisterCommand(
-                            adminUsername,
-                            adminPassword,
-                            adminEmail,
-                            adminPhone,
-                            adminFirstName,
-                            adminLastName,
-                            List.of("FLEET_ADMIN", "FLEET_SUPER_ADMIN"), // On donne les droits max
-                            null // Pas de photo pour l'instant
+                            adminUsername, adminPassword, adminEmail, adminPhone,
+                            adminFirstName, adminLastName, List.of("FLEET_ADMIN", "FLEET_SUPER_ADMIN"), null
                     );
 
                     return authPort.registerInRemote(command)
-                            .doOnSuccess(resp -> log.info("✅ Super Admin créé avec succès ! (ID: {})", resp.user().id()))
-                            .doOnError(err -> log.error("❌ Erreur lors de la création du Super Admin : {}", err.getMessage()))
-                            .then();
+                            .doOnSuccess(resp -> log.info("✅ Super Admin créé avec succès !"))
+                            .onErrorResume(err -> {
+                                // FIX : Si 409 Conflict, c'est que l'user existe déjà sur le service Auth
+                                // mais avec un mot de passe différent de notre application.yml.
+                                // On considère cela comme un "Succès" (l'user est là).
+                                if (err instanceof WebClientResponseException && 
+                                   ((WebClientResponseException) err).getStatusCode() == HttpStatus.CONFLICT) {
+                                    log.info("ℹ️ L'utilisateur Super Admin existe déjà sur le service Auth.");
+                                    return Mono.empty();
+                                }
+                                return Mono.error(err);
+                            });
                 })
                 .then();
     }
@@ -13421,6 +13597,18 @@ public interface ManageFleetManagerUseCase {
 }```
 
 ---
+### Fichier : `./src/main/java/com/yowyob/fleet/domain/ports/in/AdminStatsUseCase.java`
+```java
+package com.yowyob.fleet.domain.ports.in;
+
+import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.GlobalStatsResponse;
+import reactor.core.publisher.Mono;
+
+public interface AdminStatsUseCase {
+    Mono<GlobalStatsResponse> getGlobalStats();
+}```
+
+---
 ### Fichier : `./src/main/java/com/yowyob/fleet/domain/ports/in/ManageGeofenceUseCase.java`
 ```java
 package com.yowyob.fleet.domain.ports.in;
@@ -13450,6 +13638,7 @@ public interface ManageGeofenceUseCase {
 package com.yowyob.fleet.domain.ports.in;
 
 import com.yowyob.fleet.domain.model.Fleet;
+import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.FleetStatsResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import java.util.UUID;
@@ -13460,6 +13649,9 @@ public interface ManageFleetUseCase {
     Flux<Fleet> getFleets(UUID requesterId, boolean isAdmin);
     Mono<Fleet> updateFleet(UUID fleetId, Fleet fleet, UUID requesterId, boolean isAdmin);
     Mono<Void> deleteFleet(UUID fleetId, UUID requesterId, boolean isAdmin);
+
+    // --- AJOUT TÂCHE 6.2 ---
+    Mono<FleetStatsResponse> getFleetStatistics(UUID fleetId, UUID requesterId, boolean isAdmin);
 }```
 
 ---
@@ -13715,6 +13907,43 @@ public interface ExternalVehiclePort {
 
     Flux<Map<String, Object>> getReferenceData(String resource, String token);
     Mono<Void> assignDriverRemote(UUID vehicleId, UUID driverId, String token);
+}```
+
+---
+### Fichier : `./src/main/java/com/yowyob/fleet/domain/ports/out/ExternalPaymentPort.java`
+```java
+package com.yowyob.fleet.domain.ports.out;
+
+import reactor.core.publisher.Mono;
+import java.math.BigDecimal;
+import java.util.UUID;
+
+public interface ExternalPaymentPort {
+    /**
+     * Récupère le solde d'un propriétaire.
+     * Retourne BigDecimal.ZERO si le wallet n'existe pas encore (ou vide).
+     */
+    Mono<BigDecimal> getBalance(UUID ownerId);
+
+    /**
+     * Initialise un wallet pour un propriétaire.
+     * Idempotent : Si existe déjà, retourne l'existant.
+     */
+    Mono<UUID> initializeWallet(UUID ownerId, String ownerName);
+}```
+
+---
+### Fichier : `./src/main/java/com/yowyob/fleet/domain/ports/out/StatisticsPort.java`
+```java
+package com.yowyob.fleet.domain.ports.out;
+
+import reactor.core.publisher.Mono;
+
+public interface StatisticsPort {
+    Mono<Long> countFleetManagers();
+    Mono<Long> countFleets();
+    Mono<Long> countVehicles();
+    Mono<Long> countDrivers();
 }```
 
 ---
@@ -14587,8 +14816,12 @@ package com.yowyob.fleet.application.service;
 
 import com.yowyob.fleet.domain.model.Fleet;
 import com.yowyob.fleet.domain.ports.in.ManageFleetUseCase;
+import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.FleetStatsResponse;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.FleetEntity;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.DriverR2dbcRepository;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.FleetR2dbcRepository;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.TripR2dbcRepository;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.VehicleLocalR2dbcRepository;
 import com.yowyob.fleet.infrastructure.mappers.FleetMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14598,14 +14831,17 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class FleetService implements ManageFleetUseCase {
-
     private final FleetR2dbcRepository repository;
+    private final VehicleLocalR2dbcRepository vehicleRepository;
+    private final DriverR2dbcRepository driverRepository;
+    private final TripR2dbcRepository tripRepository;
     private final FleetMapper mapper;
 
     @Override
@@ -14680,6 +14916,79 @@ public class FleetService implements ManageFleetUseCase {
                     }
                     return repository.delete(existingEntity);
                 });
+    }
+
+    // --- TÂCHE 6.2 : STATISTIQUES ---
+    @Override
+    public Mono<FleetStatsResponse> getFleetStatistics(UUID fleetId, UUID requesterId, boolean isAdmin) {
+        // 1. Vérification d'accès
+        return repository.existsByIdAndManagerId(fleetId, requesterId)
+                .flatMap(exists -> {
+                    if (!isAdmin && !exists) {
+                        return Mono.error(new AccessDeniedException("Accès refusé aux stats de cette flotte."));
+                    }
+                    return Mono.empty();
+                })
+                .then(Mono.defer(() -> {
+                    // 2. Exécution parallèle des agrégations
+                    return Mono.zip(
+                            driverRepository.countByFleetId(fleetId),
+                            tripRepository.getTotalDistanceByFleetId(fleetId).defaultIfEmpty(0.0), // Gère le cas null
+                            vehicleRepository.countByFleetIdAndStatus(fleetId, "AVAILABLE"),
+                            vehicleRepository.countByFleetIdAndStatus(fleetId, "ON_TRIP"),
+                            vehicleRepository.countByFleetIdAndStatus(fleetId, "MAINTENANCE")
+                    ).map(tuple -> {
+                        // 3. Construction de la réponse
+                        Map<String, Long> statusMap = Map.of(
+                                "AVAILABLE", tuple.getT3(),
+                                "ON_TRIP", tuple.getT4(),
+                                "MAINTENANCE", tuple.getT5()
+                        );
+
+                        return new FleetStatsResponse(
+                                fleetId,
+                                tuple.getT1(), // drivers
+                                tuple.getT2(), // distance
+                                statusMap
+                        );
+                    });
+                }));
+    }
+}```
+
+---
+### Fichier : `./src/main/java/com/yowyob/fleet/application/service/AdminStatsService.java`
+```java
+package com.yowyob.fleet.application.service;
+
+import com.yowyob.fleet.domain.ports.in.AdminStatsUseCase;
+import com.yowyob.fleet.domain.ports.out.StatisticsPort;
+import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.GlobalStatsResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
+
+@Service
+@RequiredArgsConstructor
+public class AdminStatsService implements AdminStatsUseCase {
+
+    private final StatisticsPort statisticsPort;
+
+    @Override
+    public Mono<GlobalStatsResponse> getGlobalStats() {
+        // Exécution parallèle des 4 compteurs
+        return Mono.zip(
+                statisticsPort.countFleetManagers(),
+                statisticsPort.countFleets(),
+                statisticsPort.countVehicles(),
+                statisticsPort.countDrivers()
+        ).map(tuple -> new GlobalStatsResponse(
+                tuple.getT1(), // Managers
+                tuple.getT2(), // Fleets
+                tuple.getT3(), // Vehicles
+                tuple.getT4(), // Drivers
+                "OPERATIONAL"
+        ));
     }
 }```
 

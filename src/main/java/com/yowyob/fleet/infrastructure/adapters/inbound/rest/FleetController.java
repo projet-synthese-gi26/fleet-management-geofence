@@ -5,6 +5,7 @@ import com.yowyob.fleet.domain.ports.in.ManageFleetUseCase;
 import com.yowyob.fleet.domain.ports.out.AuthPort;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.FleetRequest;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.FleetResponse;
+import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.FleetStatsResponse; // Import
 import com.yowyob.fleet.infrastructure.mappers.FleetMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -68,11 +69,18 @@ public class FleetController {
                 .map(mapper::toResponse);
     }
 
+    // --- AJOUT TÂCHE 6.2 ---
+    @GetMapping("/{id}/stats")
+    @Operation(summary = "Statistiques de la flotte", description = "KPIs : Nombre de chauffeurs, km totaux, état des véhicules.")
+    public Mono<FleetStatsResponse> getStats(@PathVariable UUID id, Authentication auth) {
+        return fleetUseCase.getFleetStatistics(id, getUser(auth).id(), isAdmin(auth));
+    }
+
     @PutMapping("/{id}")
     @Operation(summary = "Mettre à jour une flotte")
     public Mono<FleetResponse> update(
-            @PathVariable UUID id, 
-            @Valid @RequestBody FleetRequest request, 
+            @PathVariable UUID id,
+            @Valid @RequestBody FleetRequest request,
             Authentication auth
     ) {
         return fleetUseCase.updateFleet(id, mapper.toDomain(request), getUser(auth).id(), isAdmin(auth))

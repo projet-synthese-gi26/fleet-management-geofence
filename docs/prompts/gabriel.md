@@ -34,5 +34,5 @@ La roadmap est suivie dans `todo.md`.
 
 
 ### Premiere mission
-je suis en train de debugger la fonctionnalite vehicles,je susi gabriel,j'ai fait mes taches et je suis juste en train de yetster,je commence par vehciuleses-tu pret a recevoir le premier bugg ?
+je viens de merger mon travil avec celui de raphael,l'application ne se lance plus,aide moi a corriger ca,ensuite on va avancer.
 "
