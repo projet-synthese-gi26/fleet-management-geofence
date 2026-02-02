@@ -6,10 +6,14 @@ import com.yowyob.fleet.domain.ports.in.ManageVehicleUseCase;
 import com.yowyob.fleet.domain.ports.out.ExternalVehiclePort;
 import com.yowyob.fleet.domain.ports.out.VehiclePersistencePort;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.VehicleRegistrationRequest; // Ajout temporaire pour accès facile aux champs
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.FleetR2dbcRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import java.util.UUID;
 
@@ -20,6 +24,7 @@ public class VehicleService implements ManageVehicleUseCase {
 
     private final VehiclePersistencePort localPersistencePort;
     private final ExternalVehiclePort externalVehiclePort;
+    private final FleetR2dbcRepository fleetRepository;
 
     @Override
     public Mono<Vehicle> getVehicleDetails(UUID vehicleId) {
@@ -132,5 +137,13 @@ public class VehicleService implements ManageVehicleUseCase {
     @Override
     public Mono<Vehicle> addVehicleToFleet(Vehicle vehicle) {
         return Mono.error(new UnsupportedOperationException("Utiliser createVehicle avec DTO"));
+    }
+
+     public Flux<Vehicle> getVehiclesForManager(UUID managerId) {
+        return fleetRepository.findAllByManagerId(managerId)
+                // On transforme Flux<FleetEntity> en Flux<Vehicle>
+                .<Vehicle>flatMap(fleet -> localPersistencePort.findByFleetId(fleet.getId()))
+                // On enrichit chaque véhicule avec les données distantes
+                .<Vehicle>flatMap(vLocal -> this.getVehicleDetails(vLocal.id()));
     }
 }

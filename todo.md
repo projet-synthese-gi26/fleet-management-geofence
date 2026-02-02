@@ -62,12 +62,12 @@
 *Responsabilité : Moteur spatial, Asynchronisme, Alerting.*
 
 #### Module 4 : Moteur Geofencing
-- [ ] **Tâche 4.1 :** CRUD Zones : Comprendre l'API de Kamga, identifier tous les endpoints nécessaires pour notre projet et les intégrer.
+- [x] **Tâche 4.1 :** CRUD Zones : Comprendre l'API de Kamga, identifier tous les endpoints nécessaires pour notre projet et les intégrer.
 
 #### Module 5 : Notifications & Kafka
-- [ ] **Tâche 5.1 :** Analyse du service : Comprendre comment fonctionne le service de notifs (lire la doc et se rapprocher de Tchassi). Consulter également le code d'Igor, qui a déjà intégré ce service avec succès.
-- [ ] **Tâche 5.2 :** Configuration Kafka : Configurer le nécessaire pour ce projet et offrir les endpoints pour recevoir les notifications côté client.
-- [ ] **Tâche 5.3 :** Workflow Frontend : Discuter avec l'équipe frontend pour identifier **quand** et **à qui** envoyer des notifications en fonction de chaque action. Faire des recherches pour suggérer des améliorations, puis intégrer le tout.
+- [x] **Tâche 5.1 :** Analyse du service : Comprendre comment fonctionne le service de notifs (lire la doc et se rapprocher de Tchassi). Consulter également le code d'Igor, qui a déjà intégré ce service avec succès.
+- [x] **Tâche 5.2 :** Configuration Kafka : Configurer le nécessaire pour ce projet et offrir les endpoints pour recevoir les notifications côté client.
+- [x] **Tâche 5.3 :** Workflow Frontend : Discuter avec l'équipe frontend pour identifier **quand** et **à qui** envoyer des notifications en fonction de chaque action. Faire des recherches pour suggérer des améliorations, puis intégrer le tout.
 
 ---
 

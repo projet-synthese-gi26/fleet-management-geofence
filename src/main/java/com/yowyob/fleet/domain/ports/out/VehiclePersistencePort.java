@@ -1,6 +1,8 @@
 package com.yowyob.fleet.domain.ports.out;
 
 import com.yowyob.fleet.domain.model.Vehicle;
+
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import java.util.UUID;
 
@@ -19,4 +21,5 @@ public interface VehiclePersistencePort {
      * Deletes all local records associated with a vehicle ID.
      */
     Mono<Void> deleteLocalData(UUID id);
+    Flux<Vehicle> findByFleetId(UUID fleetId);
 }
