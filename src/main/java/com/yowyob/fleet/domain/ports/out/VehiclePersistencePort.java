@@ -22,9 +22,6 @@ public interface VehiclePersistencePort {
      * Deletes all local records associated with a vehicle ID.
      */
     Mono<Void> deleteLocalData(UUID id);
-<<<<<<< HEAD
-    Flux<Vehicle> findByFleetId(UUID fleetId);
-=======
 
     /**
      * Retrieves all vehicles associated with a manager ID.
@@ -40,5 +37,4 @@ public interface VehiclePersistencePort {
      * Updates the photo URLs for a vehicle.
      */
     Mono<Void> updateVehiclePhotos(UUID vehicleId, String photoUrl, String vinPhotoUrl, String regPhotoUrl);
->>>>>>> 17589aeabf3bfcfc129c34d3271aea2931d4091a
 }

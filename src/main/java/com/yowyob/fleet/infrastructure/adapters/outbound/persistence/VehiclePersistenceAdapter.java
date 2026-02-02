@@ -8,10 +8,6 @@ import com.yowyob.fleet.infrastructure.mappers.VehicleLocalMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-<<<<<<< HEAD
-
-=======
->>>>>>> 17589aeabf3bfcfc129c34d3271aea2931d4091a
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -80,14 +76,6 @@ public class VehiclePersistenceAdapter implements VehiclePersistencePort {
     public Mono<Void> deleteLocalData(UUID id) {
         return vehicleRepo.deleteById(id);
     }
-<<<<<<< HEAD
-    // ... garder les autres imports
-@Override
-public Flux<Vehicle> findByFleetId(UUID fleetId) {
-    return vehicleRepo.findByFleetId(fleetId)
-            .map(entity -> mapper.toDomain(entity, null, null));
-}
-=======
 
     @Override
     public Flux<Vehicle> getVehiclesByManager(UUID managerId) {
@@ -110,5 +98,4 @@ public Flux<Vehicle> findByFleetId(UUID fleetId) {
                     return vehicleRepo.save(v);
                 }).then();
     }
->>>>>>> 17589aeabf3bfcfc129c34d3271aea2931d4091a
 }
