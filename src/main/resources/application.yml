@@ -12,8 +12,8 @@ spring:
   # ✅ CORRECTION: Utiliser yowyob_db au lieu de yowyob
   r2dbc:
     url: r2dbc:postgresql://localhost:5432/yowyob_db
-    username: postgres
-    password: root
+    username: fleet_admin
+    password: fleet_password
     pool:
       enabled: true
       initial-size: 2
@@ -24,8 +24,8 @@ spring:
   # JDBC (Liquibase Migration)
   datasource:
     url: jdbc:postgresql://localhost:5432/yowyob_db
-    username: postgres
-    password: root
+    username: fleet_admin
+    password: fleet_password
     driver-class-name: org.postgresql.Driver
 
   # LIQUIBASE
@@ -68,7 +68,7 @@ application:
     geofence-service-url: https://geofence-service.pynfi.com
     payment-service-url:  https://payment-service.pynfi.com
   auth:
-    mode: fake
+    mode: remote
     url: https://auth-service.pynfi.com
   bootstrap:
     admin:

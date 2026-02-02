@@ -1,5 +1,5 @@
 # Contexte du Projet : Fleet & Geofence API
-Généré le : Mon Feb  2 06:59:34 AM WAT 2026
+Généré le : Mon 02 Feb 2026 08:33:35 AM WAT
 Framework : Spring Boot WebFlux (Reactive)
 
 ## 1. Arborescence du Projet
@@ -8140,8 +8140,8 @@ spring:
   # ✅ CORRECTION: Utiliser yowyob_db au lieu de yowyob
   r2dbc:
     url: r2dbc:postgresql://localhost:5432/yowyob_db
-    username: postgres
-    password: root
+    username: fleet_admin
+    password: fleet_password
     pool:
       enabled: true
       initial-size: 2
@@ -8152,8 +8152,8 @@ spring:
   # JDBC (Liquibase Migration)
   datasource:
     url: jdbc:postgresql://localhost:5432/yowyob_db
-    username: postgres
-    password: root
+    username: fleet_admin
+    password: fleet_password
     driver-class-name: org.postgresql.Driver
 
   # LIQUIBASE
@@ -8196,7 +8196,7 @@ application:
     geofence-service-url: https://geofence-service.pynfi.com
     payment-service-url:  https://payment-service.pynfi.com
   auth:
-    mode: fake
+    mode: remote
     url: https://auth-service.pynfi.com
   bootstrap:
     admin:
