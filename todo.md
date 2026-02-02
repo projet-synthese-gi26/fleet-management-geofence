@@ -38,17 +38,19 @@
 
 #### Module 1 : Finalisation Auth & Drivers
 - [x] **Tâche 1.1 :** Validation Tests en local : Gestion des Drivers (Création, Listing, Retrait).
-- [ ] **Tâche 1.2 :** Implémentation : Gestion des Admins et Super Admins (1 Super Admin défini en dur dans le code/configuration qui peut créer les autres admins ; il sera configuré dans le `application.yml`).
+- [x] **Tâche 1.2 :** Implémentation : Gestion des Admins et Super Admins (1 Super Admin défini en dur dans le code/configuration qui peut créer les autres admins ; il sera configuré dans le `application.yml`).
 - [ ] **Tâche 1.3 :** Implémentation : Suppression de compte (Changement de service vers le service `User_Deleted`).
 - [ ] **Tâche 1.4 :** Implémentation : Upload/Update de la photo de profil (User, Driver, Fleet Manager, Admin).
 - [ ] **Tâche 1.5 :** Test et Implémentation : Gestion des assignations chauffeur-vehicules,flottes-chauffeurs,managers-flottes
 
 
 #### Module 2 : Gestion Avancée des Véhicules
-- [x] **Tâche 2.1 :** Refonte `VehicleService` : Agrégation réactive robuste (Données locales + Données distantes `VehicleApiClient`).
-- [x] **Tâche 2.2 :** CRUD Paramètres Financiers (Relation 1-1).
-- [x] **Tâche 2.3 :** CRUD Paramètres Maintenance (Relation 1-1).
-- [x] **Tâche 2.4 :** Logique d'Assignation Croisée (Empêcher conflit : 1 Driver sur 2 véhicules, etc.).
+- [x] **Tâche 2.1 :** Refonte `VehicleService` : Agrégation réactive robuste (Données locales + Données distantes `VehicleApiClient`).au minimum le CRUD
+- [x] **Tâche 2.2 :** gestion des medias des vehicles 
+- [] **Tâche 2.3 :** CRUD Paramètres Financiers (Relation 1-1).
+- [] **Tâche 2.4 :** CRUD Paramètres Maintenance (Relation 1-1).
+- [] **Tâche 2.5 :** Logique d'Assignation Croisée (Empêcher conflit : 1 Driver sur 2 véhicules, etc.).
+- [] **Tâche 2.6 :** debogage de la methode put des vehicules
 
 #### Module 3 : Gestion des Trajets (Trips) & Télémétrie
 - [x] **Tâche 3.1 :** Endpoint `Start Trip` : Initialisation, verrouillage véhicule/driver.
@@ -79,10 +81,6 @@
     *   *Note : Faire un Controller et un Service dédiés à cette tâche.*
 - [ ] **Tâche 6.2 :** Endpoints Stats Flotte (Fleet Manager) : Km parcourus par flotte, taux d'occupation des véhicules, nombre de chauffeurs, nombre de km parcourus par chauffeur, etc.
 
-#### Module 7 : Gestion Média (Véhicules)
-- [ ] **Tâche 7.1 :** Test et compréhension du service : Se rapprocher de Nathan et comprendre le fonctionnement du service média.
-- [ ] **Tâche 7.2 :** Intégration : Créer les endpoints de base pour consommer le service dans notre projet (Upload photo véhicule).
-
-#### Module 8 : Paiements
+#### Module 7 : Paiements
 - [ ] **Tâche 8.1 :** Test et compréhension du service : Se rapprocher de Nathan et comprendre le fonctionnement du service paiement.
 - [ ] **Tâche 8.2 :** Intégration : Créer les endpoints de base pour consommer le service dans notre projet.

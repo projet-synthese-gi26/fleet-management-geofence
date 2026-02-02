@@ -12,7 +12,7 @@ import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.authentication.AuthenticationWebFilter;
-import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers; // On peut retirer cet import si non utilisé ailleurs
 import reactor.core.publisher.Mono;
 
 @Configuration
@@ -28,21 +28,12 @@ public class SecurityConfig {
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
         
         // --- 1. CONFIGURATION DU FILTRE JWT ---
-        // On instancie le filtre avec le manager explicite
         AuthenticationWebFilter jwtFilter = new AuthenticationWebFilter(authenticationManager);
         jwtFilter.setServerAuthenticationConverter(authenticationConverter);
-
-        // CORRECTION ROBUSTE : Le filtre ne s'active QUE sur les routes protégées.
-        jwtFilter.setRequiresAuthenticationMatcher(
-            ServerWebExchangeMatchers.pathMatchers(
-                "/api/v1/account/**",
-                "/api/v1/fleets/**",
-                "/api/v1/drivers/**",
-                "/api/v1/vehicles/**",
-                "/api/v1/geofence/**",
-                "/api/v1/admin/**"
-            )
-        );
+        
+        // MODIFICATION : On retire le 'setRequiresAuthenticationMatcher'. 
+        // Par défaut, le filtre s'appliquera désormais à TOUTES les requêtes.
+        // Si pas de token -> Le convertisseur renvoie vide -> Le filtre laisse passer en "Anonyme".
 
         // --- 2. CHAÎNE DE SÉCURITÉ ---
         return http
@@ -50,10 +41,8 @@ public class SecurityConfig {
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 
-                // IMPORTANT : On déclare notre manager comme le manager par défaut pour éviter le "No provider found"
                 .authenticationManager(authenticationManager) 
                 
-                // Gestion explicite des erreurs 401/403
                 .exceptionHandling(handling -> handling
                     .authenticationEntryPoint((exchange, e) -> 
                         Mono.fromRunnable(() -> exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED)))
@@ -62,7 +51,7 @@ public class SecurityConfig {
                 )
 
                 .authorizeExchange(exchanges -> exchanges
-                        // Routes Publiques
+                        // A. ROUTES PUBLIQUES (Pas besoin de token, même si le filtre a essayé d'en trouver un)
                         .pathMatchers(
                             "/v3/api-docs/**", 
                             "/swagger-ui/**", 
@@ -73,11 +62,11 @@ public class SecurityConfig {
                             "/api/v1/auth/**"
                         ).permitAll()
                         
-                        // Tout le reste nécessite un Token
+                        // B. TOUT LE RESTE = AUTHENTIFICATION OBLIGATOIRE
+                        // Si le filtre n'a pas trouvé de token valide, ça bloquera ici (401).
                         .anyExchange().authenticated()
                 )
                 
-                // Ajout du filtre JWT
                 .addFilterAt(jwtFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 
                 .build();

@@ -52,9 +52,16 @@ CREATE TABLE IF NOT EXISTS fleet.geofence_zones (
 -- 6. VÉHICULES
 CREATE TABLE IF NOT EXISTS fleet.vehicles (
   id UUID PRIMARY KEY,
-  fleet_id UUID NOT NULL REFERENCES fleet.fleets(id) ON DELETE CASCADE,
   
-  current_driver_id UUID REFERENCES fleet.drivers(user_id) ON DELETE SET NULL,
+  -- La flotte est OPTIONNELLE (Un véhicule indépendant a fleet_id = NULL)
+  fleet_id UUID REFERENCES fleet.fleets(id) ON DELETE SET NULL,
+  
+  -- Le manager est OBLIGATOIRE (Un véhicule appartient toujours à quelqu'un)
+  -- Et il pointe vers la table des managers
+  manager_id UUID NOT NULL REFERENCES fleet.fleet_managers(user_id), 
+  
+  current_driver_id UUID, 
+  
   vehicle_type_id UUID REFERENCES fleet.vehicle_types(id), 
   
   license_plate VARCHAR(50) UNIQUE NOT NULL,
@@ -63,8 +70,24 @@ CREATE TABLE IF NOT EXISTS fleet.vehicles (
   manufacturing_year INT,
   color VARCHAR(50),
   status VARCHAR(50) DEFAULT 'AVAILABLE' CHECK (status IN ('AVAILABLE', 'ON_TRIP', 'MAINTENANCE')),
-  photo_url VARCHAR(255)
+ 
+  -- Stockage local des URLs
+  photo_url VARCHAR(255),
+  serial_number_photo_url VARCHAR(255),
+  registration_photo_url VARCHAR(255)
 );
+
+-- 9. GÉOMÉTRIE / DÉTAILS
+CREATE TABLE IF NOT EXISTS fleet.vehicle_illustration_images (
+  id UUID PRIMARY KEY,
+  vehicle_id UUID NOT NULL REFERENCES fleet.vehicles(id) ON DELETE CASCADE,
+  image_path VARCHAR(255) NOT NULL
+);
+
+-- Optionnel mais recommandé pour la robustesse :
+ALTER TABLE fleet.vehicles 
+ADD CONSTRAINT fk_vehicle_current_driver 
+FOREIGN KEY (current_driver_id) REFERENCES fleet.drivers(user_id) ON DELETE SET NULL;
 
 -- Ajout de la FK manquante sur drivers
 ALTER TABLE fleet.drivers 

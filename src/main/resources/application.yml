@@ -87,6 +87,14 @@ application:
     password: "system_password_secure" # À changer en prod
     organization-id: "723e4567-e89b-12d3-a456-426614174000" # UUID de notre application dans
  
+  bootstrap:
+    admin:
+      username: "superadmin123"
+      email: "superadmin123@transens.com"
+      password: "password123" 
+      phone: "+23761213141516"
+      firstname: "System"
+      lastname: "Administrator"
   # Kafka topics
   kafka:
     topics:

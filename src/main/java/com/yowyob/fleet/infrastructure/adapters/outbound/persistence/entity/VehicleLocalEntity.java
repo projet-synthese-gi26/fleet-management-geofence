@@ -11,24 +11,45 @@ import org.springframework.data.relational.core.mapping.Column;
 import java.util.UUID;
 
 @Table(name = "vehicles", schema = "fleet")
-@Data @NoArgsConstructor @AllArgsConstructor
+@Data 
+@NoArgsConstructor 
+@AllArgsConstructor
 public class VehicleLocalEntity implements Persistable<UUID> {
     @Id
     private UUID id;
-
+    
     @Column("fleet_id")
     private UUID fleetId;
-
+    
+    @Column("manager_id")
+    private UUID managerId;
+    
     @Column("current_driver_id")
     private UUID currentDriverId;
-
+    
     @Column("vehicle_type_id")
     private UUID vehicleTypeId;
-
-    private String status; // AVAILABLE, ON_TRIP, MAINTENANCE
+    
+    @Column("license_plate")
+    private String licensePlate;
+    
+    private String brand;
+    private String model;
+    
+    @Column("manufacturing_year")
+    private Integer manufacturingYear;
+    
+    private String color;
+    private String status; 
     
     @Column("photo_url")
     private String photoUrl;
+    
+    @Column("serial_number_photo_url")
+    private String serialNumberPhotoUrl;
+    
+    @Column("registration_photo_url")
+    private String registrationPhotoUrl;
 
     @Transient
     private boolean isNew = false;
@@ -36,5 +57,10 @@ public class VehicleLocalEntity implements Persistable<UUID> {
     @Override
     public boolean isNew() {
         return isNew || id == null;
+    }
+
+    // Setter explicite pour MapStruct et l'Adapter
+    public void setNew(boolean isNew) {
+        this.isNew = isNew;
     }
 }

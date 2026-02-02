@@ -87,7 +87,14 @@ application:
   auth:
     mode: remote 
     url: https://auth-service.pynfi.com
-
+  bootstrap:
+    admin:
+      username: "superadmin123"
+      email: "superadmin@transens.com"
+      password: "password123" 
+      phone: "+23761213141516"
+      firstname: "System"
+      lastname: "Administrator"
   kafka:
     topics:
       geofence-alerts: geofence-alerts-topic

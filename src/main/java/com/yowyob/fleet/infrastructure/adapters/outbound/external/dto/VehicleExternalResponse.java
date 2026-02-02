@@ -1,28 +1,36 @@
 package com.yowyob.fleet.infrastructure.adapters.outbound.external.dto;
 
-import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Mappe la réponse du Service Véhicule Distant.
- * Basé sur le Swagger fourni (VehicleResponse).
+ * Mappe exactement le JSON de réponse du Swagger "Vehicle Service".
+ * Modif: Dates en String pour gérer le format sans Timezone du service distant.
  */
 public record VehicleExternalResponse(
     UUID vehicleId,
     UUID vehicleMakeId,
     UUID vehicleModelId,
-    String registrationNumber, // registrationNumber dans le swagger
+    UUID transmissionTypeId,
+    UUID manufacturerId,
+    UUID vehicleSizeId,
+    UUID vehicleTypeId,
+    UUID fuelTypeId,
+    
     String vehicleSerialNumber,
-    String brand, // brand dans le swagger
-    // Le swagger ne renvoie pas explicitement "model" en string dans la réponse standard, 
-    // mais "brand" semble être là. On fera avec ce qu'on a.
-    String vehicleSerialPhoto,
-    String registrationPhoto,
-    Instant createdAt,
-    Instant updatedAt
-) {
-    // Helper pour récupérer un affichage lisible si le modèle n'est pas renvoyé en clair
-    public String getDisplayName() {
-        return (brand != null ? brand : "Unknown") + " (" + registrationNumber + ")";
-    }
-}
+    String vehicleSerialPhoto, // URL
+    String registrationNumber,
+    String registrationPhoto, // URL
+    String registrationExpiryDate,
+    
+    Double tankCapacity,
+    Integer luggageMaxCapacity,
+    Integer totalSeatNumber,
+    Double averageFuelConsumptionPerKm,
+    Double mileageAtStart,
+    Double mileageSinceCommissioning,
+    Integer vehicleAgeAtStart,
+    
+    String brand,
+    String createdAt, // <-- Changé de Instant à String
+    String updatedAt  // <-- Changé de Instant à String
+) {}

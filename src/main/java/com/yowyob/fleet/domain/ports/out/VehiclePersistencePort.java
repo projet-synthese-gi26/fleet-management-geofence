@@ -4,6 +4,7 @@ import com.yowyob.fleet.domain.model.Vehicle;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux; // Import Flux
 import java.util.UUID;
 
 public interface VehiclePersistencePort {
@@ -21,5 +22,23 @@ public interface VehiclePersistencePort {
      * Deletes all local records associated with a vehicle ID.
      */
     Mono<Void> deleteLocalData(UUID id);
+<<<<<<< HEAD
     Flux<Vehicle> findByFleetId(UUID fleetId);
+=======
+
+    /**
+     * Retrieves all vehicles associated with a manager ID.
+     */
+    Flux<Vehicle> getVehiclesByManager(UUID managerId);
+
+    /**
+     * Retrieves ALL vehicles in the system (For Admin).
+     */
+    Flux<Vehicle> getAllVehicles();
+
+    /**
+     * Updates the photo URLs for a vehicle.
+     */
+    Mono<Void> updateVehiclePhotos(UUID vehicleId, String photoUrl, String vinPhotoUrl, String regPhotoUrl);
+>>>>>>> 17589aeabf3bfcfc129c34d3271aea2931d4091a
 }
