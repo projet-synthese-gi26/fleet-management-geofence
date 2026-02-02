@@ -1,30 +1,78 @@
 package com.yowyob.fleet.infrastructure.adapters.outbound.external.client;
 
+import com.yowyob.fleet.infrastructure.adapters.outbound.external.dto.GeofenceZoneDTORequest;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.service.annotation.DeleteExchange;
 import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PostExchange;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.service.annotation.PutExchange;
+
 import reactor.core.publisher.Mono;
+
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
-@HttpExchange("/api/v1")
+@HttpExchange("/api")
 public interface GeofenceApiClient {
 
-    /**
-     * Vérifie si un point est à l'intérieur d'une zone.
-     * Basé sur les query params vus dans la doc.
-     */
-    @GetExchange("/check")
-    Mono<String> isPointInZone(
-        @RequestParam("zoneId") UUID zoneId, 
-        @RequestParam("lat") Double lat, 
-        @RequestParam("lng") Double lng
+
+    @PostExchange("/geofence")
+    Mono<Void> createZone(
+        @RequestBody Object request,
+        @RequestHeader("Authorization") String token
     );
 
-    /**
-     * Exemple : Création d'une zone sur le service de calcul distant.
-     */
-    @PostExchange("/zones")
-    Mono<Void> registerZone(@RequestBody Object zoneRequest);
+    @GetExchange("/check")
+    Mono<String> checkPoint(
+        @RequestParam("zoneId") String zoneId, // Utilisation de String pour plus de souplesse
+        @RequestParam("lat") Double lat,
+        @RequestParam("lng") Double lng,
+        @RequestHeader("Authorization") String token
+    );
+
+     @GetExchange("/geofence")
+    Mono<Object> getAllZones(@RequestHeader("Authorization") String token);
+
+    @GetExchange("/geofence/circles")
+    Mono<Object> getCircles(@RequestHeader("Authorization") String token);
+
+    @GetExchange("/geofence/polygons")
+    Mono<Object> getPolygons(@RequestHeader("Authorization") String token);
+
+    // --- UNITAIRE ---
+    @GetExchange("/geofence/{type}/{id}")
+    Mono<Map<String, Object>> getZoneById(
+        @PathVariable("type") String type, 
+        @PathVariable("id") UUID id, 
+        @RequestHeader("Authorization") String token
+    );
+
+ 
+    @PutExchange("/geofence/{type}/{id}")
+    Mono<Void> updateZone(
+        @PathVariable("type") String type, 
+        @PathVariable("id") UUID id, 
+        @RequestBody Object request, 
+        @RequestHeader("Authorization") String token
+    );
+
+    @DeleteExchange("/geofence/{type}/{id}")
+    Mono<Void> deleteZone(
+        @PathVariable("type") String type, 
+        @PathVariable("id") UUID id, 
+        @RequestHeader("Authorization") String token
+    );
+
+    // --- ALERTS ---
+    @GetExchange("/alerts")
+    Mono<Map<String, Object>> getAlerts(
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "size", defaultValue = "20") int size,
+        @RequestHeader("Authorization") String token
+    );;
 }

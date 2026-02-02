@@ -28,8 +28,12 @@ public class GeofencePersistenceAdapter implements GeofencePersistencePort {
 
     @Override
     public Mono<GeofenceZone> saveZone(GeofenceZone zone) {
-        // Enregistrement de la zone puis des points (simplifié ici pour la structure)
-        return zoneRepo.save(mapper.toEntity(zone))
+        GeofenceZoneEntity entity = mapper.toEntity(zone);
+        
+        // Si on a un ID mais qu'on veut forcer la création (POST)
+        entity.markNew(); 
+        
+        return zoneRepo.save(entity)
                 .map(mapper::toDomain);
     }
 

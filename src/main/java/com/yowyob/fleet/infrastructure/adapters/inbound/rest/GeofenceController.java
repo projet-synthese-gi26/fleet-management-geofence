@@ -1,68 +1,114 @@
 package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
 
+import com.yowyob.fleet.domain.model.GeofencePoint;
 import com.yowyob.fleet.domain.model.GeofenceZone;
 import com.yowyob.fleet.domain.ports.in.ManageGeofenceUseCase;
+import com.yowyob.fleet.infrastructure.adapters.outbound.external.dto.GeofenceZoneDTORequest;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.GeofenceEventEntity;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/geofence")
 @RequiredArgsConstructor
-@Tag(name = "08. Geofencing", description = "Gestion des zones et historique des alertes")
+@Tag(name = "08. Geofencing")
+@SecurityRequirement(name = "bearerAuth")
 public class GeofenceController {
 
     private final ManageGeofenceUseCase geofenceService;
 
-    @PostMapping("/zones")
-    @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Créer une nouvelle zone (Polygone ou Cercle)")
-    public Mono<GeofenceZone> create(@RequestBody GeofenceZone zone) {
-        return geofenceService.createZone(zone);
+@PostMapping("/zones")
+@ResponseStatus(HttpStatus.CREATED)
+@Operation(summary = "Créer une nouvelle géofence")
+@PreAuthorize("hasAnyRole('FLEET_MANAGER', 'FLEET_ADMIN')")
+public Mono<GeofenceZone> create(@RequestBody GeofenceZoneDTORequest request) {
+    
+    // Conversion manuelle du DTO vers le Domaine GeofenceZone
+    List<GeofencePoint> vertices = List.of();
+    if (request.polygon() != null && !request.polygon().coordinates().isEmpty()) {
+        // On extrait le premier ring (index 0) du polygone
+        vertices = request.polygon().coordinates().get(0).stream()
+                .map(coord -> new GeofencePoint(null, coord.get(1), coord.get(0), null)) // Index 1=Lat, 0=Lng
+                .toList();
     }
 
-    @GetMapping("/zones/{id}")
-    @Operation(summary = "Détails d'une zone avec ses points")
-    public Mono<GeofenceZone> getById(@PathVariable UUID id) {
-        return geofenceService.getZoneDetails(id);
+    GeofenceZone domainZone = new GeofenceZone(
+            UUID.randomUUID(),
+            null, // fleetId à gérer selon votre logique
+            request.title(),
+            request.description(),
+            request.type(),
+            null, null, null, // center/radius
+            request.isTemporalEnabled(),
+            request.startTime(),
+            request.endTime(),
+            null,
+            request.isConditionalEnabled(),
+            null, null, null,
+            true, // isActive
+            null, null,
+            vertices // C'est ici que les points sont injectés !
+    );
+
+    return geofenceService.createZone(domainZone);
+}
+
+    @GetMapping
+    @Operation(summary = "Récupérer toutes mes géofences")
+    public Flux<Map<String, Object>> listAll() {
+        return geofenceService.getAllExternalZones("all");
     }
 
-    @GetMapping("/fleets/{fleetId}/zones")
-    @Operation(summary = "Lister toutes les zones d'une flotte")
-    public Flux<GeofenceZone> listByFleet(@PathVariable UUID fleetId) {
-        return geofenceService.getZonesByFleet(fleetId);
+    @GetMapping("/circles")
+    @Operation(summary = "Récupérer mes zones circulaires")
+    public Flux<Map<String, Object>> listCircles() {
+        return geofenceService.getAllExternalZones("circles");
     }
 
-    @PutMapping("/zones/{id}")
-    @Operation(summary = "Mettre à jour une zone")
-    public Mono<GeofenceZone> update(@PathVariable UUID id, @RequestBody GeofenceZone zone) {
-        return geofenceService.updateZone(id, zone);
+    @GetMapping("/polygons")
+    @Operation(summary = "Récupérer mes zones polygonales")
+    public Flux<Map<String, Object>> listPolygons() {
+        return geofenceService.getAllExternalZones("polygons");
     }
 
-    @DeleteMapping("/zones/{id}")
+    @GetMapping("/{type}/{id}")
+    @Operation(summary = "Récupérer une géofence (par type + id)")
+    public Mono<Map<String, Object>> getById(@PathVariable String type, @PathVariable UUID id) {
+        // Logique de lecture unitaire à ajouter dans le service si besoin
+        return Mono.empty(); 
+    }
+
+    @PutMapping("/{type}/{id}")
+    @Operation(summary = "Modifier une géofence")
+    public Mono<Void> update(@PathVariable String type, @PathVariable UUID id, @RequestBody Map<String, Object> updates) {
+        return geofenceService.updateRemoteZone(type, id, updates);
+    }
+
+    @DeleteMapping("/{type}/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Supprimer une zone")
-    public Mono<Void> delete(@PathVariable UUID id) {
-        return geofenceService.deleteZone(id);
+    @Operation(summary = "Supprimer une géofence")
+    public Mono<Void> delete(@PathVariable String type, @PathVariable UUID id) {
+        return geofenceService.deleteZone(id, type);
     }
 
-    @GetMapping("/events")
-    @Operation(summary = "Consulter le log des alertes (ENTRY/EXIT) avec filtres")
-    public Flux<GeofenceEventEntity> getEvents(
-            @RequestParam(required = false) UUID vehicleId,
-            @RequestParam(required = false) UUID zoneId,
-            @RequestParam(required = false) String type,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
-    ) {
-        return geofenceService.getEvents(vehicleId, zoneId, type, date);
+    @GetMapping("/alerts")
+    @Operation(summary = "Récupérer toutes mes alertes")
+    public Mono<Map<String, Object>> getAlerts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return geofenceService.getExternalAlerts(page, size);
     }
 }

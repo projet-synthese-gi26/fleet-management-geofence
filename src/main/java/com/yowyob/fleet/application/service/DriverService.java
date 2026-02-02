@@ -9,6 +9,7 @@ import com.yowyob.fleet.domain.ports.out.DriverPersistencePort;
 import com.yowyob.fleet.domain.ports.out.ExternalVehiclePort;
 import com.yowyob.fleet.domain.ports.out.VehiclePersistencePort;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.DriverRegistrationRequest;
+import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.NotificationType;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.FleetR2dbcRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,8 +18,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import com.yowyob.fleet.domain.ports.out.SendNotificationPort;
+import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.SendNotificationRequest;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -140,6 +144,7 @@ public class DriverService implements ManageDriverUseCase {
                 });
     }
 
+    
     @Override
     @Transactional
     public Mono<Void> unassignVehicle(UUID driverId, UUID requesterId) {

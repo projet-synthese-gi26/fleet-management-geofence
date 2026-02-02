@@ -6,6 +6,7 @@ import com.yowyob.fleet.domain.ports.in.ManageVehicleUseCase;
 import com.yowyob.fleet.domain.ports.out.ExternalVehiclePort;
 import com.yowyob.fleet.domain.ports.out.VehiclePersistencePort;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.VehicleRequest;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.FleetManagerR2dbcRepository;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.VehicleTypeR2dbcRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +29,7 @@ public class VehicleService implements ManageVehicleUseCase {
     private final VehiclePersistencePort localPersistencePort;
     private final ExternalVehiclePort externalVehiclePort;
     private final VehicleTypeR2dbcRepository vehicleTypeRepository;
+    private final FleetManagerR2dbcRepository fleetRepository;
 
     // --- LOGIQUE DE SYNCHRONISATION (COEUR DU SERVICE) ---
 
@@ -199,4 +201,12 @@ public class VehicleService implements ManageVehicleUseCase {
     public Flux<Map<String, Object>> getVehicleReferenceData(String resource, String token) {
         return externalVehiclePort.getReferenceData(resource, token);
     }
+
+    //  public Flux<Vehicle> getVehiclesForManager(UUID managerId) {
+    //     return fleetRepository.findAllByManagerId(managerId)
+    //             // On transforme Flux<FleetEntity> en Flux<Vehicle>
+    //             .<Vehicle>flatMap(fleet -> localPersistencePort.findByFleetId(fleet.getId()))
+    //             // On enrichit chaque véhicule avec les données distantes
+    //             .<Vehicle>flatMap(vLocal -> this.getVehicleDetails(vLocal.id()));
+    // }
 }
