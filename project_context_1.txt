@@ -1,5 +1,5 @@
 ﻿# Contexte du Projet : Fleet & Geofence API
-GÃ©nÃ©rÃ© le : 02/02/2026 09:50:00
+GÃ©nÃ©rÃ© le : 02/02/2026 12:40:37
 Framework : Spring Boot WebFlux (Reactive)
 
 ## 1. Arborescence du Projet
@@ -459,7 +459,6 @@ D:.
 ª   ª   ª                   ª   ª   RedisConfig.java
 ª   ª   ª                   ª   ª   SecurityConfig.java
 ª   ª   ª                   ª   ª   SystemUserInitializer.java
-ª   ª   ª                   ª   ª   TransactionConfig.java
 ª   ª   ª                   ª   ª   WebClientConfig.java
 ª   ª   ª                   ª   ª   
 ª   ª   ª                   ª   +---bootstrap
@@ -653,6 +652,7 @@ D:.
     ª   ª               ª       ª   ª       VehicleApiClient.class
     ª   ª               ª       ª   ª       
     ª   ª               ª       ª   +---dto
+    ª   ª               ª       ª           GeofenceZoneDTORequest$CircleData.class
     ª   ª               ª       ª           GeofenceZoneDTORequest$PolygonData.class
     ª   ª               ª       ª           GeofenceZoneDTORequest.class
     ª   ª               ª       ª           VehicleExternalResponse.class
@@ -713,7 +713,6 @@ D:.
     ª   ª               ª   ª   RedisConfig.class
     ª   ª               ª   ª   SecurityConfig.class
     ª   ª               ª   ª   SystemUserInitializer.class
-    ª   ª               ª   ª   TransactionConfig.class
     ª   ª               ª   ª   WebClientConfig.class
     ª   ª               ª   ª   
     ª   ª               ª   +---bootstrap
@@ -11795,6 +11794,7 @@ import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.Geof
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -11819,9 +11819,10 @@ public class GeofenceController {
 
 @PostMapping("/zones")
 @ResponseStatus(HttpStatus.CREATED)
-@Operation(summary = "CrÃ©er une nouvelle gÃ©ofence")
+@Operation(summary = "CrÃ©er une nouvelle gÃ©ofence", 
+           description = "Envoie la zone au moteur spatial. Pour un POLYGON, la premiÃ¨re et la derniÃ¨re coordonnÃ©e doivent Ãªtre identiques.")
 @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'FLEET_ADMIN')")
-public Mono<GeofenceZone> create(@RequestBody GeofenceZoneDTORequest request) {
+public Mono<GeofenceZone> create(@Valid @RequestBody GeofenceZoneDTORequest request) {
     
     // Conversion manuelle du DTO vers le Domaine GeofenceZone
     List<GeofencePoint> vertices = List.of();
@@ -14048,23 +14049,57 @@ public interface VehicleApiClient {
 `$ext
 package com.yowyob.fleet.infrastructure.adapters.outbound.external.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.UUID;
 
-public record GeofenceZoneDTORequest (
-   String type,
-    String title,
+@Schema(description = "RequÃªte de crÃ©ation d'une zone de Geofencing")
+public record GeofenceZoneDTORequest(
+    
+    @Schema(example = "POLYGON", allowableValues = {"CIRCLE", "POLYGON"})
+    @NotBlank String type,
+
+    @Schema(example = "Zone Bastos SÃ©curitÃ©")
+    @NotBlank String title,
+
+    @Schema(example = "Surveillance du quartier rÃ©sidentiel")
     String description,
+
+    @Schema(description = "Active la restriction horaire", example = "true")
     Boolean isTemporalEnabled,
+
+    @Schema(description = "Active les conditions de vitesse/temps", example = "false")
     Boolean isConditionalEnabled,
+
+    @Schema(type = "string", pattern = "HH:mm:ss", example = "08:00:00")
     LocalTime startTime,
+
+    @Schema(type = "string", pattern = "HH:mm:ss", example = "18:00:00")
     LocalTime endTime,
-    PolygonData polygon // Pour capturer l'objet imbriquÃ© "polygon"
+
+    @Schema(description = "DonnÃ©es pour un cercle (obligatoire si type=CIRCLE)")
+    CircleData center,
+
+    @Schema(description = "Rayon en mÃ¨tres (si type=CIRCLE)", example = "500")
+    Double radius,
+
+    @Schema(description = "DonnÃ©es pour un polygone (obligatoire si type=POLYGON)")
+    PolygonData polygon
 ) {
+    public record CircleData(
+        @Schema(description = "CoordonnÃ©es [longitude, latitude]", example = "[11.5021, 3.8480]")
+        List<Double> coordinates
+    ) {}
+
     public record PolygonData(
+        @Schema(example = "Polygon")
         String type,
-        List<List<List<Double>>> coordinates // Format [[[lng, lat], ...]]
+        
+        @Schema(description = "Liste de anneaux de coordonnÃ©es. Le premier est le contour extÃ©rieur.", 
+                example = "[[[11.50, 3.84], [11.51, 3.84], [11.51, 3.85], [11.50, 3.85], [11.50, 3.84]]]")
+        List<List<List<Double>>> coordinates
     ) {}
 }
 
@@ -16213,28 +16248,6 @@ public class SystemUserInitializer {
 }
 
 ---
-### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\src\main\java\com\yowyob\fleet\infrastructure\config\TransactionConfig.java
-`$ext
-package com.yowyob.fleet.infrastructure.config;
-
-import io.r2dbc.spi.ConnectionFactory;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
-import org.springframework.r2dbc.connection.R2dbcTransactionManager; // <-- Le bon import pour Spring Boot 3
-import org.springframework.transaction.ReactiveTransactionManager;
-
-@Configuration
-public class TransactionConfig {
-
-    @Bean
-    @Primary
-    public ReactiveTransactionManager reactiveTransactionManager(ConnectionFactory connectionFactory) {
-        return new R2dbcTransactionManager(connectionFactory);
-    }
-}
-
----
 ### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\src\main\java\com\yowyob\fleet\infrastructure\config\WebClientConfig.java
 `$ext
 package com.yowyob.fleet.infrastructure.config;
@@ -16242,15 +16255,24 @@ package com.yowyob.fleet.infrastructure.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.support.WebClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.AuthApiClient;
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.VehicleApiClient;
+
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.GeofenceApiClient;
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.GeofenceAuthClient;
-import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.NotificationApiClient; 
+import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.NotificationApiClient;
+import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.PaymentApiClient; 
+
+import reactor.netty.http.client.HttpClient;
 
 @Configuration
 public class WebClientConfig {
@@ -16277,10 +16299,9 @@ public class WebClientConfig {
         return factory.createClient(AuthApiClient.class);
     }
      @Bean
-    public GeofenceApiClient geofenceApiClient(WebClient.Builder builder, 
-                                              @Value("${application.external.geofence-service-url}") String url) {
+    public GeofenceApiClient geofenceApiClient(                                              @Value("${application.external.geofence-service-url}") String url) {
         // url doit Ãªtre http://localhost:8081 (SANS le /api/v1 qui est dans l'interface)
-        WebClient webClient = builder.baseUrl(url).build();
+        WebClient webClient = createInsecureWebClient(url).build();
         return createProxy(webClient, GeofenceApiClient.class);
     }
      @Bean
@@ -16300,10 +16321,33 @@ public class WebClientConfig {
     }
 
     @Bean
-    public GeofenceAuthClient geofenceAuthClient(WebClient.Builder builder, 
-                                                @Value("${application.external.geofence-service-url}") String url) {
-        WebClient webClient = builder.baseUrl(url).build();
+    public GeofenceAuthClient geofenceAuthClient(@Value("${application.external.geofence-service-url}") String url) {
+        WebClient webClient = createInsecureWebClient(url).build();
         return createProxy(webClient, GeofenceAuthClient.class);
+    }
+
+    @Bean
+    public PaymentApiClient paymentApiClient(WebClient.Builder builder,
+                                             @Value("${application.external.payment-service-url}") String url) {
+        return createProxy(builder.baseUrl(url).build(), PaymentApiClient.class);
+    }
+
+    // Helper pour crÃ©er un WebClient qui ignore les erreurs SSL (DEV UNIQUEMENT)
+    private WebClient.Builder createInsecureWebClient(String baseUrl) {
+        try {
+            SslContext sslContext = SslContextBuilder.forClient()
+                    .trustManager(InsecureTrustManagerFactory.INSTANCE)
+                    .build();
+
+            HttpClient httpClient = HttpClient.create()
+                    .secure(t -> t.sslContext(sslContext));
+
+            return WebClient.builder()
+                    .baseUrl(baseUrl)
+                    .clientConnector(new ReactorClientHttpConnector(httpClient));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }
 
@@ -16786,8 +16830,7 @@ spring:
 application:
   external:
     vehicle-service-url:  https://vehicule-service.pynfi.com
-    # geofence-service-url: https://geofence-service.pynfi.com
-    geofence-service-url: http://localhost:8081
+    geofence-service-url: https://geofence-service.pynfi.com
     payment-service-url:  https://payment-service.pynfi.com
   auth:
     mode: remote
@@ -16936,6 +16979,24 @@ application:
   auth:
     mode: remote 
     url: https://auth-service.pynfi.com
+
+  notification:
+    mode: http # 'http' ou 'kafka'
+    url: https://notification-service.pynfi.com # URL du Swagger fourni
+    service-token: "a77599d3-8de7-4d52-b9d0-2202b2e13a9e" # Token rÃ©cupÃ©rÃ© aprÃ¨s enregistrement du service
+    templates:
+      new-offer: 1        # ID template: Nouvelle offre pour les chauffeurs
+      driver-applied: 2   # ID template: Un chauffeur a postulÃ© (pour le client)
+      driver-selected: 3  # ID template: Vous avez Ã©tÃ© choisi (pour le chauffeur)
+      ride-confirmed: 4   # ID template: Le chauffeur arrive (pour le client)
+      ride-cancelled: 5   # ID template: Course annulÃ©e
+      admin-validation: 7 # ID template: admin a validÃ© le profil du driver
+ 
+  geofence-system-user:
+    username: "fleetmanagementuser"
+    password: "system_password_secure" # Ã€ changer en prod
+    organization-id: "723e4567-e89b-12d3-a456-426614174000" # UUID de notre application dans
+ 
   bootstrap:
     admin:
       username: "superadmin123"
