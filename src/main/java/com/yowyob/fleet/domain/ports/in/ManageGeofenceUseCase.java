@@ -14,6 +14,11 @@ public interface ManageGeofenceUseCase {
 
     // --- CRÉATION ---
     Mono<GeofenceZone> createZone(GeofenceZone zone);
+    
+    /**
+     * Crée une zone et la lie à un FleetManager
+     */
+    Mono<GeofenceZone> createZoneWithFleetManager(GeofenceZone zone, UUID fleetManagerId);
 
     // --- LECTURE (Moteur Externe) ---
     /**
@@ -55,6 +60,12 @@ public interface ManageGeofenceUseCase {
     
     // Anciennes méthodes à garder si tu les utilises encore pour la DB locale :
     Flux<GeofenceZone> getZonesByFleet(UUID fleetId);
+    
+    /**
+     * Récupère les zones associées à un FleetManager via la table de liaison
+     */
+    Flux<GeofenceZone> getZonesByFleetManager(UUID fleetManagerId);
+    
     Mono<GeofenceZone> getZoneDetails(UUID zoneId);
     Mono<GeofenceZone> updateZone(UUID zoneId, GeofenceZone zone);
 }

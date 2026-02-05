@@ -179,3 +179,9 @@ CREATE TABLE IF NOT EXISTS fleet.geofence_events (
   type VARCHAR(50) CHECK (type IN ('ENTRY', 'EXIT')),
   timestamp TIMESTAMP DEFAULT now()
 );
+
+CREATE TABLE IF NOT EXISTS fleet.fleetmanager_geofence_zones (
+  fleet_manager_id UUID NOT NULL REFERENCES fleet.fleet_managers(user_id) ON DELETE CASCADE,
+  zone_id UUID NOT NULL REFERENCES fleet.geofence_zones(id) ON DELETE CASCADE,
+  PRIMARY KEY (fleet_manager_id, zone_id)
+);

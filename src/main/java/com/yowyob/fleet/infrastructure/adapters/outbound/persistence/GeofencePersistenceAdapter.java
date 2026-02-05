@@ -5,8 +5,10 @@ import com.yowyob.fleet.domain.model.GeofencePoint;
 import com.yowyob.fleet.domain.ports.out.GeofencePersistencePort;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.GeofenceEventEntity;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.GeofenceZoneEntity;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.FleetManagerGeofenceZoneEntity;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.GeofenceEventR2dbcRepository;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.GeofenceR2dbcRepository;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.FleetManagerGeofenceZoneR2dbcRepository;
 import com.yowyob.fleet.infrastructure.mappers.GeofenceMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.r2dbc.core.DatabaseClient;
@@ -23,6 +25,7 @@ public class GeofencePersistenceAdapter implements GeofencePersistencePort {
 
     private final GeofenceR2dbcRepository zoneRepo;
     private final GeofenceEventR2dbcRepository eventRepo;
+    private final FleetManagerGeofenceZoneR2dbcRepository fleetManagerGeofenceZoneRepo;
     private final GeofenceMapper mapper;
     private final DatabaseClient databaseClient; // Pour le filtrage dynamique complexe
 
@@ -75,5 +78,23 @@ public class GeofencePersistenceAdapter implements GeofencePersistencePort {
     public Mono<Void> saveEvent(UUID vehicleId, UUID zoneId, String type) {
         // ... implémentation existante
         return Mono.empty();
+    }
+
+    @Override
+    public Mono<Void> linkZoneToFleetManager(UUID fleetManagerId, UUID zoneId) {
+        FleetManagerGeofenceZoneEntity liaison = FleetManagerGeofenceZoneEntity.builder()
+                .fleetManagerId(fleetManagerId)
+                .zoneId(zoneId)
+                .build();
+        
+        return fleetManagerGeofenceZoneRepo.save(liaison)
+                .then();
+    }
+
+    @Override
+    public Flux<GeofenceZone> findZonesByFleetManagerId(UUID fleetManagerId) {
+        return fleetManagerGeofenceZoneRepo.findByFleetManagerId(fleetManagerId)
+                .flatMap(liaison -> zoneRepo.findById(liaison.getZoneId()))
+                .map(mapper::toDomain);
     }
 }

@@ -15,3 +15,12 @@ ADD COLUMN IF NOT EXISTS max_dwell_time INTEGER,
 ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
 
 -- Correction : Le champ 'type' de la migration 002 peut être supprimé ou ignoré au profit de 'zone_type'
+
+--changeset hassana:create-fleetmanager-geofence-liaison splitStatements:true
+-- Table de liaison entre FleetManager et GeofenceZone
+-- Permet de récupérer toutes les zones associées à un FleetManager
+CREATE TABLE IF NOT EXISTS fleet.fleetmanager_geofence_zones (
+  fleet_manager_id UUID NOT NULL REFERENCES fleet.fleet_managers(user_id) ON DELETE CASCADE,
+  zone_id UUID NOT NULL REFERENCES fleet.geofence_zones(id) ON DELETE CASCADE,
+  PRIMARY KEY (fleet_manager_id, zone_id)
+);

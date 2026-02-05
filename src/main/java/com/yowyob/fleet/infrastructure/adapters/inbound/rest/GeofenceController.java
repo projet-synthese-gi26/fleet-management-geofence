@@ -63,13 +63,20 @@ public Mono<GeofenceZone> create(@RequestBody GeofenceZoneDTORequest request) {
             vertices // C'est ici que les points sont injectés !
     );
 
-    return geofenceService.createZone(domainZone);
+    // Passer fleetManagerId au service
+    return geofenceService.createZoneWithFleetManager(domainZone, request.fleetManagerId());
 }
 
     @GetMapping
     @Operation(summary = "Récupérer toutes mes géofences")
     public Flux<Map<String, Object>> listAll() {
         return geofenceService.getAllExternalZones("all");
+    }
+
+    @GetMapping("/by-fleet-manager/{fleetManagerId}")
+    @Operation(summary = "Récupérer les zones d'un FleetManager via la liaison")
+    public Flux<GeofenceZone> getZonesByFleetManager(@PathVariable UUID fleetManagerId) {
+        return geofenceService.getZonesByFleetManager(fleetManagerId);
     }
 
     @GetMapping("/circles")

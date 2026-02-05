@@ -26,15 +26,29 @@ public class GeofenceService implements ManageGeofenceUseCase {
 
     @Override
     @Transactional
-
     public Mono<GeofenceZone> createZone(GeofenceZone zone) {
         return externalApi.synchronizeZone(zone)
                 .thenReturn(zone);
     }
 
     @Override
+    @Transactional
+    public Mono<GeofenceZone> createZoneWithFleetManager(GeofenceZone zone, UUID fleetManagerId) {
+        return externalApi.synchronizeZone(zone)
+                // Après synchronisation avec l'API externe, créer la liaison en BD locale
+                .then(localPersistence.linkZoneToFleetManager(fleetManagerId, zone.id()))
+                .thenReturn(zone);
+    }
+
+    @Override
     public Flux<GeofenceZone> getZonesByFleet(UUID fleetId) {
         return Flux.empty();
+    }
+
+    @Override
+    public Flux<GeofenceZone> getZonesByFleetManager(UUID fleetManagerId) {
+        log.info("Récupération des zones pour le FleetManager: {}", fleetManagerId);
+        return localPersistence.findZonesByFleetManagerId(fleetManagerId);
     }
 
     @Override

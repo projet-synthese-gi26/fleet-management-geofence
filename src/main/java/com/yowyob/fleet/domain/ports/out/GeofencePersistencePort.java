@@ -16,4 +16,14 @@ public interface GeofencePersistencePort {
     
     // Ajout de la méthode de filtrage pour le service
     Flux<GeofenceEventEntity> findEventsWithFilters(UUID vehicleId, UUID zoneId, String type, LocalDate date);
+    
+    /**
+     * Crée une liaison entre un FleetManager et une zone de geofence
+     */
+    Mono<Void> linkZoneToFleetManager(UUID fleetManagerId, UUID zoneId);
+    
+    /**
+     * Récupère toutes les zones associées à un FleetManager via la table de liaison
+     */
+    Flux<GeofenceZone> findZonesByFleetManagerId(UUID fleetManagerId);
 }

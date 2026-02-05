@@ -1,5 +1,5 @@
 ﻿# Contexte du Projet : Fleet & Geofence API
-GÃ©nÃ©rÃ© le : 02/02/2026 08:53:57
+GÃ©nÃ©rÃ© le : 02/05/2026 13:50:32
 Framework : Spring Boot WebFlux (Reactive)
 
 ## 1. Arborescence du Projet
@@ -487,9 +487,6 @@ D:.
 ª                   +---reactive_hexagonal
 ª                           ReactiveHexagonalApplicationTests.java
 ª                           
-    ª   reactive-hexagonal-0.0.1-SNAPSHOT.jar
-    ª   reactive-hexagonal-0.0.1-SNAPSHOT.jar.original
-    ª   
     +---classes
     ª   ª   application.yml
     ª   ª   db_updates_by_gabriel.zip
@@ -707,6 +704,7 @@ D:.
     ª   ª                       GeofenceMapper.class
     ª   ª                       GeofenceMapperImpl.class
     ª   ª                       VehicleLocalMapper.class
+    ª   ª                       VehicleLocalMapperImpl.class
     ª   ª                       
     ª   +---db
     ª       +---changelog
@@ -731,12 +729,10 @@ D:.
     ª                               DriverMapperImpl.java
     ª                               FleetMapperImpl.java
     ª                               GeofenceMapperImpl.java
+    ª                               VehicleLocalMapperImpl.java
     ª                               
     +---generated-test-sources
     ª   +---test-annotations
-    +---maven-archiver
-    ª       pom.properties
-    ª       
     +---maven-status
     ª   +---maven-compiler-plugin
     ª       +---compile
@@ -9922,25 +9918,16 @@ import com.yowyob.fleet.domain.model.VehicleParameters;
 import com.yowyob.fleet.domain.ports.in.ManageVehicleUseCase;
 import com.yowyob.fleet.domain.ports.out.ExternalVehiclePort;
 import com.yowyob.fleet.domain.ports.out.VehiclePersistencePort;
-<<<<<<< HEAD
-import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.VehicleRegistrationRequest; // Ajout temporaire pour accÃ¨s facile aux champs
-import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.FleetR2dbcRepository;
-
-=======
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.VehicleRequest;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.FleetManagerR2dbcRepository;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.VehicleTypeR2dbcRepository;
->>>>>>> 17589aeabf3bfcfc129c34d3271aea2931d4091a
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-<<<<<<< HEAD
-
-=======
 import org.springframework.web.server.ResponseStatusException;
->>>>>>> 17589aeabf3bfcfc129c34d3271aea2931d4091a
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import java.util.Map;
@@ -9954,11 +9941,8 @@ public class VehicleService implements ManageVehicleUseCase {
 
     private final VehiclePersistencePort localPersistencePort;
     private final ExternalVehiclePort externalVehiclePort;
-<<<<<<< HEAD
-    private final FleetR2dbcRepository fleetRepository;
-=======
     private final VehicleTypeR2dbcRepository vehicleTypeRepository;
->>>>>>> 17589aeabf3bfcfc129c34d3271aea2931d4091a
+    private final FleetManagerR2dbcRepository fleetRepository;
 
     // --- LOGIQUE DE SYNCHRONISATION (COEUR DU SERVICE) ---
 
@@ -10131,13 +10115,13 @@ public class VehicleService implements ManageVehicleUseCase {
         return externalVehiclePort.getReferenceData(resource, token);
     }
 
-     public Flux<Vehicle> getVehiclesForManager(UUID managerId) {
-        return fleetRepository.findAllByManagerId(managerId)
-                // On transforme Flux<FleetEntity> en Flux<Vehicle>
-                .<Vehicle>flatMap(fleet -> localPersistencePort.findByFleetId(fleet.getId()))
-                // On enrichit chaque vÃ©hicule avec les donnÃ©es distantes
-                .<Vehicle>flatMap(vLocal -> this.getVehicleDetails(vLocal.id()));
-    }
+    //  public Flux<Vehicle> getVehiclesForManager(UUID managerId) {
+    //     return fleetRepository.findAllByManagerId(managerId)
+    //             // On transforme Flux<FleetEntity> en Flux<Vehicle>
+    //             .<Vehicle>flatMap(fleet -> localPersistencePort.findByFleetId(fleet.getId()))
+    //             // On enrichit chaque vÃ©hicule avec les donnÃ©es distantes
+    //             .<Vehicle>flatMap(vLocal -> this.getVehicleDetails(vLocal.id()));
+    // }
 }
 
 ---
@@ -10990,9 +10974,6 @@ public interface VehiclePersistencePort {
      * Deletes all local records associated with a vehicle ID.
      */
     Mono<Void> deleteLocalData(UUID id);
-<<<<<<< HEAD
-    Flux<Vehicle> findByFleetId(UUID fleetId);
-=======
 
     /**
      * Retrieves all vehicles associated with a manager ID.
@@ -11008,7 +10989,6 @@ public interface VehiclePersistencePort {
      * Updates the photo URLs for a vehicle.
      */
     Mono<Void> updateVehiclePhotos(UUID vehicleId, String photoUrl, String vinPhotoUrl, String regPhotoUrl);
->>>>>>> 17589aeabf3bfcfc129c34d3271aea2931d4091a
 }
 
 ---
@@ -14344,10 +14324,6 @@ import com.yowyob.fleet.infrastructure.mappers.VehicleLocalMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-<<<<<<< HEAD
-
-=======
->>>>>>> 17589aeabf3bfcfc129c34d3271aea2931d4091a
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -14416,14 +14392,6 @@ public class VehiclePersistenceAdapter implements VehiclePersistencePort {
     public Mono<Void> deleteLocalData(UUID id) {
         return vehicleRepo.deleteById(id);
     }
-<<<<<<< HEAD
-    // ... garder les autres imports
-@Override
-public Flux<Vehicle> findByFleetId(UUID fleetId) {
-    return vehicleRepo.findByFleetId(fleetId)
-            .map(entity -> mapper.toDomain(entity, null, null));
-}
-=======
 
     @Override
     public Flux<Vehicle> getVehiclesByManager(UUID managerId) {
@@ -14446,7 +14414,6 @@ public Flux<Vehicle> findByFleetId(UUID fleetId) {
                     return vehicleRepo.save(v);
                 }).then();
     }
->>>>>>> 17589aeabf3bfcfc129c34d3271aea2931d4091a
 }
 
 ---

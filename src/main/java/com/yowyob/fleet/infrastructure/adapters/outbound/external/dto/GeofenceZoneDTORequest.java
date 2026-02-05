@@ -5,7 +5,8 @@ import java.util.List;
 import java.util.UUID;
 
 public record GeofenceZoneDTORequest (
-   String type,
+    UUID fleetManagerId, // Identifiant du FleetManager qui crée la zone
+    String type,
     String title,
     String description,
     Boolean isTemporalEnabled,
