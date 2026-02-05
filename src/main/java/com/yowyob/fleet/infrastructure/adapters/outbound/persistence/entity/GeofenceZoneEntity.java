@@ -14,6 +14,7 @@ import java.util.UUID;
 
 @Table(name = "geofence_zones", schema = "fleet")
 @Data @Builder @NoArgsConstructor @AllArgsConstructor
+
 public class GeofenceZoneEntity implements Persistable<UUID> {
     @Id
     private UUID id;
@@ -26,42 +27,47 @@ public class GeofenceZoneEntity implements Persistable<UUID> {
     @Column("zone_type")
     private String zoneType;
     
-    @Column("center_latitude")
+    @Column("centerLatitude")
     private Double centerLatitude;
     
-    @Column("center_longitude")
+    @Column("centerLongitude")
     private Double centerLongitude;
     
     private Double radius;
     
-    @Column("is_temporal_enabled")
+    @Column("isTemporalEnabled")
     private Boolean isTemporalEnabled;
     
-    @Column("start_time")
+    @Column("startTime")
     private LocalTime startTime;
     
-    @Column("end_time")
+    @Column("endTime")
     private LocalTime endTime;
     
-    @Column("is_conditional_enabled")
+    @Column("isConditionalEnabled")
     private Boolean isConditionalEnabled;
     
-    @Column("max_speed")
+    @Column("maxSpeed")
     private Double maxSpeed;
     
-    @Column("max_dwell_time")
+    @Column("maxDwellTime")
     private Integer maxDwellTime;
+
+    @Column("minDwellTime")
+    private Integer minDwellTime;
     
-    @Column("is_active")
+    @Column("isActive")
     private Boolean isActive;
 
     // Métadonnées géométriques optionnelles
-    @Column("surface_area")
+    @Column("surfaceArea")
     private Double surfaceArea;
     private Double perimeter;
 
-    @Transient
-    private boolean isNew = false;
+    
+@Transient
+@Builder.Default
+private boolean isNew = false;
 
     @Override
     public boolean isNew() {

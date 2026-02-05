@@ -3,7 +3,7 @@
 # Fleet Management - WebFlux
 # ============================================
 
-$OUTPUT_FILE = "project_context.txt"
+$OUTPUT_FILE = "project_context_5.txt"
 $PROJECT_ROOT = "."
 
 Write-Host "Génération du contexte du projet..."

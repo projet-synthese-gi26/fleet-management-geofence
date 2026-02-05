@@ -8,8 +8,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -19,7 +20,6 @@ import java.util.List;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-// On active ce loader sur tous les profils, car c'est des données vitales
 public class InitialDataLoader implements CommandLineRunner {
 
     private final VehicleTypeService vehicleTypeService;
@@ -47,62 +47,66 @@ public class InitialDataLoader implements CommandLineRunner {
     public void run(String... args) {
         log.info("🚀 Démarrage du Seeder de données initiales...");
 
-        // On chaine les opérations de manière séquentielle pour le démarrage
         seedVehicleTypes()
                 .then(seedSuperAdmin())
-                .block(Duration.ofMinutes(1)); // Timeout de sécurité
+                .timeout(Duration.ofMinutes(1))
+                // FIX CRITIQUE : Empêcher le crash de l'app si le seeding échoue
+                .onErrorResume(e -> {
+                    log.error("⚠️ Le seeding a échoué mais l'application va démarrer : {}", e.getMessage());
+                    return Mono.empty();
+                })
+                .block();
 
-        log.info("✅ Initialisation des données terminée.");
+        log.info("✅ Phase d'initialisation terminée.");
     }
 
     private Mono<Void> seedVehicleTypes() {
         return vehicleTypeService.getAllTypes()
                 .hasElements()
                 .flatMap(hasElements -> {
-                    if (hasElements) {
-                        log.info("ℹ️ Types de véhicules déjà présents. Pas de seeding nécessaire.");
-                        return Mono.empty();
-                    }
-
+                    if (hasElements) return Mono.empty();
                     log.info("🌱 Seeding des types de véhicules standards...");
                     return Flux.just(
-                            new VehicleTypeRequest("CAR", "Voiture", "Véhicule léger de tourisme (max 5 places)"),
-                            new VehicleTypeRequest("VAN", "Fourgonnette", "Véhicule utilitaire léger ou transport de groupe"),
-                            new VehicleTypeRequest("TRUCK", "Camion", "Poids lourd pour le transport de marchandises"),
-                            new VehicleTypeRequest("BIKE", "Moto", "Deux roues motorisé pour livraison rapide"),
-                            new VehicleTypeRequest("BUS", "Autobus", "Transport en commun grande capacité")
+                            new VehicleTypeRequest("CAR", "Voiture", "Véhicule léger"),
+                            new VehicleTypeRequest("VAN", "Fourgonnette", "Transport de groupe"),
+                            new VehicleTypeRequest("TRUCK", "Camion", "Poids lourd"),
+                            new VehicleTypeRequest("BIKE", "Moto", "Deux roues"),
+                            new VehicleTypeRequest("BUS", "Autobus", "Transport commun")
                     )
                     .flatMap(vehicleTypeService::createType)
                     .then();
+                })
+                .onErrorResume(e -> {
+                    log.warn("Impossible de seeder les types (probablement déjà présents) : {}", e.getMessage());
+                    return Mono.empty();
                 });
     }
 
     private Mono<Void> seedSuperAdmin() {
-        // 1. Tenter de se connecter pour voir si l'admin existe
+        // Tenter de se connecter
         return authPort.login(adminEmail, adminPassword)
-                .flatMap(response -> {
-                    log.info("ℹ️ Super Admin déjà existant (ID: {}).", response.user().id());
-                    return Mono.empty();
-                })
+                .doOnSuccess(resp -> log.info("ℹ️ Super Admin déjà opérationnel."))
                 .onErrorResume(e -> {
-                    // 2. Si erreur (Login échoué), on tente de le créer
-                    log.info("⚠️ Super Admin non détecté. Tentative de création...");
+                    log.info("⚠️ Login Admin échoué ({}). Tentative de création...", e.getMessage());
                     
                     AuthUseCase.RegisterCommand command = new AuthUseCase.RegisterCommand(
-                            adminUsername,
-                            adminPassword,
-                            adminEmail,
-                            adminPhone,
-                            adminFirstName,
-                            adminLastName,
-                            List.of("FLEET_ADMIN", "FLEET_SUPER_ADMIN"), // On donne les droits max
-                            null // Pas de photo pour l'instant
+                            adminUsername, adminPassword, adminEmail, adminPhone,
+                            adminFirstName, adminLastName, List.of("FLEET_ADMIN", "FLEET_SUPER_ADMIN"), null
                     );
 
                     return authPort.registerInRemote(command)
-                            .doOnSuccess(resp -> log.info("✅ Super Admin créé avec succès ! (ID: {})", resp.user().id()))
-                            .doOnError(err -> log.error("❌ Erreur lors de la création du Super Admin : {}", err.getMessage()))
-                            .then();
+                            .doOnSuccess(resp -> log.info("✅ Super Admin créé avec succès !"))
+                            .onErrorResume(err -> {
+                                // FIX : Si 409 Conflict, c'est que l'user existe déjà sur le service Auth
+                                // mais avec un mot de passe différent de notre application.yml.
+                                // On considère cela comme un "Succès" (l'user est là).
+                                if (err instanceof WebClientResponseException && 
+                                   ((WebClientResponseException) err).getStatusCode() == HttpStatus.CONFLICT) {
+                                    log.info("ℹ️ L'utilisateur Super Admin existe déjà sur le service Auth.");
+                                    return Mono.empty();
+                                }
+                                return Mono.error(err);
+                            });
                 })
                 .then();
     }

@@ -8,6 +8,7 @@ import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.Geof
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -32,9 +33,10 @@ public class GeofenceController {
 
 @PostMapping("/zones")
 @ResponseStatus(HttpStatus.CREATED)
-@Operation(summary = "Créer une nouvelle géofence")
+@Operation(summary = "Créer une nouvelle géofence", 
+           description = "Envoie la zone au moteur spatial. Pour un POLYGON, la première et la dernière coordonnée doivent être identiques.")
 @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'FLEET_ADMIN')")
-public Mono<GeofenceZone> create(@RequestBody GeofenceZoneDTORequest request) {
+public Mono<GeofenceZone> create(@Valid @RequestBody GeofenceZoneDTORequest request) {
     
     // Conversion manuelle du DTO vers le Domaine GeofenceZone
     List<GeofencePoint> vertices = List.of();

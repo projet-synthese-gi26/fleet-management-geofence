@@ -1,7 +1,5 @@
 package com.yowyob.fleet.infrastructure.adapters.outbound.external;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yowyob.fleet.domain.model.GeofenceZone;
 import com.yowyob.fleet.domain.ports.out.ExternalGeofencePort;
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.GeofenceApiClient;
@@ -22,7 +20,6 @@ public class GeofenceApiAdapter implements ExternalGeofencePort {
 
     private final GeofenceApiClient apiClient;
     private final GeofenceAuthClient authClient;
-    private final ObjectMapper objectMapper;
 
     @Value("${application.geofence-system-user.username}")
     private String systemUser;

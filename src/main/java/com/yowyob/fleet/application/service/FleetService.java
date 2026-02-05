@@ -2,8 +2,12 @@ package com.yowyob.fleet.application.service;
 
 import com.yowyob.fleet.domain.model.Fleet;
 import com.yowyob.fleet.domain.ports.in.ManageFleetUseCase;
+import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.FleetStatsResponse;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.FleetEntity;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.DriverR2dbcRepository;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.FleetR2dbcRepository;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.TripR2dbcRepository;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.VehicleLocalR2dbcRepository;
 import com.yowyob.fleet.infrastructure.mappers.FleetMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,14 +17,17 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class FleetService implements ManageFleetUseCase {
-
     private final FleetR2dbcRepository repository;
+    private final VehicleLocalR2dbcRepository vehicleRepository;
+    private final DriverR2dbcRepository driverRepository;
+    private final TripR2dbcRepository tripRepository;
     private final FleetMapper mapper;
 
     @Override
@@ -95,5 +102,42 @@ public class FleetService implements ManageFleetUseCase {
                     }
                     return repository.delete(existingEntity);
                 });
+    }
+
+    // --- TÂCHE 6.2 : STATISTIQUES ---
+    @Override
+    public Mono<FleetStatsResponse> getFleetStatistics(UUID fleetId, UUID requesterId, boolean isAdmin) {
+        // 1. Vérification d'accès
+        return repository.existsByIdAndManagerId(fleetId, requesterId)
+                .flatMap(exists -> {
+                    if (!isAdmin && !exists) {
+                        return Mono.error(new AccessDeniedException("Accès refusé aux stats de cette flotte."));
+                    }
+                    return Mono.empty();
+                })
+                .then(Mono.defer(() -> {
+                    // 2. Exécution parallèle des agrégations
+                    return Mono.zip(
+                            driverRepository.countByFleetId(fleetId),
+                            tripRepository.getTotalDistanceByFleetId(fleetId).defaultIfEmpty(0.0), // Gère le cas null
+                            vehicleRepository.countByFleetIdAndStatus(fleetId, "AVAILABLE"),
+                            vehicleRepository.countByFleetIdAndStatus(fleetId, "ON_TRIP"),
+                            vehicleRepository.countByFleetIdAndStatus(fleetId, "MAINTENANCE")
+                    ).map(tuple -> {
+                        // 3. Construction de la réponse
+                        Map<String, Long> statusMap = Map.of(
+                                "AVAILABLE", tuple.getT3(),
+                                "ON_TRIP", tuple.getT4(),
+                                "MAINTENANCE", tuple.getT5()
+                        );
+
+                        return new FleetStatsResponse(
+                                fleetId,
+                                tuple.getT1(), // drivers
+                                tuple.getT2(), // distance
+                                statusMap
+                        );
+                    });
+                }));
     }
 }
