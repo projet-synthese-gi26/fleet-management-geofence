@@ -164,24 +164,33 @@ CREATE TABLE IF NOT EXISTS fleet.routes (
   end_point_id UUID REFERENCES fleet.geofence_points(id)
 );
 
-CREATE TABLE IF NOT EXISTS fleet.geofence_point_zone_linkages (
-  point_id UUID REFERENCES fleet.geofence_points(id) ON DELETE CASCADE,
-  zone_id UUID REFERENCES fleet.geofence_zones(id) ON DELETE CASCADE,
-  vertex_order INT,
-  PRIMARY KEY (point_id, zone_id)
-);
+-- CREATE TABLE IF NOT EXISTS fleet.geofence_point_zone_linkages (
+--   point_id UUID REFERENCES fleet.geofence_points(id) ON DELETE CASCADE,
+--   zone_id UUID REFERENCES fleet.geofence_zones(id) ON DELETE CASCADE,
+--   vertex_order INT,
+--   PRIMARY KEY (point_id, zone_id)
+-- );
 
 -- 10. ÉVÉNEMENTS
-CREATE TABLE IF NOT EXISTS fleet.geofence_events (
-  id UUID PRIMARY KEY,
-  vehicle_id UUID REFERENCES fleet.vehicles(id) ON DELETE CASCADE,
-  zone_id UUID REFERENCES fleet.geofence_zones(id) ON DELETE SET NULL,
-  type VARCHAR(50) CHECK (type IN ('ENTRY', 'EXIT')),
-  timestamp TIMESTAMP DEFAULT now()
+-- CREATE TABLE IF NOT EXISTS fleet.geofence_events (
+--   id UUID PRIMARY KEY,
+--   vehicle_id UUID REFERENCES fleet.vehicles(id) ON DELETE CASCADE,
+--   zone_id UUID REFERENCES fleet.geofence_zones(id) ON DELETE SET NULL,
+--   type VARCHAR(50) CHECK (type IN ('ENTRY', 'EXIT')),
+--   timestamp TIMESTAMP DEFAULT now()
+-- );
+
+-- On crée une table légère d'association
+-- L'ID est celui généré par l'API Distante (ou généré par nous et envoyé à l'API)
+
+DROP TABLE IF EXISTS fleet.geofence_zones CASCADE;
+
+CREATE TABLE fleet.geofence_zones (
+    id UUID PRIMARY KEY, -- ID de la zone (Remote)
+    manager_id UUID NOT NULL, -- Propriétaire de la zone (Fleet Manager)
+    fleet_id UUID NULL REFERENCES fleet.fleets(id) ON DELETE SET NULL, -- Flotte associée (optionnel)
+    created_at TIMESTAMP DEFAULT now()
 );
 
-CREATE TABLE IF NOT EXISTS fleet.fleetmanager_geofence_zones (
-  fleet_manager_id UUID NOT NULL REFERENCES fleet.fleet_managers(user_id) ON DELETE CASCADE,
-  zone_id UUID NOT NULL REFERENCES fleet.geofence_zones(id) ON DELETE CASCADE,
-  PRIMARY KEY (fleet_manager_id, zone_id)
-);
+CREATE INDEX idx_geofence_manager ON fleet.geofence_zones(manager_id);
+CREATE INDEX idx_geofence_fleet_link ON fleet.geofence_zones(fleet_id);

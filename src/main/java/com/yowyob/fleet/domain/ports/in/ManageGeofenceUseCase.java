@@ -13,12 +13,7 @@ import java.util.UUID;
 public interface ManageGeofenceUseCase {
 
     // --- CRÉATION ---
-    Mono<GeofenceZone> createZone(GeofenceZone zone);
-    
-    /**
-     * Crée une zone et la lie à un FleetManager
-     */
-    Mono<GeofenceZone> createZoneWithFleetManager(GeofenceZone zone, UUID fleetManagerId);
+Mono<GeofenceZone> createZone(GeofenceZone zone, UUID managerId);
 
     // --- LECTURE (Moteur Externe) ---
     /**
@@ -37,12 +32,6 @@ public interface ManageGeofenceUseCase {
      * Mise à jour partielle d'une zone sur le moteur externe.
      */
     Mono<Void> updateRemoteZone(String type, UUID id, Map<String, Object> updates);
-
-    // --- SUPPRESSION ---
-    /**
-     * Supprime une zone sur le moteur externe.
-     */
-    Mono<Void> deleteZone(UUID zoneId, String type);
 
     // --- OPÉRATIONS SPATIALES & ALERTES ---
     /**
@@ -68,4 +57,19 @@ public interface ManageGeofenceUseCase {
     
     Mono<GeofenceZone> getZoneDetails(UUID zoneId);
     Mono<GeofenceZone> updateZone(UUID zoneId, GeofenceZone zone);
+
+    Flux<GeofenceZone> getMyZones(UUID managerId);
+
+    Flux<Map<String, Object>> getMyZones(UUID managerId, String category);
+    
+
+    Mono<Void> deleteZone(UUID zoneId, String type, UUID managerId);
+
+    Flux<Map<String, Object>> getZonesByManager(UUID managerId, String category);
+
+    Flux<Map<String, Object>> getZonesByFleet(UUID managerId, UUID fleetId);
+
+    Mono<Map<String, Object>> getZoneDetails(UUID zoneId, UUID managerId);
+
+    Flux<Map<String, Object>> getAllExternalZones(UUID managerId, String category);
 }

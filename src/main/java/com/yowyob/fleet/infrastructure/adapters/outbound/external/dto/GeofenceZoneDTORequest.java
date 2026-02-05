@@ -9,7 +9,7 @@ import java.util.UUID;
 
 public record GeofenceZoneDTORequest (
     @Schema(example = "123e4567-e89b-12d3-a456-426614174000")
-    @NotBlank UUID fleetManagerId, // Identifiant du FleetManager qui crée la zone
+    @NotNull UUID fleetManagerId, // Identifiant du FleetManager qui crée la zone
  
     @Schema(example = "POLYGON", allowableValues = {"CIRCLE", "POLYGON"})
     @NotBlank String type,

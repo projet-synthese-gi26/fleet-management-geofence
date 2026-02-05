@@ -59,6 +59,21 @@ public class WebClientConfig {
         return createProxy(webClient, GeofenceApiClient.class);
     }
 
+    @Bean
+    public GeofenceAuthClient geofenceAuthClient(WebClient.Builder builder,
+                                                 @Value("${application.external.geofence-service-url}") String url) {
+        WebClient webClient = builder.baseUrl(url).build();
+        return createProxy(webClient, GeofenceAuthClient.class);
+    }
+
+    // TODO: Activer après implémentation du service de notification
+    // @Bean
+    // public NotificationApiClient notificationApiClient(WebClient.Builder builder,
+    //                                                    @Value("${application.external.notification.url}") String url) {
+    //     WebClient webClient = builder.baseUrl(url).build();
+    //     return createProxy(webClient, NotificationApiClient.class);
+    // }
+
     // Helper générique
     private <S> S createProxy(WebClient webClient, Class<S> serviceClass) {
         WebClientAdapter adapter = WebClientAdapter.create(webClient);

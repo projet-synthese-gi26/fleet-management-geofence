@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.domain.Persistable;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
@@ -15,7 +17,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class FleetManagerGeofenceZoneEntity {
+public class FleetManagerGeofenceZoneEntity implements Persistable<UUID> {
     
     @Id
     @Column("fleet_manager_id")
@@ -23,4 +25,17 @@ public class FleetManagerGeofenceZoneEntity {
     
     @Column("zone_id")
     private UUID zoneId;
+    
+    @Transient
+    private boolean isNew = true;
+    
+    @Override
+    public UUID getId() {
+        return fleetManagerId;
+    }
+    
+    @Override
+    public boolean isNew() {
+        return isNew;
+    }
 }

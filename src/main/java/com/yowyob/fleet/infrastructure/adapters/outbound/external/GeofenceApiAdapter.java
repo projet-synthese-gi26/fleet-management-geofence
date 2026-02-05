@@ -1,11 +1,14 @@
 package com.yowyob.fleet.infrastructure.adapters.outbound.external;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yowyob.fleet.domain.model.GeofenceZone;
 import com.yowyob.fleet.domain.ports.out.ExternalGeofencePort;
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.GeofenceApiClient;
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.GeofenceAuthClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -20,10 +23,11 @@ public class GeofenceApiAdapter implements ExternalGeofencePort {
 
     private final GeofenceApiClient apiClient;
     private final GeofenceAuthClient authClient;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${application.geofence-system-user.username}")
     private String systemUser;
-    
+
     @Value("${application.geofence-system-user.password}")
     private String systemPass;
 
@@ -34,16 +38,18 @@ public class GeofenceApiAdapter implements ExternalGeofencePort {
         if (cachedToken == null) {
             Map<String, String> loginReq = Map.of("type", "username", "username", systemUser, "password", systemPass);
             cachedToken = authClient.login(loginReq)
-                .map(res -> "Bearer " + (res.containsKey("token") ? res.get("token") : res.get("accessToken")))
-                .cache(Duration.ofHours(24));
+                    .map(res -> "Bearer " + (res.containsKey("token") ? res.get("token") : res.get("accessToken")))
+                    .cache(Duration.ofHours(24));
         }
         return cachedToken;
     }
 
     private String resolveShortType(String type) {
-        if (type == null) return "p";
+        if (type == null)
+            return "p";
         String t = type.toLowerCase();
-        if (t.equals("c") || t.contains("circle")) return "c";
+        if (t.equals("c") || t.contains("circle"))
+            return "c";
         return "p";
     }
 
@@ -52,17 +58,39 @@ public class GeofenceApiAdapter implements ExternalGeofencePort {
         return getSystemToken().flatMap(token -> {
             Map<String, Object> request = buildGeofenceMap(zone);
             return apiClient.createZone(request, token)
-                    .doOnSuccess(v -> log.info("✅ Zone {} synchronisée", zone.name()));
+                    .doOnSuccess(v -> log.info("✅ Zone {} synchronisée", zone.name()))
+                    .then();
+        });
+    }
+
+    @Override
+    public Mono<java.util.UUID> createRemoteZone(GeofenceZone zone) {
+        return getSystemToken().flatMap(token -> {
+            Map<String, Object> request = buildGeofenceMap(zone);
+            return apiClient.createZone(request, token)
+                    .map(resp -> {
+                        // Try to extract id from response map
+                        if (resp == null)
+                            return null;
+                        Object idObj = resp.getOrDefault("id", resp.get("zoneId"));
+                        if (idObj == null)
+                            return null;
+                        try {
+                            return java.util.UUID.fromString(idObj.toString());
+                        } catch (Exception e) {
+                            log.warn("Impossible de parser l'id retourné par l'API externe: {}", idObj);
+                            return null;
+                        }
+                    })
+                    .flatMap(id -> id == null ? Mono.empty() : Mono.just(id));
         });
     }
 
     @Override
     public Mono<Void> updateRemoteZone(String type, UUID id, Map<String, Object> updates) {
         String shortType = resolveShortType(type);
-        return getSystemToken().flatMap(token -> 
-            apiClient.updateZone(shortType, id, updates, token)
-                .doOnSuccess(v -> log.info("🔄 Zone {} mise à jour", id))
-        );
+        return getSystemToken().flatMap(token -> apiClient.updateZone(shortType, id, updates, token)
+                .doOnSuccess(v -> log.info("🔄 Zone {} mise à jour", id)));
     }
 
     @Override
@@ -71,33 +99,69 @@ public class GeofenceApiAdapter implements ExternalGeofencePort {
         return getSystemToken().flatMap(token -> apiClient.deleteZone(shortType, zoneId, token));
     }
 
-   @Override
+@Override
+public Mono<Map<String, Object>> getRemoteZoneDetails(String type, UUID id) {
+    String shortType = resolveShortType(type);
+    log.info("🌐 [EXTERNAL CALL] Fetching zone details. Type: {}, ID: {}", shortType, id);
+    
+    return getSystemToken()
+        .flatMap(token -> {
+            log.debug("🔑 Using Token: {}...", token.substring(0, 15));
+            return apiClient.getZoneById(shortType, id, token)
+                .doOnNext(node -> log.info("✅ Response received for zone {}", id))
+                .map(node -> objectMapper.convertValue(node, new TypeReference<Map<String, Object>>() {}))
+                .onErrorResume(e -> {
+                    // On capture l'erreur réelle pour ne pas l'étouffer
+                    if (e instanceof org.springframework.web.reactive.function.client.WebClientResponseException ex) {
+                        log.error("❌ Geofence Service Error: {} - Body: {}", 
+                                ex.getStatusCode(), ex.getResponseBodyAsString());
+                        return Mono.error(new RuntimeException("Erreur externe: " + ex.getResponseBodyAsString()));
+                    }
+                    return Mono.error(e);
+                });
+        });
+}
+
+@Override
 @SuppressWarnings("unchecked")
 public Mono<List<Map<String, Object>>> listRemoteZones(String category) {
+    log.info("🌐 [EXTERNAL CALL] Listing zones for category: {}", category);
+    
     return getSystemToken().flatMap(token -> {
-        Mono<Object> response;
+        Mono<JsonNode> response;
         if ("circles".equalsIgnoreCase(category)) response = apiClient.getCircles(token);
         else if ("polygons".equalsIgnoreCase(category)) response = apiClient.getPolygons(token);
         else response = apiClient.getAllZones(token);
 
-        return response.map(res -> {
-            if (res instanceof List) {
-                return (List<Map<String, Object>>) res;
-            } else if (res instanceof Map) {
-                // Au cas où Kamga renvoie un objet avec une propriété "content" ou "zones"
-                Map<String, Object> map = (Map<String, Object>) res;
-                if (map.containsKey("content")) return (List<Map<String, Object>>) map.get("content");
-                return List.of(map);
+        TypeReference<Map<String, Object>> mapType = new TypeReference<>() {};
+
+        return response.map(node -> {
+            List<Map<String, Object>> result = new ArrayList<>();
+            
+            // 1. Si c'est déjà un tableau [{}, {}]
+            if (node.isArray()) {
+                node.forEach(item -> result.add(objectMapper.convertValue(item, mapType)));
+            } 
+            // 2. Si c'est un objet, on cherche les clés connues
+            else if (node.isObject()) {
+                JsonNode listNode = null;
+                if (node.has("content")) listNode = node.get("content");
+                else if (node.has("zones")) listNode = node.get("zones");
+                else if (node.has("data")) listNode = node.get("data");
+
+                if (listNode != null && listNode.isArray()) {
+                    listNode.forEach(item -> result.add(objectMapper.convertValue(item, mapType)));
+                } else {
+                    // Si c'est un objet simple sans liste (une seule zone), on l'ajoute
+                    result.add(objectMapper.convertValue(node, mapType));
+                }
             }
-            return Collections.emptyList();
+            
+            log.info("📊 Zones trouvées après extraction : {}", result.size());
+            return result;
         });
     });
 }
-
-    @Override
-    public Mono<Map<String, Object>> getRemoteZoneDetails(String type, UUID id) {
-        return getSystemToken().flatMap(token -> apiClient.getZoneById(resolveShortType(type), id, token));
-    }
 
     @Override
     public Mono<Map<String, Object>> fetchRemoteAlerts(int page, int size) {
@@ -127,7 +191,8 @@ public Mono<List<Map<String, Object>>> listRemoteZones(String category) {
             request.put("type", "polygon");
             List<List<Double>> ring = new ArrayList<>(zone.vertices().stream()
                     .map(v -> Arrays.asList(v.longitude(), v.latitude())).toList());
-            if (!ring.isEmpty() && !ring.get(0).equals(ring.get(ring.size()-1))) ring.add(ring.get(0));
+            if (!ring.isEmpty() && !ring.get(0).equals(ring.get(ring.size() - 1)))
+                ring.add(ring.get(0));
             request.put("polygon", Map.of("type", "Polygon", "coordinates", List.of(ring)));
         }
         return request;

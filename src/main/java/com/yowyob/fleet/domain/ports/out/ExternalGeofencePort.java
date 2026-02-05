@@ -8,6 +8,8 @@ import java.util.UUID;
 
 public interface ExternalGeofencePort {
     Mono<Void> synchronizeZone(GeofenceZone zone);
+    // Create a zone on the external geofence API and return the created zone id
+    Mono<java.util.UUID> createRemoteZone(GeofenceZone zone);
     Mono<Void> updateRemoteZone(String type, UUID id, Map<String, Object> updates);
     Mono<Void> deleteRemoteZone(String type, UUID zoneId);
     Mono<String> checkPointInZone(UUID zoneId, Double lat, Double lng);

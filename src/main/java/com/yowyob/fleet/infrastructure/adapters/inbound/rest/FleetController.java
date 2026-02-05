@@ -48,8 +48,7 @@ public class FleetController {
     @Operation(summary = "Créer une flotte", description = "La flotte sera automatiquement liée au manager connecté.")
     public Mono<FleetResponse> create(
             @Valid @RequestBody FleetRequest request,
-            Authentication auth
-    ) {
+            Authentication auth) {
         Fleet domainObj = mapper.toDomain(request);
         return fleetUseCase.createFleet(domainObj, getUser(auth).id())
                 .map(mapper::toResponse);
@@ -81,8 +80,7 @@ public class FleetController {
     public Mono<FleetResponse> update(
             @PathVariable UUID id,
             @Valid @RequestBody FleetRequest request,
-            Authentication auth
-    ) {
+            Authentication auth) {
         return fleetUseCase.updateFleet(id, mapper.toDomain(request), getUser(auth).id(), isAdmin(auth))
                 .map(mapper::toResponse);
     }
@@ -92,5 +90,17 @@ public class FleetController {
     @Operation(summary = "Supprimer une flotte")
     public Mono<Void> delete(@PathVariable UUID id, Authentication auth) {
         return fleetUseCase.deleteFleet(id, getUser(auth).id(), isAdmin(auth));
+    }
+
+    // Fichier :
+    // src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/FleetController.java
+
+    @GetMapping("/all")
+    @PreAuthorize("hasRole('FLEET_ADMIN')")
+    @Operation(summary = "Lister TOUTES les flottes du système (Supervision Admin)")
+    public Flux<FleetResponse> getAllFleetsAdmin() {
+        // On passe un ID null ou spécial pour dire "Tout"
+        return fleetUseCase.getFleets(null, true)
+                .map(mapper::toResponse);
     }
 }

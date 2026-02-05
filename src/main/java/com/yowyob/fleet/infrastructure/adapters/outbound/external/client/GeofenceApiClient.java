@@ -1,5 +1,6 @@
 package com.yowyob.fleet.infrastructure.adapters.outbound.external.client;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.dto.GeofenceZoneDTORequest;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,7 +23,7 @@ public interface GeofenceApiClient {
 
 
     @PostExchange("/geofence")
-    Mono<Void> createZone(
+    Mono<java.util.Map<String,Object>> createZone(
         @RequestBody Object request,
         @RequestHeader("Authorization") String token
     );
@@ -36,17 +37,17 @@ public interface GeofenceApiClient {
     );
 
      @GetExchange("/geofence")
-    Mono<Object> getAllZones(@RequestHeader("Authorization") String token);
+    Mono<JsonNode> getAllZones(@RequestHeader("Authorization") String token);
 
     @GetExchange("/geofence/circles")
-    Mono<Object> getCircles(@RequestHeader("Authorization") String token);
+    Mono<JsonNode> getCircles(@RequestHeader("Authorization") String token);
 
     @GetExchange("/geofence/polygons")
-    Mono<Object> getPolygons(@RequestHeader("Authorization") String token);
+    Mono<JsonNode> getPolygons(@RequestHeader("Authorization") String token);
 
     // --- UNITAIRE ---
     @GetExchange("/geofence/{type}/{id}")
-    Mono<Map<String, Object>> getZoneById(
+    Mono<JsonNode> getZoneById(
         @PathVariable("type") String type, 
         @PathVariable("id") UUID id, 
         @RequestHeader("Authorization") String token
@@ -74,5 +75,6 @@ public interface GeofenceApiClient {
         @RequestParam(value = "page", defaultValue = "0") int page,
         @RequestParam(value = "size", defaultValue = "20") int size,
         @RequestHeader("Authorization") String token
-    );;
+    );
+    
 }

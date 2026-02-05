@@ -2,23 +2,17 @@ package com.yowyob.fleet.infrastructure.mappers;
 
 import com.yowyob.fleet.domain.model.GeofenceZone;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.GeofenceZoneEntity;
-import org.mapstruct.Builder; // ATTENTION : import org.mapstruct.Builder
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 
-@Mapper(componentModel = "spring", builder = @Builder(disableBuilder = true))
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface GeofenceMapper {
     
-    // Entity -> Domain
-    @Mapping(target = "radius", ignore = true)
-    @Mapping(target = "isActive", ignore = true)
-    @Mapping(target = "minDwellTime", ignore = true)
+    // ✅ La cible est le Domaine, la source est l'Entité (le lien local)
+    @Mapping(target = "name", constant = "Zone")
     GeofenceZone toDomain(GeofenceZoneEntity entity);
 
-    // Domain -> Entity
-    @Mapping(target = "radius", ignore = true)
-    @Mapping(target = "isActive", ignore = true)
-    @Mapping(target = "minDwellTime", ignore = true)
-    @Mapping(target = "new", ignore = true) // C'est la propriété de l'interface Persistable
+    // ✅ La cible est l'Entité, la source est le Domaine
     GeofenceZoneEntity toEntity(GeofenceZone domain);
 }
