@@ -26,49 +26,50 @@ public class SecurityConfig {
 
     @Bean
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
-        
-        // --- 1. CONFIGURATION DU FILTRE JWT ---
+
         AuthenticationWebFilter jwtFilter = new AuthenticationWebFilter(authenticationManager);
         jwtFilter.setServerAuthenticationConverter(authenticationConverter);
-        
-        // MODIFICATION : On retire le 'setRequiresAuthenticationMatcher'. 
-        // Par défaut, le filtre s'appliquera désormais à TOUTES les requêtes.
-        // Si pas de token -> Le convertisseur renvoie vide -> Le filtre laisse passer en "Anonyme".
 
-        // --- 2. CHAÎNE DE SÉCURITÉ ---
+
+        jwtFilter.setRequiresAuthenticationMatcher(
+                ServerWebExchangeMatchers.pathMatchers(
+                        "/api/v1/account/**",
+                        "/api/v1/fleets/**",
+                        "/api/v1/drivers/**",
+                        "/api/v1/vehicles/**",
+                        "/api/v1/geofence/**",
+                        "/api/v1/payments/**", 
+                        "/api/v1/admin/**"
+                )
+        );
+
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
-                
-                .authenticationManager(authenticationManager) 
-                
+                .authenticationManager(authenticationManager)
+
                 .exceptionHandling(handling -> handling
-                    .authenticationEntryPoint((exchange, e) -> 
-                        Mono.fromRunnable(() -> exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED)))
-                    .accessDeniedHandler((exchange, e) -> 
-                        Mono.fromRunnable(() -> exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN)))
+                        .authenticationEntryPoint((exchange, e) ->
+                                Mono.fromRunnable(() -> exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED)))
+                        .accessDeniedHandler((exchange, e) ->
+                                Mono.fromRunnable(() -> exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN)))
                 )
 
                 .authorizeExchange(exchanges -> exchanges
                         // A. ROUTES PUBLIQUES (Pas besoin de token, même si le filtre a essayé d'en trouver un)
                         .pathMatchers(
-                            "/v3/api-docs/**", 
-                            "/swagger-ui/**", 
-                            "/swagger-ui.html", 
-                            "/webjars/**",
-                            "/actuator/**",
-                            "/api/v1/health/**",
-                            "/api/v1/auth/**"
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/webjars/**",
+                                "/actuator/**",
+                                "/api/v1/health/**",
+                                "/api/v1/auth/**"
                         ).permitAll()
-                        
-                        // B. TOUT LE RESTE = AUTHENTIFICATION OBLIGATOIRE
-                        // Si le filtre n'a pas trouvé de token valide, ça bloquera ici (401).
                         .anyExchange().authenticated()
                 )
-                
                 .addFilterAt(jwtFilter, SecurityWebFiltersOrder.AUTHENTICATION)
-                
                 .build();
     }
 }

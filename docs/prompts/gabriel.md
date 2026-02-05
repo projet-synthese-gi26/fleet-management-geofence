@@ -34,5 +34,64 @@ La roadmap est suivie dans `todo.md`.
 
 
 ### Premiere mission
-je viens de merger mon travil avec celui de raphael,l'application ne se lance plus,aide moi a corriger ca,ensuite on va avancer.
+je viens de merger mon travail ,moi gabriel avec celui de mes colalborateurs,la'pi est fonctionnelle,deployee. maisntenant on doit finaliser.chacun connait deja ses taches donc on va juste mettre dans la todo les taches sous la forme,finaliser le module:
+moi en temos que chef du proejt backend,j'ai la plus grosse tache.
+-on va d;abord mettre a jour la todo,ensuite on va se oncentrer sur les modules qui me concernent
+
+objectifs:
+- reorganiser l'odre des modules du swagger pour plus de clarte et de logique(moi)
+-finalisation gestion du geofence: hassana
+-finalisation gestion des paiements: raphael
+-teste et finalisations des autres modules: gabriel(monitoring,auth,account,superamdnins,admins,managers,drivers,vehicles,flottes,courses) pour chaque module il faudra teste et completer.
+
+ton role est de ma'ccampagner dans ce processus,ta premeire mission est de ma;ider a proposer une todo en md,datee d'ajour'dui selon le modele de l'ancien sausf que ici il n'yaura pas le detail des taches des autres,chacun sait quoi faire,peut etre juste tester et finaliser partout
 "
+toute fosi tu m'aides d'abord a rfesourdre les soucis que le merge a cause et a lancer l'applicorrectement:" git stash push -m "backup avant checkout raphael"
+No local changes to save
+gabriel@gabriel-pc:~/Documents/projects/ecole/5GI/projet-synthese/fleet-management/code$ git checkout -b raphael origin/raphael
+Branch 'raphael' set up to track remote branch 'raphael' from 'origin'.
+Switched to a new branch 'raphael'
+gabriel@gabriel-pc:~/Documents/projects/ecole/5GI/projet-synthese/fleet-management/code$ # Passer sur main
+git checkout main
+
+# S'assurer que main est à jour
+git reset --hard origin/main
+
+# Merger Raphael
+git merge raphael
+Switched to branch 'main'
+Your branch is up to date with 'origin/main'.
+HEAD is now at b76d587 resolution des conflits de merge sur le geofence, vehicules et paiements
+Auto-merging src/main/java/com/yowyob/fleet/infrastructure/config/SecurityConfig.java
+CONFLICT (content): Merge conflict in src/main/java/com/yowyob/fleet/infrastructure/config/SecurityConfig.java
+Auto-merging src/main/java/com/yowyob/fleet/infrastructure/config/WebClientConfig.java
+CONFLICT (content): Merge conflict in src/main/java/com/yowyob/fleet/infrastructure/config/WebClientConfig.java
+Automatic merge failed; fix conflicts and then commit the result.
+gabriel@gabriel-pc:~/Documents/projects/ecole/5GI/projet-synthese/fleet-management/code$ git status
+On branch main
+Your branch is up to date with 'origin/main'.
+
+You have unmerged paths.
+  (fix conflicts and run "git commit")
+  (use "git merge --abort" to abort the merge)
+
+Changes to be committed:
+        modified:   import_context_window.ps1
+        new file:   project_context_2.txt
+        new file:   project_context_3.txt
+        new file:   project_context_4.txt
+        new file:   project_context_5.txt
+        modified:   src/main/java/com/yowyob/fleet/domain/ports/out/ExternalPaymentPort.java
+        new file:   src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/PaymentController.java
+        deleted:    src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/TestPaymentController.java
+        modified:   src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/external/PaymentApiAdapter.java
+        deleted:    src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/external/client/PaymentApiClient.java
+        new file:   src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/external/dto/TransactionExternalRequest.java
+        new file:   src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/external/dto/TransactionExternalResponse.java
+
+Unmerged paths:
+  (use "git add <file>..." to mark resolution)
+        both modified:   src/main/java/com/yowyob/fleet/infrastructure/config/SecurityConfig.java
+        both modified:   src/main/java/com/yowyob/fleet/infrastructure/config/WebClientConfig.java
+
+gabriel@gabriel-pc:~/Documents/projects/ecole/5GI/projet-synthese/fleet-management/code$ " j'ai fais un premier essaide correction mais dans webclientconig ca ne egrre pas,il y'a le rouge,payment apiclientnot found
