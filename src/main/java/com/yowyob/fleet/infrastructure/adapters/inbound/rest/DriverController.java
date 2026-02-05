@@ -87,9 +87,14 @@ public class DriverController {
     }
 
     @PostMapping("/drivers/{userId}/assign-vehicle")
-    @Operation(summary = "Assigner un véhicule (Smart Swap)", description = "Assigne le véhicule et gère automatiquement le détachement des précédents conducteurs/véhicules.")
-    public Mono<Void> assign(@PathVariable UUID userId, @RequestBody VehicleAssignRequest req, Authentication auth) {
-        return driverUseCase.assignVehicle(userId, req.vehicleId(), getUser(auth).id());
+    @Operation(summary = "Assigner un véhicule (Smart Swap)", description = "Assigne le véhicule et gère automatiquement le détachement.")
+    public Mono<Void> assign(
+            @PathVariable UUID userId, 
+            @RequestBody VehicleAssignRequest req, 
+            Authentication auth,
+            @Parameter(hidden = true) @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader // Ajout
+    ) {
+        return driverUseCase.assignVehicle(userId, req.vehicleId(), getUser(auth).id(), getToken(authHeader));
     }
 
     @PostMapping("/drivers/{userId}/unassign-vehicle")

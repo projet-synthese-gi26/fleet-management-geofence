@@ -18,7 +18,7 @@ public interface ManageDriverUseCase {
     Flux<Driver> getDrivers(UUID fleetId, UUID requesterId, boolean isAdmin);
     
     // Gestion Véhicule
-    Mono<Void> assignVehicle(UUID userId, UUID vehicleId, UUID requesterId);
+    Mono<Void> assignVehicle(UUID userId, UUID vehicleId, UUID requesterId, String token);
     Mono<Void> unassignVehicle(UUID userId, UUID requesterId);
     
     // Retrait de la flotte (Manager)

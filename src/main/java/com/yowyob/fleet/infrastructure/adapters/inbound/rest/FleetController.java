@@ -44,7 +44,7 @@ public class FleetController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('FLEET_MANAGER')")
+    @PreAuthorize("hasRole('FLEET_MANAGER') or hasRole('ADMIN')") // Seul un manager crée sa flotte
     @Operation(summary = "Créer une flotte", description = "La flotte sera automatiquement liée au manager connecté.")
     public Mono<FleetResponse> create(
             @Valid @RequestBody FleetRequest request,

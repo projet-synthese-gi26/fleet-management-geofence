@@ -34,9 +34,5 @@ La roadmap est suivie dans `todo.md`.
 
 
 ### Premiere mission
-je suis gabriel.scanne la todo,identifie mes taches.je suis en train de finaliser la gestion des trips,j'ai deja coche dans la tdo,maintennat je debugge et teste juste.
-voici:
-erreur dans le service:"The method setStartTime(LocalTime) in the type TripEntity is not applicable for the arguments (Instant)Java(67108979)
-Windsurf: Explain Problem
-
-void com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.TripEntity.setStartTime(LocalTime startTime)" donne moi le service complet et a jour
+je viens de merger mon travil avec celui de raphael,l'application ne se lance plus,aide moi a corriger ca,ensuite on va avancer.
+"

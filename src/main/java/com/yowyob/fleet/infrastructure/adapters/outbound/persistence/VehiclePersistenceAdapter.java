@@ -2,18 +2,16 @@ package com.yowyob.fleet.infrastructure.adapters.outbound.persistence;
 
 import com.yowyob.fleet.domain.model.Vehicle;
 import com.yowyob.fleet.domain.ports.out.VehiclePersistencePort;
-import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.FinancialParameterEntity;
-import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.MaintenanceParameterEntity;
-import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.VehicleLocalEntity;
-import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.FinancialParameterR2dbcRepository;
-import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.MaintenanceParameterR2dbcRepository;
-import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.VehicleLocalR2dbcRepository;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.*;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.*;
 import com.yowyob.fleet.infrastructure.mappers.VehicleLocalMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -23,41 +21,45 @@ public class VehiclePersistenceAdapter implements VehiclePersistencePort {
     private final VehicleLocalR2dbcRepository vehicleRepo;
     private final FinancialParameterR2dbcRepository financialRepo;
     private final MaintenanceParameterR2dbcRepository maintenanceRepo;
+    private final VehicleIllustrationImageR2dbcRepository galleryRepo;
     private final VehicleLocalMapper mapper;
 
     @Override
     @Transactional
     public Mono<Vehicle> saveLocalData(Vehicle vehicle) {
-        // Préparation de l'entité pivot
-        VehicleLocalEntity vEntity = mapper.toVehicleEntity(vehicle);
-        
-        // On vérifie si c'est une création pour mettre le flag isNew
-        return vehicleRepo.findById(vehicle.id())
-                .map(existing -> {
-                    vEntity.setNew(false);
-                    return existing;
+        return vehicleRepo.existsById(vehicle.id())
+                .flatMap(exists -> {
+                    VehicleLocalEntity vEntity = mapper.toVehicleEntity(vehicle);
+                    vEntity.setNew(!exists); 
+                    return vehicleRepo.save(vEntity);
                 })
-                .switchIfEmpty(Mono.defer(() -> {
-                    vEntity.setNew(true);
-                    return Mono.empty();
-                }))
-                .then(vehicleRepo.save(vEntity))
-                .flatMap(savedV -> {
-                    // Initialisation forcée des 1:1 si non existants
-                    FinancialParameterEntity fin = mapper.toFinancialEntity(vehicle);
-                    fin.setId(fin.getId() == null ? UUID.randomUUID() : fin.getId());
-                    fin.setVehicleId(savedV.getId());
+                .flatMap(savedV -> saveParameters(vehicle, savedV.getId()))
+                .flatMap(savedV -> getLocalDataById(savedV.getId()));
+    }
 
-                    MaintenanceParameterEntity maint = mapper.toMaintenanceEntity(vehicle);
-                    maint.setId(maint.getId() == null ? UUID.randomUUID() : maint.getId());
-                    maint.setVehicleId(savedV.getId());
+    private Mono<VehicleLocalEntity> saveParameters(Vehicle vehicle, UUID vehicleId) {
+        FinancialParameterEntity fin = mapper.toFinancialEntity(vehicle);
+        if (fin.getId() == null) { 
+            fin.setId(UUID.randomUUID()); 
+            fin.setNew(true); 
+        }
+        fin.setVehicleId(vehicleId);
 
-                    return Mono.zip(
-                            financialRepo.save(fin),
-                            maintenanceRepo.save(maint)
-                    ).thenReturn(savedV);
-                })
-                .map(v -> mapper.toDomain(v, null, null));
+        MaintenanceParameterEntity maint = mapper.toMaintenanceEntity(vehicle);
+        if (maint.getId() == null) { 
+            maint.setId(UUID.randomUUID()); 
+            maint.setNew(true); 
+        }
+        maint.setVehicleId(vehicleId);
+
+        return Mono.zip(
+                financialRepo.findByVehicleId(vehicleId)
+                    .map(existing -> { fin.setId(existing.getId()); fin.setNew(false); return fin; })
+                    .defaultIfEmpty(fin).flatMap(financialRepo::save),
+                maintenanceRepo.findByVehicleId(vehicleId)
+                    .map(existing -> { maint.setId(existing.getId()); maint.setNew(false); return maint; })
+                    .defaultIfEmpty(maint).flatMap(maintenanceRepo::save)
+        ).thenReturn(new VehicleLocalEntity(vehicleId, null, null, null, null, null, null, null, null, null, null, null, null, null, false));
     }
 
     @Override
@@ -65,12 +67,35 @@ public class VehiclePersistenceAdapter implements VehiclePersistencePort {
         return Mono.zip(
                 vehicleRepo.findById(id),
                 financialRepo.findByVehicleId(id).defaultIfEmpty(new FinancialParameterEntity()),
-                maintenanceRepo.findByVehicleId(id).defaultIfEmpty(new MaintenanceParameterEntity())
-        ).map(tuple -> mapper.toDomain(tuple.getT1(), tuple.getT2(), tuple.getT3()));
+                maintenanceRepo.findByVehicleId(id).defaultIfEmpty(new MaintenanceParameterEntity()),
+                galleryRepo.findByVehicleId(id).map(VehicleIllustrationImageEntity::getImagePath).collectList().defaultIfEmpty(List.of())
+        ).map(tuple -> mapper.toDomain(tuple.getT1(), tuple.getT2(), tuple.getT3(), tuple.getT4()));
     }
 
     @Override
     public Mono<Void> deleteLocalData(UUID id) {
         return vehicleRepo.deleteById(id);
+    }
+
+    @Override
+    public Flux<Vehicle> getVehiclesByManager(UUID managerId) {
+        return vehicleRepo.findByManagerId(managerId).flatMap(v -> getLocalDataById(v.getId()));
+    }
+
+    @Override
+    public Flux<Vehicle> getAllVehicles() {
+        return vehicleRepo.findAll().flatMap(v -> getLocalDataById(v.getId()));
+    }
+
+    @Override
+    public Mono<Void> updateVehiclePhotos(UUID vehicleId, String photoUrl, String vinPhotoUrl, String regPhotoUrl) {
+        return vehicleRepo.findById(vehicleId)
+                .flatMap(v -> {
+                    if (photoUrl != null) v.setPhotoUrl(photoUrl);
+                    if (vinPhotoUrl != null) v.setSerialNumberPhotoUrl(vinPhotoUrl);
+                    if (regPhotoUrl != null) v.setRegistrationPhotoUrl(regPhotoUrl);
+                    v.setNew(false);
+                    return vehicleRepo.save(v);
+                }).then();
     }
 }

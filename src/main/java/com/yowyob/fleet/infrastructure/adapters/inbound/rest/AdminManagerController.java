@@ -23,7 +23,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Tag(name = "04. Fleet Managers", description = "Administration des entreprises (Réservé ADMIN)")
 @SecurityRequirement(name = "bearerAuth")
-@PreAuthorize("hasRole('FLEET_ADMIN')") 
+@PreAuthorize("hasRole('FLEET_ADMIN') or hasRole('ADMIN')") 
 public class AdminManagerController {
 
     private final ManageFleetManagerUseCase manageFleetManagerUseCase;
