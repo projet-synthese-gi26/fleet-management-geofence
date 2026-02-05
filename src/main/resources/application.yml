@@ -12,8 +12,8 @@ spring:
   # ✅ CORRECTION: Utiliser yowyob_db au lieu de yowyob
   r2dbc:
     url: r2dbc:postgresql://localhost:5432/yowyob_db
-    username: fleet_admin
-    password: fleet_password
+    username: postgres
+    password: root
     pool:
       enabled: true
       initial-size: 2
@@ -24,8 +24,8 @@ spring:
   # JDBC (Liquibase Migration)
   datasource:
     url: jdbc:postgresql://localhost:5432/yowyob_db
-    username: fleet_admin
-    password: fleet_password
+    username: postgres
+    password: root
     driver-class-name: org.postgresql.Driver
 
   # LIQUIBASE

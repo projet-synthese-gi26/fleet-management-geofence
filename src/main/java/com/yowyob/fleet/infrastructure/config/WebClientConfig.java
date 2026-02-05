@@ -1,42 +1,31 @@
 package com.yowyob.fleet.infrastructure.config;
 
-import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.*;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.support.WebClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
-import reactor.core.publisher.Mono;
 
-@Slf4j
+import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.AuthApiClient;
+import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.VehicleApiClient;
+import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.GeofenceApiClient;
+import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.GeofenceAuthClient;
+import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.NotificationApiClient;
+
 @Configuration
 public class WebClientConfig {
 
-    // --- Filtre de Logging ---
-    private ExchangeFilterFunction logRequest() {
-        return ExchangeFilterFunction.ofRequestProcessor(clientRequest -> {
-            log.info("📡 [OUTBOUND] {} {}", clientRequest.method(), clientRequest.url());
-            clientRequest.headers().forEach((name, values) ->
-                    values.forEach(value -> log.info("   👉 {}: {}", name, value))
-            );
-            return Mono.just(clientRequest);
-        });
+    @Bean
+    public WebClient webClient(WebClient.Builder builder) {
+        return builder.build();
     }
 
-    // --- 1. WebClient manuel pour le Paiement (Celui qui remplace l'interface) ---
     @Bean("paymentWebClient")
     public WebClient paymentWebClient(WebClient.Builder builder,
                                       @Value("${application.external.payment-service-url}") String url) {
-        return builder
-                .baseUrl(url)
-                .filter(logRequest()) // Active les logs
-                .build();
+        return builder.baseUrl(url).build();
     }
-
-    // --- 2. Clients Déclaratifs (Les autres, on les garde) ---
 
     @Bean
     public VehicleApiClient vehicleApiClient(WebClient.Builder builder,
@@ -59,7 +48,20 @@ public class WebClientConfig {
         return createProxy(webClient, GeofenceApiClient.class);
     }
 
-    // Helper générique
+    @Bean
+    public GeofenceAuthClient geofenceAuthClient(WebClient.Builder builder,
+                                                 @Value("${application.external.geofence-service-url}") String url) {
+        WebClient webClient = builder.baseUrl(url).build();
+        return createProxy(webClient, GeofenceAuthClient.class);
+    }
+
+    @Bean
+    public NotificationApiClient notificationApiClient(WebClient.Builder builder,
+                                                       @Value("${application.notification.url}") String url) {
+        WebClient webClient = builder.baseUrl(url).build();
+        return createProxy(webClient, NotificationApiClient.class);
+    }
+
     private <S> S createProxy(WebClient webClient, Class<S> serviceClass) {
         WebClientAdapter adapter = WebClientAdapter.create(webClient);
         HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(adapter).build();
