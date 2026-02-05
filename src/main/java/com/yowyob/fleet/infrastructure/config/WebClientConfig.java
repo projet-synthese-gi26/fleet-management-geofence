@@ -20,14 +20,18 @@ import reactor.netty.http.client.HttpClient;
 @Configuration
 public class WebClientConfig {
 
+    /**
+     * Filtre pour logger toutes les requêtes sortantes vers les microservices tiers.
+     */
     private ExchangeFilterFunction logRequest() {
         return ExchangeFilterFunction.ofRequestProcessor(clientRequest -> {
-            log.info("📡 [OUTBOUND] {} {}", clientRequest.method(), clientRequest.url());
+            log.info("📡 [OUTBOUND CALL] {} {}", clientRequest.method(), clientRequest.url());
             return Mono.just(clientRequest);
         });
     }
 
-    // Bean utilisé par PaymentApiAdapter via @Qualifier("paymentWebClient")
+    // --- CLIENTS STANDARDS ---
+
     @Bean("paymentWebClient")
     public WebClient paymentWebClient(WebClient.Builder builder,
                                       @Value("${application.external.payment-service-url}") String url) {
@@ -37,14 +41,25 @@ public class WebClientConfig {
     @Bean
     public VehicleApiClient vehicleApiClient(WebClient.Builder builder,
                                              @Value("${application.external.vehicle-service-url}") String url) {
-        return createProxy(builder.baseUrl(url).build(), VehicleApiClient.class);
+        WebClient webClient = builder.baseUrl(url).filter(logRequest()).build();
+        return createProxy(webClient, VehicleApiClient.class);
     }
 
     @Bean
     public AuthApiClient authApiClient(WebClient.Builder builder,
                                        @Value("${application.auth.url}") String url) {
-        return createProxy(builder.baseUrl(url).build(), AuthApiClient.class);
+        WebClient webClient = builder.baseUrl(url).filter(logRequest()).build();
+        return createProxy(webClient, AuthApiClient.class);
     }
+
+    @Bean
+    public NotificationApiClient notificationApiClient(WebClient.Builder builder, 
+                                                      @Value("${application.notification.url}") String url) {
+        WebClient webClient = builder.baseUrl(url).filter(logRequest()).build();
+        return createProxy(webClient, NotificationApiClient.class);
+    }
+
+    // --- CLIENTS SPECIAUX (GEOFENCE - SSL INSECURE) ---
 
     @Bean
     public GeofenceApiClient geofenceApiClient(@Value("${application.external.geofence-service-url}") String url) {
@@ -53,16 +68,12 @@ public class WebClientConfig {
     }
 
     @Bean
-    public NotificationApiClient notificationApiClient(WebClient.Builder builder, 
-                                                      @Value("${application.notification.url}") String url) {
-        return createProxy(builder.baseUrl(url).build(), NotificationApiClient.class);
-    }
-
-    @Bean
     public GeofenceAuthClient geofenceAuthClient(@Value("${application.external.geofence-service-url}") String url) {
         WebClient webClient = createInsecureWebClient(url).build();
         return createProxy(webClient, GeofenceAuthClient.class);
     }
+
+    // --- HELPERS ---
 
     private <S> S createProxy(WebClient webClient, Class<S> serviceClass) {
         WebClientAdapter adapter = WebClientAdapter.create(webClient);
@@ -70,12 +81,20 @@ public class WebClientConfig {
         return factory.createClient(serviceClass);
     }
 
+    /**
+     * Crée un WebClient qui accepte les certificats SSL auto-signés (Utile pour le service Geofence).
+     */
     private WebClient.Builder createInsecureWebClient(String baseUrl) {
         try {
             SslContext sslContext = SslContextBuilder.forClient()
                     .trustManager(InsecureTrustManagerFactory.INSTANCE).build();
             HttpClient httpClient = HttpClient.create().secure(t -> t.sslContext(sslContext));
-            return WebClient.builder().baseUrl(baseUrl).clientConnector(new ReactorClientHttpConnector(httpClient));
-        } catch (Exception e) { throw new RuntimeException(e); }
+            return WebClient.builder()
+                    .baseUrl(baseUrl)
+                    .filter(logRequest())
+                    .clientConnector(new ReactorClientHttpConnector(httpClient));
+        } catch (Exception e) { 
+            throw new RuntimeException("Erreur configuration WebClient Insecure", e); 
+        }
     }
 }

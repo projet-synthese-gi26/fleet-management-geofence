@@ -1,7 +1,7 @@
 # 📋 Roadmap Finalisation - 05 Février 2026
 
 ## 🦁 Cluster Gabriel (Chef de projet Backend)
-- [ ] **Tâche 1 :** Réorganisation finale Swagger (Config faite).
+- [x] **Tâche 1 :** Réorganisation finale Swagger (Config faite).
 - [ ] **Tâche 2 :** Test et finalisation module Monitoring.
 - [ ] **Tâche 3 :** Test et finalisation module Auth.
 - [ ] **Tâche 4 :** Test et finalisation module Account.
