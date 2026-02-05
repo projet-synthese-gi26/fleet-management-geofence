@@ -21,7 +21,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/admin/managers")
 @RequiredArgsConstructor
-@Tag(name = "04. Fleet Managers", description = "Administration des entreprises (Réservé ADMIN)")
+@Tag(name = "06. Fleet Managers", description = "Administration des entreprises (Réservé ADMIN)")
 @SecurityRequirement(name = "bearerAuth")
 @PreAuthorize("hasRole('FLEET_ADMIN') or hasRole('ADMIN')") 
 public class AdminManagerController {

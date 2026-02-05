@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono;
 @RestController
 @RequestMapping("/api/v1/admin/stats")
 @RequiredArgsConstructor
-@Tag(name = "01. Monitoring", description = "Statistiques et Supervision") // On le regroupe avec Monitoring
+@Tag(name = "05. Admin", description = "Statistiques et Supervision") // On le regroupe avec Monitoring
 @SecurityRequirement(name = "bearerAuth")
 public class AdminStatsController {
 

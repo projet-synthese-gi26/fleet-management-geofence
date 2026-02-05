@@ -23,7 +23,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/admin/users")
 @RequiredArgsConstructor
-@Tag(name = "00. Super Admin", description = "Gestion des Administrateurs Fleet")
+@Tag(name = "04. Super Admin", description = "Gestion des Administrateurs Fleet")
 @SecurityRequirement(name = "bearerAuth")
 @PreAuthorize("hasRole('FLEET_SUPER_ADMIN')")
 public class AdminUserController {
