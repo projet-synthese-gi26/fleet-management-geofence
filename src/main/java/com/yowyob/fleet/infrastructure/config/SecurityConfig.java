@@ -30,8 +30,7 @@ public class SecurityConfig {
         AuthenticationWebFilter jwtFilter = new AuthenticationWebFilter(authenticationManager);
         jwtFilter.setServerAuthenticationConverter(authenticationConverter);
 
-        // --- CORRECTION ICI ---
-        // Ajout de "/**" à la fin de "/api/v1/payments"
+
         jwtFilter.setRequiresAuthenticationMatcher(
                 ServerWebExchangeMatchers.pathMatchers(
                         "/api/v1/account/**",
@@ -39,7 +38,7 @@ public class SecurityConfig {
                         "/api/v1/drivers/**",
                         "/api/v1/vehicles/**",
                         "/api/v1/geofence/**",
-                        "/api/v1/payments/**", // <--- C'ÉTAIT L'ERREUR (Manquait les **)
+                        "/api/v1/payments/**", 
                         "/api/v1/admin/**"
                 )
         );
@@ -58,6 +57,7 @@ public class SecurityConfig {
                 )
 
                 .authorizeExchange(exchanges -> exchanges
+                        // A. ROUTES PUBLIQUES (Pas besoin de token, même si le filtre a essayé d'en trouver un)
                         .pathMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
@@ -65,7 +65,8 @@ public class SecurityConfig {
                                 "/webjars/**",
                                 "/actuator/**",
                                 "/api/v1/health/**",
-                                "/api/v1/auth/**"
+                                "/api/v1/auth/**",
+                                "/api/v1/health/**"
                         ).permitAll()
                         .anyExchange().authenticated()
                 )

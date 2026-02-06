@@ -18,7 +18,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/admin/references")
 @RequiredArgsConstructor
-@Tag(name = "00. Super Admin", description = "Configuration du système")
+@Tag(name = "05. Admin", description = "Configuration du système")
 @SecurityRequirement(name = "bearerAuth")
 @PreAuthorize("hasRole('FLEET_ADMIN')")
 public class AdminReferenceController {

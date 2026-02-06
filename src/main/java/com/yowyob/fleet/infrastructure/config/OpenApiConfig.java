@@ -4,17 +4,14 @@ import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
-import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
-import io.swagger.v3.oas.models.tags.Tag;
 import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Configuration
@@ -25,10 +22,10 @@ public class OpenApiConfig {
         final String securitySchemeName = "bearerAuth";
         return new OpenAPI()
                 .info(new Info()
-                        .title("YowYob Microservice Fleet Management")
+                        .title("YowYob Fleet Management API")
                         .version("1.0.0")
                         .description("API Réactive pour la gestion de flottes et le géorepérage.")
-                        .contact(new Contact().name("Équipe Backend").email("dev@yowyob.com")))
+                        .contact(new Contact().name("Gabriel Nomo").email("g.nomo@yowyob.com")))
                 .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
                 .components(new Components()
                         .addSecuritySchemes(securitySchemeName,
@@ -42,22 +39,26 @@ public class OpenApiConfig {
     @Bean
     public OpenApiCustomizer sortTagsAlphabetically() {
         return openApi -> {
-            // Définition de l'ordre exact souhaité
             List<String> order = List.of(
                 "01. Monitoring",
                 "02. Auth",
                 "03. Account",
-                "04. Fleet Managers",
-                "05. Drivers",
-                "06. Vehicles",
-                "07. Fleets"
+                "04. Super Admin",
+                "05. Admin",
+                "06. Fleet Managers",
+                "07. Drivers",
+                "08. Vehicles",
+                "09. Fleets",
+                "10. Trips",
+                "11. Geofencing",
+                "12. Payments"
             );
 
             if (openApi.getTags() != null) {
                 openApi.setTags(openApi.getTags().stream()
                         .sorted(Comparator.comparingInt(tag -> {
                             int index = order.indexOf(tag.getName());
-                            return index == -1 ? 999 : index; // Les inconnus à la fin
+                            return index == -1 ? 999 : index;
                         }))
                         .collect(Collectors.toList()));
             }

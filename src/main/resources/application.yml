@@ -85,8 +85,8 @@ application:
       admin-validation: 7 # ID template: admin a validé le profil du driver
  
   geofence-system-user:
-    username: "fleetmanagementuser"
-    password: "system_password_secure" # À changer en prod
+    username: "yowyob_fleet_internal_admin"
+    password: "system_password_secure_2026" 
     organization-id: "723e4567-e89b-12d3-a456-426614174000" # UUID de notre application dans
  
   bootstrap:

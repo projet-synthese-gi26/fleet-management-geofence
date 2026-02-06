@@ -15,7 +15,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/notifications")
 @RequiredArgsConstructor
-@Tag(name = "Notification-History", description = "In-app notifications history")
+@Tag(name = "03. Account", description = "In-app notifications history")
 public class NotificationController {
 
     private final NotificationHistoryRepositoryPort historyPort;

@@ -1,5 +1,5 @@
 ﻿# Contexte du Projet : Fleet & Geofence API
-GÃ©nÃ©rÃ© le : 02/06/2026 05:43:58
+GÃ©nÃ©rÃ© le : 02/06/2026 06:37:46
 Framework : Spring Boot WebFlux (Reactive)
 
 ## 1. Arborescence du Projet
@@ -634,8 +634,6 @@ D:.
     ª   ª               ª       ª   ª   FakeAuthAdapter.class
     ª   ª               ª       ª   ª   FakeDistanceAdapter.class
     ª   ª               ª       ª   ª   GeofenceApiAdapter$1.class
-    ª   ª               ª       ª   ª   GeofenceApiAdapter$2.class
-    ª   ª               ª       ª   ª   GeofenceApiAdapter$3.class
     ª   ª               ª       ª   ª   GeofenceApiAdapter$6.class
     ª   ª               ª       ª   ª   GeofenceApiAdapter.class
     ª   ª               ª       ª   ª   PaymentApiAdapter.class
@@ -1122,92 +1120,26 @@ Si vous avez des erreurs Liquibase ou de schÃ©ma, rÃ©initialisez la base ave
 ---
 ### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\todo.md
 `$ext
-# ðŸ“‹ Roadmap RÃ©partie : API Fleet & Geofence
-**Version :** 3.0
-**Date de gÃ©nÃ©ration :** 27 Janvier 2026
-**Statut :** En cours de planification
+# ðŸ“‹ Roadmap Finalisation - 05 FÃ©vrier 2026
 
----
+## ðŸ¦ Cluster Gabriel (Chef de projet Backend)
+- [x] **TÃ¢che 1 :** RÃ©organisation finale Swagger (Config faite).
+- [x] **TÃ¢che 2 :** Test et finalisation module Monitoring.
+- [ ] **TÃ¢che 3 :** Test et finalisation module Auth.
+- [ ] **TÃ¢che 4 :** Test et finalisation module Account.
+- [ ] **TÃ¢che 5 :** Test et finalisation module Super Admin.
+- [ ] **TÃ¢che 6 :** Test et finalisation module Admin.
+- [ ] **TÃ¢che 7 :** Test et finalisation module Fleet Managers.
+- [ ] **TÃ¢che 8 :** Test et finalisation module Drivers.
+- [ ] **TÃ¢che 9 :** Test et finalisation module Vehicles (Debug PUT et ressources initiales).
+- [ ] **TÃ¢che 10 :** Test et finalisation module Fleets.
+- [ ] **TÃ¢che 11 :** Test et finalisation module Trips (Courses).
 
-## âš ï¸ RÃ¨gles GÃ©nÃ©rales
-*   **Documentation :** Chacun doit lire le `README.md` et le suivre Ã  la lettre avant de travailler pour garantir la productivitÃ©. En cas de question, se rapprocher de **Nomo Gabriel**.
-*   **Tests :** Chacun doit tester son travail **en local** et vÃ©rifier la compatibilitÃ© **en production** (staging).
-*   **Gestion de code (Git) :**
-    *   **Interdiction formelle de push sur `main`**. Il faut impÃ©rativement passer par une **Pull Request**.
-    *   Seul **Nomo Gabriel** a le droit de valider/merger sur `main`.
-    *   **Hassana** travaille en collaboration avec Gabriel sur la branche `master`/`main`.
-    *   **Bihai RaphaÃ«l** crÃ©e une branche `raphael` sur laquelle il travaille. Nous ferons un merge global plus tard.
-*   **Base de DonnÃ©es :** Pour toute modification de la BD (schÃ©ma), il est impÃ©ratif de le **signaler dans le groupe** pour Ã©viter de casser le travail des autres.
-*   **DÃ©lais :** Toutes les tÃ¢ches doivent Ãªtre livrÃ©es **au plus tard demain matin Ã  10h00**, lors de la rÃ©union de l'Ã©quipe backend.
-*   **Configuration :** Toujours mettre Ã  jour le fichier `prod.application.yml` lorsqu'une modification est apportÃ©e au `application.yml` local.
-*   **Architecture :** Respecter scrupuleusement l'architecture **hexagonale** du projet.
+## ðŸ¦… Cluster Hassana
+- [ ] **TÃ¢che 12 :** Finalisation module Geofence.
 
----
-
-## âœ… PHASE 1 : FONDATIONS (TerminÃ©)
-*(Rappel pour contexte)*
-- [x] Infrastructure (Docker, Liquibase, R2DBC).
-- [x] Base de donnÃ©es (SchÃ©ma `fleet` & `public`, Seeding).
-- [x] Auth & SÃ©curitÃ© (Jwt, Proxy Auth Service, Mode Fake).
-- [x] Gestion Fleet Managers (CRUD & Synchro).
-- [x] Gestion Flottes (CRUD).
-- [x] Gestion Drivers (ImplÃ©mentation faite, tests restants).
-
----
-
-## ðŸ—ï¸ PHASE 2 : PARALLÃ‰LISATION (En cours)
-
-### ðŸ¦ Cluster 1 : Gabriel (Core Business & Orchestration)
-*ResponsabilitÃ© : Logique complexe, agrÃ©gation de donnÃ©es, machines Ã  Ã©tats, validation finale.*
-
-#### Module 1 : Finalisation Auth & Drivers
-- [x] **TÃ¢che 1.1 :** Validation Tests en local : Gestion des Drivers (CrÃ©ation, Listing, Retrait).
-- [x] **TÃ¢che 1.2 :** ImplÃ©mentation : Gestion des Admins et Super Admins (1 Super Admin dÃ©fini en dur dans le code/configuration qui peut crÃ©er les autres admins ; il sera configurÃ© dans le `application.yml`).
-- [ ] **TÃ¢che 1.3 :** ImplÃ©mentation : Suppression de compte (Changement de service vers le service `User_Deleted`).
-- [ ] **TÃ¢che 1.4 :** ImplÃ©mentation : Upload/Update de la photo de profil (User, Driver, Fleet Manager, Admin).
-- [ ] **TÃ¢che 1.5 :** Test et ImplÃ©mentation : Gestion des assignations chauffeur-vehicules,flottes-chauffeurs,managers-flottes
-
-
-#### Module 2 : Gestion AvancÃ©e des VÃ©hicules
-- [x] **TÃ¢che 2.1 :** Refonte `VehicleService` : AgrÃ©gation rÃ©active robuste (DonnÃ©es locales + DonnÃ©es distantes `VehicleApiClient`).au minimum le CRUD
-- [x] **TÃ¢che 2.2 :** gestion des medias des vehicles 
-- [] **TÃ¢che 2.3 :** CRUD ParamÃ¨tres Financiers (Relation 1-1).
-- [] **TÃ¢che 2.4 :** CRUD ParamÃ¨tres Maintenance (Relation 1-1).
-- [] **TÃ¢che 2.5 :** Logique d'Assignation CroisÃ©e (EmpÃªcher conflit : 1 Driver sur 2 vÃ©hicules, etc.).
-- [] **TÃ¢che 2.6 :** debogage de la methode put des vehicules
-
-#### Module 3 : Gestion des Trajets (Trips) & TÃ©lÃ©mÃ©trie
-- [x] **TÃ¢che 3.1 :** Endpoint `Start Trip` : Initialisation, verrouillage vÃ©hicule/driver.
-- [x] **TÃ¢che 3.2 :** Endpoint `Telemetry` : Ingestion haute frÃ©quence des points GPS (WebFlux Stream).
-- [x] **TÃ¢che 3.3 :** Endpoint `End Trip` : ClÃ´ture, calcul distance/durÃ©e, libÃ©ration ressources.
-- [x] **TÃ¢che 3.4 :** Identification d'autres endpoints si nÃ©cessaire et implÃ©mentation.
-
----
-
-### ðŸ¦… Cluster 2 : Hassana (Geofence & Event-Driven)
-*ResponsabilitÃ© : Moteur spatial, Asynchronisme, Alerting.*
-
-#### Module 4 : Moteur Geofencing
-- [x] **TÃ¢che 4.1 :** CRUD Zones : Comprendre l'API de Kamga, identifier tous les endpoints nÃ©cessaires pour notre projet et les intÃ©grer.
-
-#### Module 5 : Notifications & Kafka
-- [x] **TÃ¢che 5.1 :** Analyse du service : Comprendre comment fonctionne le service de notifs (lire la doc et se rapprocher de Tchassi). Consulter Ã©galement le code d'Igor, qui a dÃ©jÃ  intÃ©grÃ© ce service avec succÃ¨s.
-- [x] **TÃ¢che 5.2 :** Configuration Kafka : Configurer le nÃ©cessaire pour ce projet et offrir les endpoints pour recevoir les notifications cÃ´tÃ© client.
-- [x] **TÃ¢che 5.3 :** Workflow Frontend : Discuter avec l'Ã©quipe frontend pour identifier **quand** et **Ã  qui** envoyer des notifications en fonction de chaque action. Faire des recherches pour suggÃ©rer des amÃ©liorations, puis intÃ©grer le tout.
-
----
-
-### ðŸ¢ Cluster 3 : RaphaÃ«l (Support, Admin & IntÃ©grations Satellites)
-*ResponsabilitÃ© : Modules isolÃ©s, Dashboarding, IntÃ©grations tiers.*
-
-#### Module 6 : Administration & Statistiques
-- [ ] **TÃ¢che 6.1 :** Endpoints Stats Globales (Super Admin) : Nombre total de flottes, vÃ©hicules, managers, etc. (Identifier une liste de stats pertinentes).
-    *   *Note : Faire un Controller et un Service dÃ©diÃ©s Ã  cette tÃ¢che.*
-- [ ] **TÃ¢che 6.2 :** Endpoints Stats Flotte (Fleet Manager) : Km parcourus par flotte, taux d'occupation des vÃ©hicules, nombre de chauffeurs, nombre de km parcourus par chauffeur, etc.
-
-#### Module 7 : Paiements
-- [ ] **TÃ¢che 8.1 :** Test et comprÃ©hension du service : Se rapprocher de Nathan et comprendre le fonctionnement du service paiement.
-- [ ] **TÃ¢che 8.2 :** IntÃ©gration : CrÃ©er les endpoints de base pour consommer le service dans notre projet.
+## ðŸ¢ Cluster RaphaÃ«l
+- [ ] **TÃ¢che 13 :** Finalisation module Payments.
 
 ---
 ### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\.mvn\wrapper\maven-wrapper.properties
@@ -8484,8 +8416,67 @@ La roadmap est suivie dans `todo.md`.
 
 
 ### Premiere mission
-je viens de merger mon travil avec celui de raphael,l'application ne se lance plus,aide moi a corriger ca,ensuite on va avancer.
+je viens de merger mon travail ,moi gabriel avec celui de mes colalborateurs,la'pi est fonctionnelle,deployee. maisntenant on doit finaliser.chacun connait deja ses taches donc on va juste mettre dans la todo les taches sous la forme,finaliser le module:
+moi en temos que chef du proejt backend,j'ai la plus grosse tache.
+-on va d;abord mettre a jour la todo,ensuite on va se oncentrer sur les modules qui me concernent
+
+objectifs:
+- reorganiser l'odre des modules du swagger pour plus de clarte et de logique(moi)
+-finalisation gestion du geofence: hassana
+-finalisation gestion des paiements: raphael
+-teste et finalisations des autres modules: gabriel(monitoring,auth,account,superamdnins,admins,managers,drivers,vehicles,flottes,courses) pour chaque module il faudra teste et completer.
+
+ton role est de ma'ccampagner dans ce processus,ta premeire mission est de ma;ider a proposer une todo en md,datee d'ajour'dui selon le modele de l'ancien sausf que ici il n'yaura pas le detail des taches des autres,chacun sait quoi faire,peut etre juste tester et finaliser partout
 "
+toute fosi tu m'aides d'abord a rfesourdre les soucis que le merge a cause et a lancer l'applicorrectement:" git stash push -m "backup avant checkout raphael"
+No local changes to save
+gabriel@gabriel-pc:~/Documents/projects/ecole/5GI/projet-synthese/fleet-management/code$ git checkout -b raphael origin/raphael
+Branch 'raphael' set up to track remote branch 'raphael' from 'origin'.
+Switched to a new branch 'raphael'
+gabriel@gabriel-pc:~/Documents/projects/ecole/5GI/projet-synthese/fleet-management/code$ # Passer sur main
+git checkout main
+
+# S'assurer que main est Ã  jour
+git reset --hard origin/main
+
+# Merger Raphael
+git merge raphael
+Switched to branch 'main'
+Your branch is up to date with 'origin/main'.
+HEAD is now at b76d587 resolution des conflits de merge sur le geofence, vehicules et paiements
+Auto-merging src/main/java/com/yowyob/fleet/infrastructure/config/SecurityConfig.java
+CONFLICT (content): Merge conflict in src/main/java/com/yowyob/fleet/infrastructure/config/SecurityConfig.java
+Auto-merging src/main/java/com/yowyob/fleet/infrastructure/config/WebClientConfig.java
+CONFLICT (content): Merge conflict in src/main/java/com/yowyob/fleet/infrastructure/config/WebClientConfig.java
+Automatic merge failed; fix conflicts and then commit the result.
+gabriel@gabriel-pc:~/Documents/projects/ecole/5GI/projet-synthese/fleet-management/code$ git status
+On branch main
+Your branch is up to date with 'origin/main'.
+
+You have unmerged paths.
+  (fix conflicts and run "git commit")
+  (use "git merge --abort" to abort the merge)
+
+Changes to be committed:
+        modified:   import_context_window.ps1
+        new file:   project_context_2.txt
+        new file:   project_context_3.txt
+        new file:   project_context_4.txt
+        new file:   project_context_5.txt
+        modified:   src/main/java/com/yowyob/fleet/domain/ports/out/ExternalPaymentPort.java
+        new file:   src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/PaymentController.java
+        deleted:    src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/TestPaymentController.java
+        modified:   src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/external/PaymentApiAdapter.java
+        deleted:    src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/external/client/PaymentApiClient.java
+        new file:   src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/external/dto/TransactionExternalRequest.java
+        new file:   src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/external/dto/TransactionExternalResponse.java
+
+Unmerged paths:
+  (use "git add <file>..." to mark resolution)
+        both modified:   src/main/java/com/yowyob/fleet/infrastructure/config/SecurityConfig.java
+        both modified:   src/main/java/com/yowyob/fleet/infrastructure/config/WebClientConfig.java
+
+gabriel@gabriel-pc:~/Documents/projects/ecole/5GI/projet-synthese/fleet-management/code$ " j'ai fais un premier essaide correction mais dans webclientconig ca ne egrre pas,il y'a le rouge,payment apiclientnot found
 
 ---
 ### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\docs\prompts\master_pair_programmer.md
@@ -11122,6 +11113,7 @@ public interface DriverPersistencePort {
 package com.yowyob.fleet.domain.ports.out;
 
 import com.yowyob.fleet.domain.model.GeofenceZone;
+import com.yowyob.fleet.domain.model.Vehicle;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -11144,6 +11136,7 @@ public interface ExternalGeofencePort {
     
     Mono<String> getSystemToken();
     Flux<Map<String, Object>> getZonesByManager(UUID managerId, String category);
+    Mono<Void> registerVehicleAndAssignToZone(Vehicle vehicle, UUID zoneId, String zoneType);
 }
 
 ---
@@ -11495,7 +11488,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/admin/managers")
 @RequiredArgsConstructor
-@Tag(name = "04. Fleet Managers", description = "Administration des entreprises (RÃ©servÃ© ADMIN)")
+@Tag(name = "06. Fleet Managers", description = "Administration des entreprises (RÃ©servÃ© ADMIN)")
 @SecurityRequirement(name = "bearerAuth")
 @PreAuthorize("hasRole('FLEET_ADMIN') or hasRole('ADMIN')") 
 public class AdminManagerController {
@@ -11562,7 +11555,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/admin/references")
 @RequiredArgsConstructor
-@Tag(name = "00. Super Admin", description = "Configuration du systÃ¨me")
+@Tag(name = "05. Admin", description = "Configuration du systÃ¨me")
 @SecurityRequirement(name = "bearerAuth")
 @PreAuthorize("hasRole('FLEET_ADMIN')")
 public class AdminReferenceController {
@@ -11610,7 +11603,7 @@ import reactor.core.publisher.Mono;
 @RestController
 @RequestMapping("/api/v1/admin/stats")
 @RequiredArgsConstructor
-@Tag(name = "01. Monitoring", description = "Statistiques et Supervision") // On le regroupe avec Monitoring
+@Tag(name = "05. Admin", description = "Statistiques et Supervision") // On le regroupe avec Monitoring
 @SecurityRequirement(name = "bearerAuth")
 public class AdminStatsController {
 
@@ -11652,7 +11645,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/admin/users")
 @RequiredArgsConstructor
-@Tag(name = "00. Super Admin", description = "Gestion des Administrateurs Fleet")
+@Tag(name = "04. Super Admin", description = "Gestion des Administrateurs Fleet")
 @SecurityRequirement(name = "bearerAuth")
 @PreAuthorize("hasRole('FLEET_SUPER_ADMIN')")
 public class AdminUserController {
@@ -11816,7 +11809,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
-@Tag(name = "05. Drivers", description = "Gestion des chauffeurs (CrÃ©ation & Recrutement)")
+@Tag(name = "07. Drivers", description = "Gestion des chauffeurs (CrÃ©ation & Recrutement)")
 @SecurityRequirement(name = "bearerAuth")
 public class DriverController {
 
@@ -11927,7 +11920,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/fleets")
 @RequiredArgsConstructor
-@Tag(name = "07. Fleets", description = "Gestion des flottes (SÃ©curisÃ© par PropriÃ©taire)")
+@Tag(name = "09. Fleets", description = "Gestion des flottes (SÃ©curisÃ© par PropriÃ©taire)")
 @SecurityRequirement(name = "bearerAuth")
 public class FleetController {
 
@@ -12041,7 +12034,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/geofence")
 @RequiredArgsConstructor
-@Tag(name = "08. Geofencing")
+@Tag(name = "11. Geofencing")
 @SecurityRequirement(name = "bearerAuth")
 public class GeofenceController {
 
@@ -12292,13 +12285,16 @@ public class GlobalExceptionHandler {
 `$ext
 package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
 
+import com.yowyob.fleet.domain.ports.out.AuthPort;
+import com.yowyob.fleet.domain.ports.out.ExternalGeofencePort;
+import com.yowyob.fleet.domain.ports.out.StatisticsPort;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
-import org.springframework.kafka.core.reactive.ReactiveKafkaProducerTemplate;
+import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12315,110 +12311,121 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/health")
 @RequiredArgsConstructor
-@Tag(name = "01. Monitoring", description = "Diagnostic complet de l'infrastructure")
+@Tag(name = "01. Monitoring" , description = "Endpoints de diagnostic et statistiques publiques")
 public class HealthCheckController {
 
     private final DatabaseClient databaseClient;
     private final ReactiveRedisConnectionFactory redisConnectionFactory;
-    
-    // On injecte le template pour vÃ©rifier si Kafka est configurÃ©
-    // Note: Pour un vrai check de santÃ© Kafka, il faudrait AdminClient, mais c'est complexe en rÃ©actif pur sans dÃ©pendance lourde.
-    // Ici on vÃ©rifie juste que le bean est up et on tente une opÃ©ration non intrusive si possible.
-    private final ReactiveKafkaProducerTemplate<String, Object> kafkaTemplate;
-
-    @Value("${application.auth.url}")
-    private String authUrl;
-
-    @Value("${application.external.vehicle-service-url}")
-    private String vehicleUrl;
-
+    private final ReactiveRedisTemplate<String, Object> redisTemplate;
+    private final StatisticsPort statisticsPort;
+    private final AuthPort authPort;
+    private final ExternalGeofencePort geofencePort;
     private final WebClient.Builder webClientBuilder;
 
+    @Value("${application.geofence-system-user.username}") private String sysUser;
+    @Value("${application.geofence-system-user.password}") private String sysPass;
+    @Value("${application.auth.url}") private String authUrl;
+    @Value("${application.external.vehicle-service-url}") private String vehicleUrl;
+    @Value("${application.external.payment-service-url}") private String paymentUrl;
+    @Value("${application.external.geofence-service-url}") private String geofenceUrl;
+
+    private static final String STATS_CACHE_KEY = "fleet:stats:public";
+
     @GetMapping("/diagnostic")
-    @Operation(summary = "Diagnostic SystÃ¨me complet", description = "VÃ©rifie DB, Redis, Kafka et les APIs distantes.")
-    public Mono<SystemHealth> getDiagnostic() {
-        // Lancement parallÃ¨le des checks
+    @Operation(summary = "Diagnostic SystÃ¨me profond (Multi-Service)", description = "VÃ©rifie la connectivitÃ© rÃ©elle de tous les services tiers.")
+    public Mono<Map<String, Object>> getDeepDiagnostic() {
+        // RÃ©cupÃ©ration parallÃ¨le des deux tokens systÃ¨me
         return Mono.zip(
-            checkDatabase(),
-            checkRedis(),
-            checkKafka(),
-            checkRemoteService("Auth Service", authUrl),
-            checkRemoteService("Vehicle Service", vehicleUrl)
-        ).map(tuple -> {
-            Map<String, ServiceStatus> dependencies = new HashMap<>();
-            dependencies.put("database", tuple.getT1());
-            dependencies.put("redis", tuple.getT2());
-            dependencies.put("kafka", tuple.getT3());
-            dependencies.put("auth_service", tuple.getT4());
-            dependencies.put("vehicle_service", tuple.getT5());
+            authPort.login(sysUser, sysPass).map(r -> "Bearer " + r.accessToken()).onErrorReturn(""),
+            geofencePort.getSystemToken().onErrorReturn("")
+        ).flatMap(tokens -> {
+            String ecoToken = tokens.getT1();
+            String geoToken = tokens.getT2();
 
-            // Si l'un des services critiques (DB, Redis) est DOWN, le global est DOWN
-            boolean isGlobalUp = tuple.getT1().status().equals("UP") 
-                              && tuple.getT2().status().equals("UP");
-
-            return new SystemHealth(
-                isGlobalUp ? "UP" : "DEGRADED",
-                Instant.now(),
-                dependencies
-            );
+            return Mono.zip(
+                checkDB(),
+                checkRedis(),
+                checkRemote("/api/roles", authUrl, ecoToken, "Auth Service"),
+                checkRemote("/vehicles", vehicleUrl, ecoToken, "Vehicle Service"),
+                checkRemote("/api/v1/wallets", paymentUrl, ecoToken, "Payment Service"),
+                checkRemote("/api/geofence/circles", geofenceUrl, geoToken, "Geofence Engine")
+            ).map(t -> {
+                Map<String, Object> report = new HashMap<>();
+                report.put("timestamp", Instant.now());
+                report.put("local_db", t.getT1());
+                report.put("local_redis", t.getT2());
+                report.put("auth_service", t.getT3());
+                report.put("vehicle_service", t.getT4());
+                report.put("payment_service", t.getT5());
+                report.put("geofence_engine", t.getT6());
+                return report;
+            });
         });
     }
 
-    // --- CHECKS INDIVIDUELS ---
-
-    private Mono<ServiceStatus> checkDatabase() {
-        return databaseClient.sql("SELECT 1")
-                .fetch()
-                .first()
-                .map(r -> new ServiceStatus("UP", "PostgreSQL R2DBC Connected"))
-                .timeout(Duration.ofSeconds(2))
-                .onErrorResume(e -> Mono.just(new ServiceStatus("DOWN", e.getMessage())));
+@GetMapping("/public-stats")
+    @Operation(summary = "Statistiques publiques (Landing Page)", description = "DonnÃ©es agrÃ©gÃ©es avec cache de 6 heures.")
+    @SuppressWarnings("unchecked") // Pour ignorer l'avertissement sur le cast de la Map
+    public Mono<Map<String, Object>> getPublicStats() {
+        return redisTemplate.opsForValue().get(STATS_CACHE_KEY)
+            // On cast chaque Ã©lÃ©ment du flux plutÃ´t que le Mono lui-mÃªme
+            .map(value -> (Map<String, Object>) value)
+            // Important : Utiliser defer pour que le calcul ne se lance que si nÃ©cessaire
+            .switchIfEmpty(Mono.defer(this::calculateAndCacheStats));
     }
 
-    private Mono<ServiceStatus> checkRedis() {
-        return redisConnectionFactory.getReactiveConnection()
-                .ping()
-                .map(resp -> new ServiceStatus("UP", "Redis PONG received"))
-                .timeout(Duration.ofSeconds(2))
-                .onErrorResume(e -> Mono.just(new ServiceStatus("DOWN", e.getMessage())));
+    private Mono<Map<String, Object>> calculateAndCacheStats() {
+        return Mono.zip(
+            statisticsPort.countFleetManagers(),
+            statisticsPort.countFleets(),
+            statisticsPort.countVehicles(),
+            statisticsPort.countDrivers()
+        ).map(t -> {
+            Map<String, Object> stats = new HashMap<>();
+            stats.put("activeManagers", t.getT1());
+            stats.put("totalFleets", t.getT2());
+            stats.put("managedVehicles", t.getT3());
+            stats.put("totalDrivers", t.getT4());
+            stats.put("serviceStatus", "All systems operational");
+            return stats;
+        }).flatMap(stats -> 
+            redisTemplate.opsForValue().set(STATS_CACHE_KEY, stats, Duration.ofHours(6))
+                .thenReturn(stats)
+        );
     }
 
-    private Mono<ServiceStatus> checkKafka() {
-        // Check simple : est-ce que le contexte Kafka est chargÃ© ?
-        // Pour aller plus loin, il faudrait envoyer un message test, ce qui est intrusif.
-        if (kafkaTemplate != null) {
-            return Mono.just(new ServiceStatus("UP", "Kafka Producer Configured"));
-        }
-        return Mono.just(new ServiceStatus("UNKNOWN", "Kafka template not available"));
+    // --- Helpers de sonde ---
+
+    private Mono<String> checkDB() {
+        return databaseClient.sql("SELECT 1").fetch().first().map(r -> "UP").timeout(Duration.ofSeconds(5)).onErrorReturn("DOWN");
     }
 
-    private Mono<ServiceStatus> checkRemoteService(String name, String url) {
-        if (url == null || url.isBlank()) {
-            return Mono.just(new ServiceStatus("DISABLED", "No URL configured"));
-        }
+    private Mono<String> checkRedis() {
+        return redisConnectionFactory.getReactiveConnection().ping().map(r -> "UP").timeout(Duration.ofSeconds(5)).onErrorReturn("DOWN");
+    }
+
+    private Mono<String> checkRemote(String path, String baseUrl, String token, String name) {
+        if (baseUrl == null || baseUrl.isBlank()) return Mono.just("NOT_CONFIGURED");
         
-        // On suppose que les services ont un endpoint /actuator/health ou rÃ©pondent sur la racine
-        // Pour Ãªtre gÃ©nÃ©rique, on ping la racine ou une route connue.
-        // Ici on tente simplement d'atteindre l'URL.
-        return webClientBuilder.build()
-                .get()
-                .uri(url) // Attention: si l'URL est juste le domaine, il faut peut-Ãªtre ajouter un path
-                .retrieve()
-                .toBodilessEntity()
-                .map(response -> new ServiceStatus("UP", "HTTP " + response.getStatusCode()))
-                .timeout(Duration.ofSeconds(3))
-                .onErrorResume(e -> {
-                    String msg = e.getMessage();
-                    if (msg != null && msg.contains("Connection refused")) {
-                        msg = "Unreachable";
+        return webClientBuilder.build().get()
+                .uri(baseUrl + path)
+                .header("Authorization", token)
+                .exchangeToMono(response -> {
+                    // Si le code est 2xx, 401 ou 403, le service est considÃ©rÃ© comme "UP"
+                    if (response.statusCode().is2xxSuccessful() || 
+                        response.statusCode().value() == 401 || 
+                        response.statusCode().value() == 403) {
+                        return Mono.just("UP");
                     }
-                    return Mono.just(new ServiceStatus("DOWN", msg));
+                    // Si c'est un 500 ou autre, on le marque DOWN avec le code
+                    return Mono.just("DOWN (" + response.statusCode().value() + ")");
+                })
+                .timeout(Duration.ofSeconds(5))
+                .onErrorResume(e -> {
+                    log.warn("Health check failed for {}: {}", name, e.getMessage());
+                    return Mono.just("DOWN");
                 });
     }
-
-    // --- DTOs ---
-    public record SystemHealth(String status, Instant timestamp, Map<String, ServiceStatus> dependencies) {}
-    public record ServiceStatus(String status, String details) {}
 }
 
 ---
@@ -12441,7 +12448,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/notifications")
 @RequiredArgsConstructor
-@Tag(name = "Notification-History", description = "In-app notifications history")
+@Tag(name = "03. Account", description = "In-app notifications history")
 public class NotificationController {
 
     private final NotificationHistoryRepositoryPort historyPort;
@@ -12492,7 +12499,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/payments")
 @RequiredArgsConstructor
-@Tag(name = "10. Payments", description = "IntÃ©gration Service Paiement")
+@Tag(name = "12. Payments", description = "IntÃ©gration Service Paiement")
 @SecurityRequirement(name = "bearerAuth")
 public class PaymentController {
 
@@ -12604,7 +12611,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/trips")
 @RequiredArgsConstructor
-@Tag(name = "09. Trips", description = "Gestion des courses et tÃ©lÃ©mÃ©trie")
+@Tag(name = "10. Trips", description = "Gestion des courses et tÃ©lÃ©mÃ©trie")
 @SecurityRequirement(name = "bearerAuth")
 public class TripController {
 
@@ -12681,7 +12688,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
-@Tag(name = "06. Vehicles", description = "Gestion unifiÃ©e du parc")
+@Tag(name = "08. Vehicles", description = "Gestion unifiÃ©e du parc")
 @SecurityRequirement(name = "bearerAuth")
 public class VehicleController {
 
@@ -12788,7 +12795,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/vehicles/lookup")
 @RequiredArgsConstructor
-@Tag(name = "06. Vehicles", description = "Gestion complÃ¨te du parc automobile")
+@Tag(name = "08. Vehicles", description = "Gestion complÃ¨te du parc automobile")
 @SecurityRequirement(name = "bearerAuth")
 public class VehicleLookupController {
 
@@ -12830,7 +12837,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/vehicles/{vehicleId}/media")
 @RequiredArgsConstructor
-@Tag(name = "06. Vehicles", description = "Gestion unifiÃ©e des mÃ©dias")
+@Tag(name = "08. Vehicles", description = "Gestion unifiÃ©e des mÃ©dias")
 @SecurityRequirement(name = "bearerAuth")
 public class VehicleMediaController {
 
@@ -13545,6 +13552,7 @@ package com.yowyob.fleet.infrastructure.adapters.outbound.external;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yowyob.fleet.domain.model.GeofenceZone;
+import com.yowyob.fleet.domain.model.Vehicle;
 import com.yowyob.fleet.domain.ports.out.ExternalGeofencePort;
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.GeofenceApiClient;
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.GeofenceAuthClient;
@@ -13566,6 +13574,7 @@ import java.util.*;
 public class GeofenceApiAdapter implements ExternalGeofencePort {
 
     private final GeofenceApiClient apiClient;
+    
     private final GeofenceAuthClient authClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -13737,30 +13746,92 @@ public class GeofenceApiAdapter implements ExternalGeofencePort {
 
 
     // MÃ©thode helper pour Ã©viter la duplication
-   @SuppressWarnings("unchecked")
     private Mono<List<Map<String, Object>>> fetchZonesInternal(String category, UUID userId, String token) {
-        Mono<Object> response;
-        
-        // On passe userId Ã  null si non filtrÃ©
-        if ("circles".equalsIgnoreCase(category)) 
-            response = apiClient.getCircles(userId, token);
-        else if ("polygons".equalsIgnoreCase(category)) 
-            response = apiClient.getPolygons(userId, token);
-        else 
-            response = apiClient.getAllZones(userId, token);
+        // Le type local doit correspondre au retour du Client (Mono<JsonNode>)
+        Mono<JsonNode> response;
 
-        return response.map(res -> {
-            if (res instanceof List) {
-                return (List<Map<String, Object>>) res;
-            } else if (res instanceof Map) {
-                Map<String, Object> map = (Map<String, Object>) res;
-                if (map.containsKey("content")) return (List<Map<String, Object>>) map.get("content");
-                return List.of(map);
+        if ("circles".equalsIgnoreCase(category)) {
+            response = apiClient.getCircles(userId, token);
+        } else if ("polygons".equalsIgnoreCase(category)) {
+            response = apiClient.getPolygons(userId, token);
+        } else {
+            response = apiClient.getAllZones(userId, token);
+        }
+
+        return response.map(jsonNode -> {
+            List<Map<String, Object>> result = new ArrayList<>();
+            
+            // Cas 1 : C'est un tableau JSON direct [...]
+            if (jsonNode.isArray()) {
+                jsonNode.forEach(node -> result.add(convertNodeToMap(node)));
+            } 
+            // Cas 2 : C'est un objet (Pagination ?) qui contient une liste "content"
+            else if (jsonNode.has("content") && jsonNode.get("content").isArray()) {
+                jsonNode.get("content").forEach(node -> result.add(convertNodeToMap(node)));
+            } 
+            // Cas 3 : C'est un objet unique (ou une erreur wrapped)
+            else if (!jsonNode.isEmpty()) {
+                result.add(convertNodeToMap(jsonNode));
             }
-            return Collections.emptyList();
-        });
+            
+            return result;
+        }).defaultIfEmpty(Collections.emptyList());
     }
 
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> convertNodeToMap(JsonNode node) {
+        return objectMapper.convertValue(node, Map.class);
+    }
+// --- DANS GeofenceApiAdapter.java ---
+
+    @Override
+    public Mono<Void> registerVehicleAndAssignToZone(Vehicle vehicle, UUID zoneId, String zoneType) {
+        return getSystemToken().flatMap(token -> {
+            
+            // 1. PrÃ©paration du Body pour l'API Geofence
+            Map<String, Object> vehicleRequest = new HashMap<>();
+            vehicleRequest.put("brand", vehicle.brand());
+            vehicleRequest.put("model", vehicle.model());
+            
+            // âœ… CORRECTION ICI : On utilise la vraie plaque d'immatriculation
+            vehicleRequest.put("licensePlate", vehicle.licensePlate()); 
+            
+            vehicleRequest.put("description", "ImportÃ© depuis Fleet Management");
+
+            log.info("ðŸš€ Sync VÃ©hicule vers Geofence API : Plaque {}", vehicle.licensePlate());
+
+            // 2. Appel CrÃ©ation
+            return apiClient.createVehicle(vehicleRequest, token)
+                .flatMap(responseNode -> {
+                    // 3. Extraction de l'ID technique gÃ©nÃ©rÃ© par l'API Geofence
+                    // (On a toujours besoin de l'ID technique pour l'appel suivant, mÃªme si on lie par la plaque)
+                    String remoteVehicleId = null;
+                    
+                    if (responseNode.has("id")) {
+                        remoteVehicleId = responseNode.get("id").asText();
+                    } else if (responseNode.has("_id")) {
+                        remoteVehicleId = responseNode.get("_id").asText();
+                    } else if (responseNode.has("data") && responseNode.get("data").has("id")) {
+                        remoteVehicleId = responseNode.get("data").get("id").asText();
+                    }
+
+                    if (remoteVehicleId == null) {
+                        // Cas robuste : Si le vÃ©hicule existe dÃ©jÃ  (conflit sur la plaque), 
+                        // il faudrait idÃ©alement rÃ©cupÃ©rer son ID existant.
+                        // Pour l'instant, on lÃ¨ve une erreur explicite.
+                        return Mono.error(new RuntimeException("Impossible de rÃ©cupÃ©rer l'ID distant pour le vÃ©hicule : " + vehicle.licensePlate()));
+                    }
+
+                    log.info("âœ… VÃ©hicule crÃ©Ã©/rÃ©cupÃ©rÃ© dans Geofence (Remote ID: {}). Assignation Ã  la zone {}...", remoteVehicleId, zoneId);
+
+                    // 4. Appel Assignation Ã  la zone (utilise l'ID technique)
+                    String shortType = resolveShortType(zoneType);
+                    return apiClient.addVehicleToZone(remoteVehicleId, shortType, zoneId, token);
+                })
+                .doOnSuccess(v -> log.info("ðŸŽ‰ VÃ©hicule {} assignÃ© Ã  la zone {} avec succÃ¨s.", vehicle.licensePlate(), zoneId))
+                .doOnError(e -> log.error("âŒ Erreur lors de la synchro Geofence du vÃ©hicule {} : {}", vehicle.licensePlate(), e.getMessage()));
+        });
+    }
 
 
 }
@@ -14387,6 +14458,21 @@ public interface GeofenceApiClient {
         @RequestParam(value = "size", defaultValue = "20") int size,
         @RequestHeader("Authorization") String token
     );
+    
+    @PostExchange("/vehicle")
+    Mono<JsonNode> createVehicle(
+        @RequestBody Map<String, Object> vehicleData,
+        @RequestHeader("Authorization") String token
+    );
+
+    @PostExchange("/vehicle/{vehicleId}/geofence/{type}/{zoneId}")
+    Mono<Void> addVehicleToZone(
+        @PathVariable("vehicleId") String remoteVehicleId, // ID gÃ©nÃ©rÃ© par l'API Geofence
+        @PathVariable("type") String type, // "c" ou "p"
+        @PathVariable("zoneId") UUID zoneId,
+        @RequestHeader("Authorization") String token
+    );
+
     
 }
 
@@ -16597,17 +16683,14 @@ import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
-import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
-import io.swagger.v3.oas.models.tags.Tag;
 import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Configuration
@@ -16618,10 +16701,10 @@ public class OpenApiConfig {
         final String securitySchemeName = "bearerAuth";
         return new OpenAPI()
                 .info(new Info()
-                        .title("YowYob Microservice Fleet Management")
+                        .title("YowYob Fleet Management API")
                         .version("1.0.0")
                         .description("API RÃ©active pour la gestion de flottes et le gÃ©orepÃ©rage.")
-                        .contact(new Contact().name("Ã‰quipe Backend").email("dev@yowyob.com")))
+                        .contact(new Contact().name("Gabriel Nomo").email("g.nomo@yowyob.com")))
                 .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
                 .components(new Components()
                         .addSecuritySchemes(securitySchemeName,
@@ -16635,22 +16718,26 @@ public class OpenApiConfig {
     @Bean
     public OpenApiCustomizer sortTagsAlphabetically() {
         return openApi -> {
-            // DÃ©finition de l'ordre exact souhaitÃ©
             List<String> order = List.of(
                 "01. Monitoring",
                 "02. Auth",
                 "03. Account",
-                "04. Fleet Managers",
-                "05. Drivers",
-                "06. Vehicles",
-                "07. Fleets"
+                "04. Super Admin",
+                "05. Admin",
+                "06. Fleet Managers",
+                "07. Drivers",
+                "08. Vehicles",
+                "09. Fleets",
+                "10. Trips",
+                "11. Geofencing",
+                "12. Payments"
             );
 
             if (openApi.getTags() != null) {
                 openApi.setTags(openApi.getTags().stream()
                         .sorted(Comparator.comparingInt(tag -> {
                             int index = order.indexOf(tag.getName());
-                            return index == -1 ? 999 : index; // Les inconnus Ã  la fin
+                            return index == -1 ? 999 : index;
                         }))
                         .collect(Collectors.toList()));
             }
@@ -16757,8 +16844,7 @@ public class SecurityConfig {
         AuthenticationWebFilter jwtFilter = new AuthenticationWebFilter(authenticationManager);
         jwtFilter.setServerAuthenticationConverter(authenticationConverter);
 
-        // --- CORRECTION ICI ---
-        // Ajout de "/**" Ã  la fin de "/api/v1/payments"
+
         jwtFilter.setRequiresAuthenticationMatcher(
                 ServerWebExchangeMatchers.pathMatchers(
                         "/api/v1/account/**",
@@ -16766,7 +16852,7 @@ public class SecurityConfig {
                         "/api/v1/drivers/**",
                         "/api/v1/vehicles/**",
                         "/api/v1/geofence/**",
-                        "/api/v1/payments/**", // <--- C'Ã‰TAIT L'ERREUR (Manquait les **)
+                        "/api/v1/payments/**", 
                         "/api/v1/admin/**"
                 )
         );
@@ -16785,6 +16871,7 @@ public class SecurityConfig {
                 )
 
                 .authorizeExchange(exchanges -> exchanges
+                        // A. ROUTES PUBLIQUES (Pas besoin de token, mÃªme si le filtre a essayÃ© d'en trouver un)
                         .pathMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
@@ -16792,7 +16879,8 @@ public class SecurityConfig {
                                 "/webjars/**",
                                 "/actuator/**",
                                 "/api/v1/health/**",
-                                "/api/v1/auth/**"
+                                "/api/v1/auth/**",
+                                "/api/v1/health/**"
                         ).permitAll()
                         .anyExchange().authenticated()
                 )
@@ -16806,16 +16894,23 @@ public class SecurityConfig {
 `$ext
 package com.yowyob.fleet.infrastructure.config;
 
+import com.yowyob.fleet.domain.ports.in.AuthUseCase;
+import com.yowyob.fleet.domain.ports.out.AuthPort;
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.GeofenceAuthClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
-import java.util.Map;
+
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 @Component
@@ -16823,6 +16918,7 @@ import java.util.HashMap;
 public class SystemUserInitializer {
 
     private final GeofenceAuthClient geofenceAuthClient;
+    private final AuthPort authPort;
 
     @Value("${application.geofence-system-user.username}")
     private String username;
@@ -16831,26 +16927,109 @@ public class SystemUserInitializer {
     private String password;
 
     @EventListener(ApplicationReadyEvent.class)
-    public void initSystemUserInGeofence() {
-        log.info("ðŸš€ Synchronisation de l'utilisateur systÃ¨me dans le moteur Geofence...");
+    public void initSystemUser() {
+        log.info("ðŸš€ [SYSTEM_USER] Initialisation pour : {}", username);
 
-        Map<String, Object> regRequest = new HashMap<>();
-        regRequest.put("firstname", "System");
-        regRequest.put("lastname", "Fleet");
-        regRequest.put("username", username);
-        regRequest.put("phoneNumber", "+237000000000");
-        regRequest.put("email", "system@yowyob.com");
-        regRequest.put("password", password);
-        regRequest.put("password_confirmation", password);
-        regRequest.put("DOB", "1990-01-01"); // Date de naissance requise
-
-        geofenceAuthClient.register(regRequest)
-                .doOnSuccess(res -> log.info("âœ… Utilisateur systÃ¨me crÃ©Ã© dans la DB Geofence."))
+        // --- 1. INITIALISATION AUTH CENTRAL ---
+        Mono<Void> authCentralFlow = authPort.login(username, password).then()
+                .doOnSuccess(res -> log.info("âœ… [AUTH_CENTRAL] Login rÃ©ussi."))
                 .onErrorResume(e -> {
-                    log.info("â„¹ï¸ L'utilisateur systÃ¨me existe dÃ©jÃ  dans le Geofence ou le service est indisponible.");
-                    return Mono.empty();
+                    log.warn("âš ï¸ [AUTH_CENTRAL] Login impossible. Tentative de crÃ©ation...");
+                    return attemptAuthRegistration(1).then();
+                }).then();
+
+        // --- 2. INITIALISATION GEOFENCE ENGINE ---
+        Map<String, String> loginReq = Map.of(
+            "type", "username", 
+            "username", username, 
+            "password", password
+        );
+
+        Mono<Void> geofenceFlow = geofenceAuthClient.login(loginReq).then()
+                .doOnSuccess(res -> log.info("âœ… [GEOFENCE] Login rÃ©ussi. Utilisateur opÃ©rationnel."))
+                .onErrorResume(e -> {
+                    log.warn("âš ï¸ [GEOFENCE] Login impossible. Tentative de synchronisation (Register)...");
+                    return syncGeofenceWithRetry(1).then();
                 })
+                .then(); // <--- âœ… C'EST ICI : Convertit Mono<Map> en Mono<Void>
+
+        // --- EXÃ‰CUTION SÃ‰QUENTIELLE ---
+        authCentralFlow
+                .then(geofenceFlow)
+                .doOnTerminate(() -> log.info("ðŸ [SYSTEM_USER] Fin du processus."))
                 .subscribe();
+    }
+
+    private Mono<AuthPort.AuthResponse> attemptAuthRegistration(int attempt) {
+        if (attempt > 3) {
+            log.error("âŒ [AUTH_CENTRAL] Abandon aprÃ¨s 3 tentatives.");
+            return Mono.empty();
+        }
+
+        String phone = generateRandomCameroonPhone();
+        String email = username + attempt + "@yowyob.com"; 
+
+        log.info("ðŸ“© [AUTH_CENTRAL] Tentative de crÃ©ation #{}...", attempt);
+
+        AuthUseCase.RegisterCommand authReq = new AuthUseCase.RegisterCommand(
+                username, password, email, phone,
+                "System", "Fleet", List.of("FLEET_ADMIN"), null
+        );
+
+        return authPort.registerInRemote(authReq)
+                .doOnSuccess(res -> log.info("âœ… [AUTH_CENTRAL] CrÃ©ation rÃ©ussie."))
+                .onErrorResume(err -> {
+                    if (isConflict(err)) {
+                        log.warn("âš ï¸ [AUTH_CENTRAL] Conflit dÃ©tectÃ©, essai suivant...");
+                        return attemptAuthRegistration(attempt + 1);
+                    }
+                    log.error("âŒ [AUTH_CENTRAL] Erreur critique : {}", err.getMessage());
+                    return Mono.empty();
+                });
+    }
+
+    private Mono<Void> syncGeofenceWithRetry(int attempt) {
+        if (attempt > 3) {
+            log.warn("âš ï¸ [GEOFENCE] Abandon de la synchronisation aprÃ¨s 3 essais.");
+            return Mono.empty();
+        }
+
+        String phone = generateRandomCameroonPhone();
+        String email = username + attempt + "@yowyob.com";
+
+        Map<String, Object> req = new HashMap<>();
+        req.put("firstname", "System");
+        req.put("lastname", "Fleet");
+        req.put("username", username);
+        req.put("phoneNumber", phone);
+        req.put("email", email);
+        req.put("password", password);
+        req.put("password_confirmation", password);
+        req.put("DOB", "1990-01-01");
+
+        return geofenceAuthClient.register(req)
+                .then() 
+                .doOnSuccess(v -> log.info("âœ… [GEOFENCE] Utilisateur synchronisÃ©."))
+                .onErrorResume(err -> {
+                    if (isConflict(err)) {
+                        log.info("â„¹ï¸ [GEOFENCE] Conflit Ã  la tentative #{} (dÃ©jÃ  prÃ©sent ou collision), essai suivant...", attempt);
+                        return syncGeofenceWithRetry(attempt + 1);
+                    }
+                    log.error("âŒ [GEOFENCE] Erreur lors de la synchronisation : {}", err.getMessage());
+                    return Mono.empty();
+                });
+    }
+
+    private String generateRandomCameroonPhone() {
+        int suffix = ThreadLocalRandom.current().nextInt(10000000, 99999999);
+        return "+2376" + suffix;
+    }
+
+    private boolean isConflict(Throwable t) {
+        if (t instanceof WebClientResponseException wcre) {
+            return wcre.getStatusCode() == HttpStatus.CONFLICT;
+        }
+        return t.getMessage() != null && t.getMessage().contains("409");
     }
 }
 
@@ -16864,61 +17043,79 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.support.WebClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 import reactor.core.publisher.Mono;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import reactor.netty.http.client.HttpClient;
 
 @Slf4j
 @Configuration
 public class WebClientConfig {
 
-    // --- Filtre de Logging ---
+    /**
+     * Filtre pour logger toutes les requÃªtes sortantes vers les microservices tiers.
+     */
     private ExchangeFilterFunction logRequest() {
         return ExchangeFilterFunction.ofRequestProcessor(clientRequest -> {
-            log.info("ðŸ“¡ [OUTBOUND] {} {}", clientRequest.method(), clientRequest.url());
-            clientRequest.headers().forEach((name, values) ->
-                    values.forEach(value -> log.info("   ðŸ‘‰ {}: {}", name, value))
-            );
+            log.info("ðŸ“¡ [OUTBOUND CALL] {} {}", clientRequest.method(), clientRequest.url());
             return Mono.just(clientRequest);
         });
     }
 
-    // --- 1. WebClient manuel pour le Paiement (Celui qui remplace l'interface) ---
+    // --- BUILDER DE BASE AVEC LOGGING ---    
+    @Bean
+    @Primary // Pour que ce builder soit celui utilisÃ© par dÃ©faut partout
+    public WebClient.Builder webClientBuilder() {
+        return WebClient.builder()
+                .filter(logRequest()); // On lui injecte le filtre de log
+    }
+
+    // --- CLIENTS STANDARDS ---
+
     @Bean("paymentWebClient")
     public WebClient paymentWebClient(WebClient.Builder builder,
                                       @Value("${application.external.payment-service-url}") String url) {
-        return builder
-                .baseUrl(url)
-                .filter(logRequest()) // Active les logs
-                .build();
+        return builder.baseUrl(url).filter(logRequest()).build();
     }
-
-    // --- 2. Clients DÃ©claratifs (Les autres, on les garde) ---
 
     @Bean
     public VehicleApiClient vehicleApiClient(WebClient.Builder builder,
                                              @Value("${application.external.vehicle-service-url}") String url) {
-        WebClient webClient = builder.baseUrl(url).build();
+        WebClient webClient = builder.baseUrl(url).filter(logRequest()).build();
         return createProxy(webClient, VehicleApiClient.class);
     }
 
     @Bean
     public AuthApiClient authApiClient(WebClient.Builder builder,
                                        @Value("${application.auth.url}") String url) {
-        WebClient webClient = builder.baseUrl(url).build();
+        WebClient webClient = builder.baseUrl(url).filter(logRequest()).build();
         return createProxy(webClient, AuthApiClient.class);
     }
 
     @Bean
-    public GeofenceApiClient geofenceApiClient(WebClient.Builder builder,
-                                               @Value("${application.external.geofence-service-url}") String url) {
-        WebClient webClient = builder.baseUrl(url).build();
+    public NotificationApiClient notificationApiClient(WebClient.Builder builder, 
+                                                      @Value("${application.notification.url}") String url) {
+        WebClient webClient = builder.baseUrl(url).filter(logRequest()).build();
+        return createProxy(webClient, NotificationApiClient.class);
+    }
+
+    // --- CLIENTS SPECIAUX (GEOFENCE - SSL INSECURE) ---
+
+    @Bean
+    public GeofenceApiClient geofenceApiClient(@Value("${application.external.geofence-service-url}") String url) {
+        WebClient webClient = createInsecureWebClient(url).build();
         return createProxy(webClient, GeofenceApiClient.class);
     }
 
     @Bean
+<<<<<<< HEAD
     public GeofenceAuthClient geofenceAuthClient(WebClient.Builder builder,
                                                  @Value("${application.external.geofence-service-url}") String url) {
         WebClient webClient = builder.baseUrl(url).build();
@@ -16934,10 +17131,36 @@ public class WebClientConfig {
     // }
 
     // Helper gÃ©nÃ©rique
+=======
+    public GeofenceAuthClient geofenceAuthClient(@Value("${application.external.geofence-service-url}") String url) {
+        WebClient webClient = createInsecureWebClient(url).build();
+        return createProxy(webClient, GeofenceAuthClient.class);
+    }
+
+    // --- HELPERS ---
+
+>>>>>>> 2128c8c50b35149a511973b5435f100961c9449c
     private <S> S createProxy(WebClient webClient, Class<S> serviceClass) {
         WebClientAdapter adapter = WebClientAdapter.create(webClient);
         HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(adapter).build();
         return factory.createClient(serviceClass);
+    }
+
+    /**
+     * CrÃ©e un WebClient qui accepte les certificats SSL auto-signÃ©s (Utile pour le service Geofence).
+     */
+    private WebClient.Builder createInsecureWebClient(String baseUrl) {
+        try {
+            SslContext sslContext = SslContextBuilder.forClient()
+                    .trustManager(InsecureTrustManagerFactory.INSTANCE).build();
+            HttpClient httpClient = HttpClient.create().secure(t -> t.sslContext(sslContext));
+            return WebClient.builder()
+                    .baseUrl(baseUrl)
+                    .filter(logRequest())
+                    .clientConnector(new ReactorClientHttpConnector(httpClient));
+        } catch (Exception e) { 
+            throw new RuntimeException("Erreur configuration WebClient Insecure", e); 
+        }
     }
 }
 
@@ -17448,8 +17671,8 @@ application:
       admin-validation: 7 # ID template: admin a validÃ© le profil du driver
  
   geofence-system-user:
-    username: "fleetmanagementuser"
-    password: "system_password_secure" # Ã€ changer en prod
+    username: "yowyob_fleet_internal_admin"
+    password: "system_password_secure_2026" 
     organization-id: "723e4567-e89b-12d3-a456-426614174000" # UUID de notre application dans
  
   bootstrap:
