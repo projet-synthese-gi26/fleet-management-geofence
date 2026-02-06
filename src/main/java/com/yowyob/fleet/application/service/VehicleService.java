@@ -3,7 +3,6 @@ package com.yowyob.fleet.application.service;
 import com.yowyob.fleet.domain.model.Vehicle;
 import com.yowyob.fleet.domain.model.VehicleParameters;
 import com.yowyob.fleet.domain.ports.in.ManageVehicleUseCase;
-import com.yowyob.fleet.domain.ports.out.ExternalGeofencePort;
 import com.yowyob.fleet.domain.ports.out.ExternalVehiclePort;
 import com.yowyob.fleet.domain.ports.out.VehiclePersistencePort;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.VehicleRequest;
@@ -31,7 +30,7 @@ public class VehicleService implements ManageVehicleUseCase {
     private final ExternalVehiclePort externalVehiclePort;
     private final VehicleTypeR2dbcRepository vehicleTypeRepository;
     private final FleetManagerR2dbcRepository fleetRepository;
-    private final ExternalGeofencePort geofencePort;
+
     // --- LOGIQUE DE SYNCHRONISATION (COEUR DU SERVICE) ---
 
     private Mono<Vehicle> syncWithRemote(Vehicle remote, UUID vehicleId) {
@@ -84,18 +83,13 @@ public class VehicleService implements ManageVehicleUseCase {
         return createVehicleInternal(null, request, managerId, token);
     }
 
-    // ... imports
-
     @Transactional
     protected Mono<Vehicle> createVehicleInternal(UUID fleetId, VehicleRequest req, UUID managerId, String token) {
         return vehicleTypeRepository.existsById(req.vehicleTypeId())
                 .flatMap(exists -> {
                     if (!exists) return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Type invalide"));
-                    
-                    // 1. Création Distante (Vehicle API)
                     return externalVehiclePort.createRemoteVehicle(req, token)
                             .flatMap(remote -> {
-                                // 2. Sauvegarde Locale
                                 Vehicle shell = new Vehicle(remote.id(), fleetId, managerId, null, req.vehicleTypeId(),
                                         req.licensePlate(), remote.vehicleSerialNumber(), remote.brand(), remote.model(),
                                         req.manufacturingYear(), req.transmissionType(), req.fuelType(), 
@@ -105,27 +99,9 @@ public class VehicleService implements ManageVehicleUseCase {
                                 return localPersistencePort.saveLocalData(shell);
                             });
                 })
-                .flatMap(savedVehicle -> {
-                    // 3. Logique Geofence (Optionnel)
-                    if (req.geofenceZoneId() != null) {
-                        // On définit le type par défaut "p" (Polygon) si non spécifié, ou on adapte le DTO
-                        String defaultType = "p"; 
-                        
-                        return geofencePort.registerVehicleAndAssignToZone(savedVehicle, req.geofenceZoneId(), defaultType)
-                                // IMPORTANT : Si succès, on retourne le véhicule sauvegardé
-                                .thenReturn(savedVehicle)
-                                // IMPORTANT : Si échec Geofence, on log mais on ne bloque pas la création du véhicule
-                                .onErrorResume(e -> {
-                                    log.warn("⚠️ Véhicule créé mais échec synchro Geofence: {}", e.getMessage());
-                                    return Mono.just(savedVehicle);
-                                });
-                    }
-                    // Si pas de zone demandée, on retourne le véhicule tel quel
-                    return Mono.just(savedVehicle);
-                })
-                // 4. Récupération finale propre
                 .flatMap(v -> getVehicleDetails(v.id(), token));
     }
+
     // --- MODIFICATION ---
 
     @Override
