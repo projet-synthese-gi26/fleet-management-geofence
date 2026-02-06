@@ -6,12 +6,13 @@ import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.FleetResponse;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.FleetEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface FleetMapper {
 
     // Domain -> Entity

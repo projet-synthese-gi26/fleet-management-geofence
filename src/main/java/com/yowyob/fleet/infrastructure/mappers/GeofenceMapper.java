@@ -2,23 +2,30 @@ package com.yowyob.fleet.infrastructure.mappers;
 
 import com.yowyob.fleet.domain.model.GeofenceZone;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.GeofenceZoneEntity;
-import org.mapstruct.Builder; // ATTENTION : import org.mapstruct.Builder
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 
-@Mapper(componentModel = "spring", builder = @Builder(disableBuilder = true))
+// unmappedTargetPolicy = ReportingPolicy.IGNORE est la clé pour corriger ton erreur
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface GeofenceMapper {
     
-    // Entity -> Domain
-    @Mapping(target = "radius", ignore = true)
-    @Mapping(target = "isActive", ignore = true)
-    @Mapping(target = "minDwellTime", ignore = true)
-    GeofenceZone toDomain(GeofenceZoneEntity entity);
-
-    // Domain -> Entity
-    @Mapping(target = "radius", ignore = true)
-    @Mapping(target = "isActive", ignore = true)
-    @Mapping(target = "minDwellTime", ignore = true)
-    @Mapping(target = "new", ignore = true) // C'est la propriété de l'interface Persistable
+    /**
+     * Mappe le domaine vers l'entité de liaison locale.
+     * Note : managerId doit être présent dans l'objet domaine GeofenceZone 
+     * ou passé via une méthode par défaut si nécessaire.
+     */
+    @Mapping(target = "zoneType", source = "zoneType")
     GeofenceZoneEntity toEntity(GeofenceZone domain);
+
+    /**
+     * Mappe l'entité vers le domaine (coquille vide pour agrégation).
+     */
+    @Mapping(target = "vertices", ignore = true)
+    @Mapping(target = "activeDays", ignore = true)
+    GeofenceZone toDomain(GeofenceZoneEntity entity);
+    
+    // Si GeofenceZone n'a pas de champ managerId, 
+    // on peut utiliser cette astuce dans le service 
+    // ou ajouter le champ au record GeofenceZone.
 }

@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
 @Primary
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "application.notification.mode", havingValue = "http", matchIfMissing = true)
+@ConditionalOnProperty(name = "application.notification.enabled", havingValue = "true")
 public class HttpNotificationAdapter implements SendNotificationPort {
 
     private final NotificationApiClient notificationApiClient;

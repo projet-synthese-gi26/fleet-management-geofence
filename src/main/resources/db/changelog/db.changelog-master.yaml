@@ -8,4 +8,4 @@ databaseChangeLog:
   - include:
       file: db/changelog/changes/003-create-notification-settings.sql
   - include:
-      file: db/changelog/changes/004-geofence-tables.sql
+      file: db/changelog/changes/003-update_geofence_tables.sql

@@ -1,5 +1,6 @@
 package com.yowyob.fleet.infrastructure.adapters.outbound.external.client;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.dto.GeofenceZoneDTORequest;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,7 +23,7 @@ public interface GeofenceApiClient {
 
 
     @PostExchange("/geofence")
-    Mono<Void> createZone(
+    Mono<JsonNode> createZone(
         @RequestBody Object request,
         @RequestHeader("Authorization") String token
     );
@@ -36,17 +37,24 @@ public interface GeofenceApiClient {
     );
 
      @GetExchange("/geofence")
-    Mono<Object> getAllZones(@RequestHeader("Authorization") String token);
+     
+    Mono<JsonNode> getAllZones(
+         @RequestParam(name = "userId", required = false) UUID userId,
+        @RequestHeader("Authorization") String token);
 
     @GetExchange("/geofence/circles")
-    Mono<Object> getCircles(@RequestHeader("Authorization") String token);
+    Mono<JsonNode> getCircles(
+         @RequestParam(name = "userId", required = false) UUID userId,
+        @RequestHeader("Authorization") String token);
 
     @GetExchange("/geofence/polygons")
-    Mono<Object> getPolygons(@RequestHeader("Authorization") String token);
+    Mono<JsonNode> getPolygons(
+         @RequestParam(name = "userId", required = false) UUID userId,
+        @RequestHeader("Authorization") String token);
 
     // --- UNITAIRE ---
     @GetExchange("/geofence/{type}/{id}")
-    Mono<Map<String, Object>> getZoneById(
+    Mono<JsonNode> getZoneById(
         @PathVariable("type") String type, 
         @PathVariable("id") UUID id, 
         @RequestHeader("Authorization") String token
@@ -74,5 +82,21 @@ public interface GeofenceApiClient {
         @RequestParam(value = "page", defaultValue = "0") int page,
         @RequestParam(value = "size", defaultValue = "20") int size,
         @RequestHeader("Authorization") String token
-    );;
+    );
+    
+    @PostExchange("/vehicle")
+    Mono<JsonNode> createVehicle(
+        @RequestBody Map<String, Object> vehicleData,
+        @RequestHeader("Authorization") String token
+    );
+
+    @PostExchange("/vehicle/{vehicleId}/geofence/{type}/{zoneId}")
+    Mono<Void> addVehicleToZone(
+        @PathVariable("vehicleId") String remoteVehicleId, // ID généré par l'API Geofence
+        @PathVariable("type") String type, // "c" ou "p"
+        @PathVariable("zoneId") UUID zoneId,
+        @RequestHeader("Authorization") String token
+    );
+
+    
 }

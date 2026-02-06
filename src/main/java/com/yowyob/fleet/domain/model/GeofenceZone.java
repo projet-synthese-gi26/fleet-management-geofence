@@ -4,9 +4,12 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
 
+import jakarta.validation.constraints.NotBlank;
+
 public record GeofenceZone(
     UUID id,
     UUID fleetId,
+    UUID managerId,
     String name,
     String description,
     String zoneType, // CIRCLE or POLYGON
@@ -26,6 +29,8 @@ public record GeofenceZone(
     Double perimeter,
     List<GeofencePoint> vertices // Pour POLYGON
 ) {
+
+
 
     public Boolean getIsActive() {
         return isActive;
