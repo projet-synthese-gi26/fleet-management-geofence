@@ -22,6 +22,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -64,17 +65,20 @@ public class GeofenceService implements ManageGeofenceUseCase {
                 .doOnError(e -> log.error("❌ Échec de la synchronisation Geofence: {}", e.getMessage()));
     }
 
-    public Mono<Void> assignZoneToFleet(UUID zoneId, UUID fleetId, UUID managerId) {
-        return zoneRepo.findById(zoneId)
-                .filter(z -> z.getManagerId().equals(managerId)) // Sécurité
-                .switchIfEmpty(Mono.error(new RuntimeException("Zone introuvable ou non autorisée")))
-                .flatMap(z -> {
-                    z.setFleetId(fleetId);
-                    z.setNew(false);
-                    return zoneRepo.save(z);
-                }).then();
+
+
+    // Helpers
+    private boolean isType(Map<String, Object> zoneData, String type) {
+        Object t = zoneData.get("type");
+        return t != null && t.toString().equalsIgnoreCase(type);
     }
 
+    private String normalizeType(String type) {
+        if (type == null) return "";
+        if (type.toLowerCase().startsWith("c")) return "circle";
+        if (type.toLowerCase().startsWith("p")) return "polygon";
+        return type;
+    }
     @Override
     public Flux<GeofenceZone> getZonesByFleet(UUID fleetId) {
         // 1. Récupérer les IDs locaux liés à la flotte
@@ -122,27 +126,15 @@ public Mono<GeofenceZone> updateZone(UUID zoneId, GeofenceZone zone) {
             .thenReturn(updatedZone);
 }
 
-// Si tu as un autre endroit (comme la ligne 152 mentionnée dans l'erreur) 
-// où tu crées un objet "shell", assure-toi de respecter le même ordre.
-
-
-    @Override
-    public Flux<Map<String, Object>> getMyZones(UUID managerId, String category) {
-        // 1. On récupère les IDs des zones de ce manager uniquement
-        return zoneRepo.findByManagerId(managerId)
-                .map(GeofenceZoneEntity::getId)
-                .collectList()
-                .flatMapMany(myIds -> {
-                    if (myIds.isEmpty())
-                        return Flux.empty();
-                    // 2. Bulk fetch distant et filtre
-                    return externalApi.listRemoteZones(category)
-                            .flatMapMany(Flux::fromIterable)
-                            .filter(remoteMap -> myIds.contains(UUID.fromString(remoteMap.get("id").toString())));
-                });
-    }
 
 // Dans GeofenceService.java
+
+@Override
+public Flux<Map<String, Object>> getMyExternalZones(String category) {
+    log.info("🔍 Récupération des zones externes pour la catégorie : {}", category);
+    return externalApi.listRemoteZones(category)
+            .flatMapMany(Flux::fromIterable);
+}
 
 @Override
 public Flux<Map<String, Object>> getAllExternalZones(String category) {
@@ -150,7 +142,6 @@ public Flux<Map<String, Object>> getAllExternalZones(String category) {
     return externalApi.listRemoteZones(category)
             .flatMapMany(Flux::fromIterable);
 }
-
 @Override
 public Mono<Map<String, Object>> getExternalZoneDetails(String type, UUID id) {
     log.info("ℹ️ Récupération des détails de la zone : {} (Type: {})", id, type);
@@ -220,6 +211,13 @@ public Mono<Map<String, Object>> getExternalZoneDetails(String type, UUID id) {
     public Flux<Map<String, Object>> getZonesByFleet(UUID managerId, UUID fleetId) {
         return getFilteredRemoteZones(managerId, "all", fleetId);
     }
+       @Override
+    public Flux<GeofenceZone> getZonesByFleet1(UUID fleetId) {
+        return localPersistence.findByFleetId(fleetId)
+                .flatMap(localLink -> externalApi.getRemoteZoneDetails("all", localLink.id())
+                        .map(details -> mapRemoteToDomain(localLink.id(), fleetId, localLink.managerId(), details))
+                        .onErrorResume(e -> Mono.empty()));
+    }
 
     @Override // GET by ID (Sécurisé par managerId)
     public Mono<Map<String, Object>> getZoneDetails(UUID zoneId, UUID managerId) {
@@ -243,34 +241,18 @@ public Mono<Map<String, Object>> getExternalZoneDetails(String type, UUID id) {
     @Override public Mono<Void> updateRemoteZone(String t, UUID id, Map<String, Object> u) { return externalApi.updateRemoteZone(t, id, u); }
     @Override public Flux<GeofenceEventEntity> getEvents(UUID v, UUID z, String t, LocalDate d) { return localPersistence.findEventsWithFilters(v, z, t, d); }
 
-// Dans GeofenceService.java
-@Override
-public Flux<Map<String, Object>> getZonesByFleetManager(UUID fleetManagerId) {
-   // 1. Récupérer les zones rattachées au manager en base locale
-    return localPersistence.findByManagerId(fleetManagerId)
-            .map(zone -> zone.id().toString()) // On travaille en String pour la comparaison
-            .collectList()
-            .flatMapMany(myLocalIds -> {
-                if (myLocalIds.isEmpty()) {
-                    log.warn("⚠️ Aucune zone trouvée en local pour le manager {}", fleetManagerId);
-                    return Flux.empty();
-                }
 
-                // 2. Récupérer et filtrer la liste aplatie
-                return getAllExternalZones("all")
-                        .filter(extZone -> {
-                            Object idObj = extZone.get("id");
-                            if (idObj == null) return false;
-                            
-                            // Nettoyage rigoureux de l'ID externe
-                            String extId = idObj.toString().replace("\"", "").trim();
-                            boolean match = myLocalIds.contains(extId);
-                            
-                            if (match) log.debug("🎯 Match trouvé pour la zone {}", extId);
-                            return match;
-                        });
-            });
-}
+  @Override
+    public Mono<Void> assignZoneToFleet(UUID zoneId, UUID fleetId, UUID managerId) {
+        return zoneRepo.findById(zoneId)
+                .filter(z -> z.getManagerId().equals(managerId))
+                .switchIfEmpty(Mono.error(new RuntimeException("Zone introuvable ou non autorisée")))
+                .flatMap(z -> {
+                    z.setFleetId(fleetId);
+                    z.setNew(false);
+                    return zoneRepo.save(z);
+                }).then();
+    }
 
  @Override
     public Flux<Map<String, Object>> getZonesByManager(UUID managerId, String category) {
@@ -278,5 +260,13 @@ public Flux<Map<String, Object>> getZonesByFleetManager(UUID fleetManagerId) {
         return externalApi.getZonesByOwner(managerId, category)
                 .flatMapMany(Flux::fromIterable);
     }
+
+
+
+ @Override
+ public Flux<Map<String, Object>> getZonesByFleetManager(UUID fleetManagerId) {
+    // TODO Auto-generated method stub
+    throw new UnsupportedOperationException("Unimplemented method 'getZonesByFleetManager'");
+ }
 
 }

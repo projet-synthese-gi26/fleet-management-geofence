@@ -1,5 +1,5 @@
 ﻿# Contexte du Projet : Fleet & Geofence API
-GÃ©nÃ©rÃ© le : 02/06/2026 06:37:46
+GÃ©nÃ©rÃ© le : 02/06/2026 17:58:03
 Framework : Spring Boot WebFlux (Reactive)
 
 ## 1. Arborescence du Projet
@@ -22,13 +22,8 @@ D:.
 ª   run_local.bat
 ª   run_local.sh
 ª   sync_auth.sh
-ª   test_auth.py
-ª   test_image.jpg
-ª   test_profile.jpg
 ª   todo.md
 ª   
-ª   +---appmod
-ª   ª   +---appcat
 ª   +---java-upgrade
 ª   ª   ª   
 ª   ª   +---20251223160130
@@ -248,18 +243,6 @@ D:.
 ª   ª   fleet-management.pdf
 ª   ª   remarks_of_conception.md
 ª   ª   
-ª   +---data
-ª   ª   +---YOWYOB_DB
-ª   ª       ª   README.md
-ª   ª       ª   yowyob_db_init.sql
-ª   ª       ª   yowyob_db_seed.sql
-ª   ª       ª   yowyob_db_test.sql
-ª   ª       ª   
-ª   ª       +---last_schema
-ª   ª               data.sql
-ª   ª               guide_database_setup.md
-ª   ª               schema.sql
-ª   ª               
 ª   +---prompts
 ª   ª       gabriel.md
 ª   ª       master_pair_programmer.md
@@ -294,6 +277,10 @@ D:.
 ª   ª   ª               ª           VehicleTypeService.java
 ª   ª   ª               ª           
 ª   ª   ª               +---domain
+ª   ª   ª               ª   +---exception
+ª   ª   ª               ª   ª       AuthException.java
+ª   ª   ª               ª   ª       DomainException.java
+ª   ª   ª               ª   ª       
 ª   ª   ª               ª   +---model
 ª   ª   ª               ª   ª       Driver.java
 ª   ª   ª               ª   ª       Fleet.java
@@ -433,6 +420,7 @@ D:.
 ª   ª   ª                   ª           ª       NotificationSettingsEntity.java
 ª   ª   ª                   ª           ª       OperationalParameterEntity.java
 ª   ª   ª                   ª           ª       TripEntity.java
+ª   ª   ª                   ª           ª       UserLocalEntity.java
 ª   ª   ª                   ª           ª       VehicleIllustrationImageEntity.java
 ª   ª   ª                   ª           ª       VehicleLocalEntity.java
 ª   ª   ª                   ª           ª       VehicleTypeEntity.java
@@ -449,6 +437,7 @@ D:.
 ª   ª   ª                   ª                   NotificationR2dbcRepository.java
 ª   ª   ª                   ª                   NotificationSettingsR2dbcRepository.java
 ª   ª   ª                   ª                   TripR2dbcRepository.java
+ª   ª   ª                   ª                   UserLocalR2dbcRepository.java
 ª   ª   ª                   ª                   VehicleIllustrationImageR2dbcRepository.java
 ª   ª   ª                   ª                   VehicleLocalR2dbcRepository.java
 ª   ª   ª                   ª                   VehicleTypeR2dbcRepository.java
@@ -491,6 +480,9 @@ D:.
 ª   ª               ª       001-init-schemas.sql
 ª   ª               ª       002-fleet-tables.sql
 ª   ª               ª       003-create-notification-settings.sql
+ª   ª               ª       003-update_geofence_tables.sql
+ª   ª               ª       005-move-users-to-fleet.sql
+ª   ª               ª       006-add-photo-url-to-users.sql
 ª   ª               ª       
 ª   ª               +---data
 ª   ª                       001-local-public-mock.sql
@@ -527,6 +519,10 @@ D:.
     ª   ª           ª           VehicleTypeService.class
     ª   ª           ª           
     ª   ª           +---domain
+    ª   ª           ª   +---exception
+    ª   ª           ª   ª       AuthException.class
+    ª   ª           ª   ª       DomainException.class
+    ª   ª           ª   ª       
     ª   ª           ª   +---model
     ª   ª           ª   ª       Driver.class
     ª   ª           ª   ª       Fleet.class
@@ -594,8 +590,6 @@ D:.
     ª   ª               ª   ª       ª   FleetController.class
     ª   ª               ª   ª       ª   GeofenceController.class
     ª   ª               ª   ª       ª   GlobalExceptionHandler.class
-    ª   ª               ª   ª       ª   HealthCheckController$ServiceStatus.class
-    ª   ª               ª   ª       ª   HealthCheckController$SystemHealth.class
     ª   ª               ª   ª       ª   HealthCheckController.class
     ª   ª               ª   ª       ª   NotificationController.class
     ª   ª               ª   ª       ª   PaymentController.class
@@ -691,6 +685,7 @@ D:.
     ª   ª               ª           ª       NotificationSettingsEntity.class
     ª   ª               ª           ª       OperationalParameterEntity.class
     ª   ª               ª           ª       TripEntity.class
+    ª   ª               ª           ª       UserLocalEntity.class
     ª   ª               ª           ª       VehicleIllustrationImageEntity.class
     ª   ª               ª           ª       VehicleLocalEntity.class
     ª   ª               ª           ª       VehicleTypeEntity.class
@@ -707,6 +702,7 @@ D:.
     ª   ª               ª                   NotificationR2dbcRepository.class
     ª   ª               ª                   NotificationSettingsR2dbcRepository.class
     ª   ª               ª                   TripR2dbcRepository.class
+    ª   ª               ª                   UserLocalR2dbcRepository.class
     ª   ª               ª                   VehicleIllustrationImageR2dbcRepository.class
     ª   ª               ª                   VehicleLocalR2dbcRepository.class
     ª   ª               ª                   VehicleTypeR2dbcRepository.class
@@ -747,6 +743,9 @@ D:.
     ª           ª       001-init-schemas.sql
     ª           ª       002-fleet-tables.sql
     ª           ª       003-create-notification-settings.sql
+    ª           ª       003-update_geofence_tables.sql
+    ª           ª       005-move-users-to-fleet.sql
+    ª           ª       006-add-photo-url-to-users.sql
     ª           ª       
     ª           +---data
     ª                   001-local-public-mock.sql
@@ -1124,9 +1123,28 @@ Si vous avez des erreurs Liquibase ou de schÃ©ma, rÃ©initialisez la base ave
 
 ## ðŸ¦ Cluster Gabriel (Chef de projet Backend)
 - [x] **TÃ¢che 1 :** RÃ©organisation finale Swagger (Config faite).
+    - [x] stats publiques pour la landing page
+    - [x] mise a jour de checkhealt pour verifier la sante reelle des services
 - [x] **TÃ¢che 2 :** Test et finalisation module Monitoring.
-- [ ] **TÃ¢che 3 :** Test et finalisation module Auth.
-- [ ] **TÃ¢che 4 :** Test et finalisation module Account.
+    - [x] **2.1 :** stats publiques pour la landing page
+    - [x] **2.2 :** mise a jour de checkhealt pour verifier la sante reelle des services
+- [x] **TÃ¢che 3 :** Test et finalisation module Auth.
+    - [x] **3.1 :** Migration SQL : DÃ©placer `users` vers le schÃ©ma `fleet` et ajouter `is_active` (boolean) et `deleted_at` (timestamp).
+    - [x] **3.2 :** Refactoring technique : Adapter l'entitÃ© `UserEntity` et son repository pour pointer sur `fleet.users`.
+    - [x] **3.3 :** ImplÃ©mentation du flux `Refresh Token` (Route + Service + Port).
+    - [x] **3.4 :** Raffinement du flux `Login` : IntÃ©grer le "Pull" (sync Ã  chaque login) et la vÃ©rification du statut `is_active`.
+    - [x] **3.5 :** Gestion des erreurs : CrÃ©er un mapper d'exceptions pour traduire proprement les codes d'erreur du service distant (401, 409, etc.).
+    - [x] **3.6 :** Validation Swagger : ScÃ©nario d'inscription, login, accÃ¨s bloquÃ© (en forÃ§ant `is_active: false` en DB) et rafraÃ®chissement de token.
+
+- [-] **TÃ¢che 4 :** Test et finalisation module Account.
+    - [ ] **4.1 :** AgrÃ©gation du profil (`/me`) : Fusionner les donnÃ©es de l'Auth central avec les donnÃ©es locales (`fleet_managers` ou `drivers`) en un seul objet.
+    - [ ] **4.2 :** Mise Ã  jour de l'identitÃ© : ImplÃ©menter le flux de modification (Nom, PrÃ©nom, Phone) avec synchronisation bidirectionnelle (Distant <-> Local).
+    - [ ] **4.3 :** Gestion de l'image : Endpoint de mise Ã  jour de la photo de profil (traitement Multipart et propagation au service distant).
+    - [ ] **4.4 :** **Soft Delete MÃ©tier** : ImplÃ©menter l'endpoint de suppression de compte qui active `deleted_at` et `is_active = false` en local.
+    - [ ] **4.5 :** **Logique de LibÃ©ration (Clean-up)** : CrÃ©er le service qui, lors d'un Soft Delete, dÃ©sassigne automatiquement le vÃ©hicule si l'utilisateur est un chauffeur (Driver).
+    - [ ] **4.6 :** Validation Swagger : Tester la modification de profil, l'upload de photo et vÃ©rifier qu'un compte supprimÃ© est immÃ©diatement banni par le `JwtAuthenticationManager`.
+
+
 - [ ] **TÃ¢che 5 :** Test et finalisation module Super Admin.
 - [ ] **TÃ¢che 6 :** Test et finalisation module Admin.
 - [ ] **TÃ¢che 7 :** Test et finalisation module Fleet Managers.
@@ -5590,2927 +5608,504 @@ Je remarque la factorisation qui est regroupage elegant des cas d'utilisation da
 ---
 
 ---
-### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\docs\data\YOWYOB_DB\README.md
-`$ext
-# Yowyob Database - Instructions
-
-Ce dossier contient les scripts SQL nÃ©cessaires pour initialiser, peupler et tester la base de donnÃ©es PostgreSQL du projet Yowyob. Le projet a Ã©tÃ© principalement testÃ© en local.
-
-## [Contenu des fichiers]
-
-1. **`yowyob_db_init.sql`** : 
-   - CrÃ©e le schÃ©ma (tables, types ENUM, triggers).
-   - **Note :** Ce script commence par un `DROP SCHEMA public CASCADE`. Il effacera toutes les donnÃ©es existantes.
-
-2. **`yowyob_db_seed.sql`** : 
-   - Remplit la base avec des **donnÃ©es factices (Fake Data)** pour le dÃ©veloppement.
-
-3. **`yowyob_db_test.sql`** : 
-   - Contient des requÃªtes de lecture pour vÃ©rifier la cohÃ©rence des relations et des donnÃ©es sur **certaines relations** de la base de donnÃ©es. *Chaque jeu de test doit renvoyer **au moins une ligne de donnÃ©es.***
-
-## [Guide d'installation]
-
-### PrÃ©-requis
-- PostgreSQL 16 ou supÃ©rieur.
-- Un utilisateur PostgreSQL ayant les droits de crÃ©ation de tables.
-
-### Ã‰tape 1 : CrÃ©ation de la base (si elle n'existe pas)
-```bash
-createdb -U <user> yowyob_db
-```
-
-### Ã‰tape 2 : Initialisation de la structure
-```bash
-psql -U <user> -d yowyob_db -f yowyob_db_init.sql
-```
-
-### Ã‰tape 3 : Peuplement des donnÃ©es (DEV / STAGING UNIQUEMENT)
-```bash
-psql -U <user> -d yowyob_db -f yowyob_db_seed.sql
-```
-
-### Ã‰tape 4 : VÃ©rification
-```bash
-psql -U <user> -d yowyob_db -f yowyob_db_test.sql
-```
-
----
-### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\docs\data\YOWYOB_DB\yowyob_db_init.sql
-`$ext
--- =====================================================
--- YOWYOB DB - INIT SCRIPT
--- PostgreSQL
--- Structure: Core -> Organization -> RBAC
--- =====================================================
-
--- Start a transaction for safety
-BEGIN;
-
--- Fresh start
-DROP SCHEMA IF EXISTS public CASCADE;
-CREATE SCHEMA public;
-
--- Publish query paths
-SET search_path TO public;
-
--- Extension for UUID generation
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
--- =====================================================
--- ENUM TYPES
--- =====================================================
-
-CREATE TYPE status_enum AS ENUM (
-  'DRAFT', 'WAITING_CONFIRMATION', 'PUBLISHED', 'IN_PROGRESS', 'CANCELLED', 'EXPIRED'
-);
-
-CREATE TYPE category_enum AS ENUM (
-  'ANNOUNCE', 'PLANNING', 'VEHICLE', 'ADDRESS', 'EXPERIENCE'
-);
-
-CREATE TYPE action_enum AS ENUM (
-  'CREATE', 'UPDATE', 'READ', 'DELETE'
-);
-
-CREATE TYPE vehicle_type_enum AS ENUM (
-  'CAR', 'VAN', 'TRUCK', 'BIKE'
-);
-
-CREATE TYPE offer_state_enum AS ENUM (
-  'NEW', 'PENDING', 'CHOSEN', 'TERMINATED', 'CANCELED'
-);
-
-CREATE TYPE ride_state_enum AS ENUM (
-  'CONFIRMED', 'ONGOING', 'COMPLETED', 'CANCELED'
-);
-
-CREATE TYPE event_type_enum AS ENUM (
-  'ENTRY', 'EXIT'
-);
-
-CREATE TYPE maintenance_status_enum AS ENUM (
-  'UP_TO_DATE', 'PENDING', 'OVERDUE'
-);
-
-CREATE TYPE engine_status_enum AS ENUM (
-  'OK', 'NEED_SERVICE', 'OUT_OF_SERVICE'
-);
-
-CREATE TYPE role_type_enum AS ENUM (
-  'CUSTOMER', 'DRIVER', 'FLEET_MANAGER', 'ADMIN', 'PASSENGER', 'PRESIDENT', 'MODERATOR', 'CLIENT'
-);
-
-CREATE TYPE type_enum AS ENUM (
-  'NOTIFICATION', 'CHAT', 'PAYMENT', 'MEDIA'
-);
-
-CREATE TYPE reaction_type_enum AS ENUM (
-  'LIKE', 'LOVE', 'HAHA', 'WOW', 'SAD', 'ANGRY'
-);
-
--- =====================================================
--- CORE TABLES
--- =====================================================
-
-CREATE TABLE users (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT NOT NULL,
-  phone_number TEXT,
-  email_address TEXT UNIQUE
-);
-
-CREATE TABLE images (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  url TEXT NOT NULL,
-  alt_text TEXT,
-  uploaded_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE countries (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT NOT NULL,
-  code TEXT NOT NULL UNIQUE,
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE business_actors (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT,
-  phone_number TEXT,
-  email_address TEXT,
-  CONSTRAINT fk_business_actor_user
-    FOREIGN KEY (id) REFERENCES users(id)
-    ON DELETE CASCADE
-);
-
--- =====================================================
--- ORGANIZATION TABLES
--- =====================================================
-
-CREATE TABLE organizations (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  business_actor_id UUID REFERENCES business_actors(id),
-  logo_id UUID REFERENCES images(id),
-
-  code TEXT,
-  service TEXT,
-  is_individual_business BOOLEAN DEFAULT false,
-  email TEXT,
-  short_name TEXT,
-  long_name TEXT,
-  description TEXT,
-  logo_uri TEXT,
-  website_url TEXT,
-  social_network TEXT,
-  business_registration_number TEXT,
-  tax_number TEXT,
-  capital_share NUMERIC,
-  ceo_name TEXT,
-  year_founded INT,
-  keywords TEXT,
-  number_of_employees INT,
-  legal_form TEXT,
-  is_active BOOLEAN DEFAULT true,
-  status status_enum DEFAULT 'DRAFT',
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now(),
-  deleted_at TIMESTAMP
-);
-
-CREATE TABLE agencies (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE, -- Must belong to an org
-
-  owner_id UUID REFERENCES business_actors(id),
-  manager_id UUID REFERENCES business_actors(id),
-  logo_id UUID REFERENCES images(id),
-
-  code TEXT,
-  name TEXT,
-  location TEXT,
-  description TEXT,
-  transferable BOOLEAN DEFAULT false,
-  is_active BOOLEAN DEFAULT true,
-  logo_uri TEXT,
-  short_name TEXT,
-  long_name TEXT,
-  is_individual_business BOOLEAN DEFAULT false,
-  is_headquarter BOOLEAN DEFAULT false,
-  country TEXT,
-  city TEXT,
-  latitude NUMERIC,
-  longitude NUMERIC,
-  open_time TIME,
-  close_time TIME,
-  phone TEXT,
-  email TEXT,
-  whatsapp TEXT,
-  greeting_message TEXT,
-  average_revenue NUMERIC,
-  capital_share NUMERIC,
-  registration_number TEXT,
-  social_network TEXT,
-  tax_number TEXT,
-  keywords TEXT,
-  is_public BOOLEAN DEFAULT false,
-  is_business BOOLEAN DEFAULT true,
-  total_affiliated_customers INT DEFAULT 0,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now(),
-  deleted_at TIMESTAMP
-);
-
-CREATE TABLE business_domains (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  organization_id UUID REFERENCES organizations(id) ON DELETE SET NULL, -- optional link to organization
-  parent_id UUID REFERENCES business_domains(id) ON DELETE SET NULL,   -- self-referential for hierarchy
-  image_id UUID REFERENCES images(id),
-
-  code TEXT,
-  service TEXT,
-  name TEXT,
-  image_uri TEXT,
-  type TEXT,
-  type_label TEXT,
-  description TEXT,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now(),
-  deleted_at TIMESTAMP
-);
-
-CREATE TABLE organization_business_domains (
-  organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
-  business_domain_id UUID REFERENCES business_domains(id) ON DELETE CASCADE,
-  PRIMARY KEY (organization_id, business_domain_id)
-);
-
-CREATE TABLE contacts (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  contactable_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
-
-  contactable_type TEXT,
-  first_name TEXT,
-  last_name TEXT,
-  title TEXT,
-  is_email_verified BOOLEAN DEFAULT false,
-  is_phone_number_verified BOOLEAN DEFAULT false,
-  is_favorite BOOLEAN DEFAULT false,
-  phone_number TEXT,
-  secondary_phone_number TEXT,
-  fax_number TEXT,
-  email TEXT,
-  secondary_email TEXT,
-  email_verified_at TIMESTAMP,
-  phone_verified_at TIMESTAMP,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now(),
-  deleted_at TIMESTAMP
-);
-
-CREATE TABLE certifications (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
-
-  type TEXT,
-  name TEXT,
-  description TEXT,
-  obtainment_date DATE,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now(),
-  deleted_at TIMESTAMP
-);
-
-CREATE TABLE third_parties (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
-  logo_id UUID REFERENCES images(id),
-
-  code TEXT,
-  type TEXT,
-  legal_form TEXT,
-  unique_identification_number TEXT,
-  trade_registration_number TEXT,
-  name TEXT,
-  acronym TEXT,
-  long_name TEXT,
-  logo_uri TEXT,
-  accounting_account_numbers TEXT,
-  authorized_payment_methods TEXT,
-  authorized_credit_limit NUMERIC,
-  max_discount_rate NUMERIC,
-  vat_subject BOOLEAN,
-  operations_balance NUMERIC,
-  opening_balance NUMERIC,
-  pay_term_number INT,
-  pay_term_type TEXT,
-  third_party_family TEXT,
-  classification TEXT,
-  tax_number TEXT,
-  loyalty_points NUMERIC,
-  loyalty_points_used NUMERIC,
-  loyalty_points_expired NUMERIC,
-  enabled BOOLEAN DEFAULT true,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now(),
-  deleted_at TIMESTAMP
-);
-
-CREATE TABLE settings (
-  user_id UUID PRIMARY KEY REFERENCES users(id),
-  theme TEXT,
-  language TEXT,
-  long_ride_enabled BOOLEAN DEFAULT false,
-  short_ride_enabled BOOLEAN DEFAULT false,
-  privacy_enable BOOLEAN DEFAULT true,
-  allow_calls BOOLEAN DEFAULT true,
-  allow_messages BOOLEAN DEFAULT true,
-  notify_new_rides BOOLEAN DEFAULT true,
-  notify_ratings BOOLEAN DEFAULT true,
-  notify_practical_tips BOOLEAN DEFAULT true,
-  notify_promotions BOOLEAN DEFAULT true,
-  notify_policy_updates BOOLEAN DEFAULT true,
-  notify_peak_hour_recommendations BOOLEAN DEFAULT true,
-  receive_email BOOLEAN DEFAULT true,
-  receive_sms BOOLEAN DEFAULT true,
-  receive_push_notifications BOOLEAN DEFAULT true,
-  receive_whatsapp BOOLEAN DEFAULT true,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE proposed_activities (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
-
-  type TEXT,
-  name TEXT,
-  rate NUMERIC,
-  description TEXT,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE addresses (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  addressable_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
-  country_id UUID REFERENCES countries(id) ON DELETE SET NULL,
-
-  addressable_type TEXT,
-  type TEXT,
-  address_line_1 TEXT,
-  address_line_2 TEXT,
-  city TEXT,
-  state TEXT,
-  locality TEXT,
-  zip_code TEXT,
-  postal_code TEXT,
-  po_box TEXT,
-  is_default BOOLEAN DEFAULT false,
-  neighbor_hood TEXT,
-  informal_description TEXT,
-  latitude NUMERIC,
-  longitude NUMERIC,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now(),
-  deleted_at TIMESTAMP
-);
-
--- =====================================================
--- USERS EXTENDED
--- =====================================================
-
-CREATE TABLE providers (
-  id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-
-  code TEXT,
-  contact_info TEXT,
-  address TEXT,
-  is_active BOOLEAN DEFAULT true,
-  product_service_type TEXT,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now(),
-  deleted_at TIMESTAMP
-);
-
-CREATE TABLE employees (
-  id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-
-  code TEXT,
-  is_manager BOOLEAN DEFAULT false,
-  role TEXT,
-  department TEXT,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now(),
-  deleted_at TIMESTAMP
-);
-
-CREATE TABLE prospects (
-  id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-
-  code TEXT,
-  payment_method TEXT,
-  amount_paid NUMERIC,
-  interest_level TEXT,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE sales_persons (
-  id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-
-  code TEXT,
-  commission_rate NUMERIC,
-  credit NUMERIC,
-  current_balance NUMERIC,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now(),
-  deleted_at TIMESTAMP
-);
-
-CREATE TABLE customers (
-  id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-
-  code TEXT,
-  payment_method TEXT,
-  amount_paid NUMERIC,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now(),
-  deleted_at TIMESTAMP
-);
-
-CREATE TABLE services (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-  name TEXT,
-  phone_number TEXT,
-  email_address TEXT
-);
-
--- =====================================================
--- RIDE & FLEET MANAGEMENT
--- =====================================================
-
-CREATE TABLE drivers (
-  id UUID PRIMARY KEY REFERENCES business_actors(id) ON DELETE CASCADE,
-
-  status TEXT,
-  license_number TEXT,
-  has_car BOOLEAN DEFAULT false
-);
-
-CREATE TABLE offers (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  passenger_id UUID REFERENCES customers(id) ON DELETE CASCADE,
-
-  start_point TEXT,
-  end_point TEXT,
-  price NUMERIC,
-  state offer_state_enum DEFAULT 'NEW',
-  ids_interested_drivers TEXT,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE rides (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  offer_id UUID REFERENCES offers(id) ON DELETE SET NULL,
-  passenger_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  driver_id UUID REFERENCES drivers(id) ON DELETE SET NULL,
-
-  distance NUMERIC,
-  time_estimation NUMERIC,
-  real_time NUMERIC,
-  state ride_state_enum DEFAULT 'CONFIRMED',
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE fleet_managers (
-  id UUID PRIMARY KEY REFERENCES business_actors(id) ON DELETE CASCADE,
-
-  name TEXT,
-  phone_number TEXT,
-  email_address TEXT
-);
-
-CREATE TABLE fleets (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  fleet_manager_id UUID REFERENCES fleet_managers(id) ON DELETE SET NULL,
-
-  name TEXT,
-  phone_number TEXT,
-  email_address TEXT,
-
-  created_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE geofence_zones (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-  surface_area NUMERIC,
-  perimeter NUMERIC
-);
-
-CREATE TABLE vehicles (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  driver_id UUID REFERENCES drivers(id) ON DELETE SET NULL,
-  fleet_id UUID REFERENCES fleets(id) ON DELETE SET NULL,
-  zone_id UUID REFERENCES geofence_zones(id) ON DELETE SET NULL,
-
-  license_plate TEXT,
-  model TEXT,
-  brand TEXT,
-  manufacturing_year INT,
-  type vehicle_type_enum,
-  color TEXT
-);
-
-CREATE TABLE roads (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-  start_point TEXT,
-  end_point TEXT
-);
-
-CREATE TABLE trips (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  road_id UUID REFERENCES roads(id) ON DELETE SET NULL,
-  driver_id UUID REFERENCES drivers(id) ON DELETE SET NULL,
-
-  start_date DATE,
-  end_date DATE,
-  start_time TIME,
-  end_time TIME,
-  type TEXT,
-  color TEXT
-);
-
-CREATE TABLE operational_parameters (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  vehicle_id UUID REFERENCES vehicles(id) ON DELETE CASCADE,
-  trip_id UUID REFERENCES trips(id) ON DELETE CASCADE,
-
-  statut TEXT,
-  current_location TEXT,
-  current_speed NUMERIC,
-  fuel_level NUMERIC,
-  mileage NUMERIC,
-  odometer_reading NUMERIC,
-  bearing NUMERIC,
-
-  timestamp TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE financial_parameters (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  vehicle_id UUID REFERENCES vehicles(id) ON DELETE CASCADE,
-  trip_id UUID REFERENCES trips(id) ON DELETE CASCADE,
-
-  insurance_number TEXT,
-  insurance_expired_at DATE,
-  registered_at DATE,
-  purchased_at DATE,
-  depreciation_rate NUMERIC,
-  cost_per_km NUMERIC
-);
-
-CREATE TABLE maintenance_parameters (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  vehicle_id UUID REFERENCES vehicles(id) ON DELETE CASCADE,
-  trip_id UUID REFERENCES trips(id) ON DELETE CASCADE,
-
-  last_maintenance_at DATE,
-  next_maintenance_at DATE,
-  engine_status engine_status_enum DEFAULT 'OK',
-  battery_health TEXT,
-  maintenance_status maintenance_status_enum DEFAULT 'UP_TO_DATE'
-);
-
-CREATE TABLE geofence_points (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-  latitude NUMERIC,
-  longitude NUMERIC
-);
-
-CREATE TABLE geofence_point_zone_linkages (
-  point_id UUID REFERENCES geofence_points(id) ON DELETE CASCADE,
-  zone_id UUID REFERENCES geofence_zones(id) ON DELETE CASCADE,
-  PRIMARY KEY (point_id, zone_id)
-);
-
-CREATE TABLE geofence_events (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  vehicle_id UUID REFERENCES vehicles(id) ON DELETE CASCADE,
-  zone_id UUID REFERENCES geofence_zones(id) ON DELETE SET NULL,
-  point_id UUID REFERENCES geofence_points(id) ON DELETE SET NULL,
-
-  type event_type_enum,
-
-  timestamp TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE offer_driver_linkages (
-  offer_id UUID REFERENCES offers(id) ON DELETE CASCADE,
-  driver_id UUID REFERENCES drivers(id) ON DELETE CASCADE,
-  PRIMARY KEY (offer_id, driver_id),
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
--- =====================================================
--- OTHERS: PRODUCTS, SYNDICATS, PUBLICATIONS & REVIEWS
--- =====================================================
-
-CREATE TABLE syndicats (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
-
-  is_approved BOOLEAN DEFAULT false,
-  name TEXT,
-  description TEXT,
-  domain TEXT,
-  type TEXT,
-  charte_url TEXT,
-  status_url TEXT,
-  members_list_url TEXT,
-  commitment_certificate_url TEXT,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE abstract_products (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  syndicat_id UUID REFERENCES syndicats(id) ON DELETE SET NULL,
-
-  name TEXT,
-  description TEXT,
-
-  created_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE products (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
-  abstract_product_id UUID REFERENCES abstract_products(id) ON DELETE SET NULL,
-
-  name TEXT,
-  description TEXT,
-  is_active BOOLEAN DEFAULT true,
-  standard_price NUMERIC,
-  departure_location TEXT,
-  arrival_location TEXT,
-  start_date DATE,
-  start_time TIME,
-  end_date DATE,
-  end_time TIME,
-  baggage_info TEXT,
-  is_negotiable BOOLEAN DEFAULT false,
-  payment_method TEXT,
-  title TEXT,
-  status status_enum DEFAULT 'DRAFT',
-  product_urls TEXT,
-  regular_amount NUMERIC,
-  discount_percentage NUMERIC,
-  discounted_amount NUMERIC,
-  metadata JSONB,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE publication_votes (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-  title TEXT,
-  description TEXT,
-  closing_at TIMESTAMP,
-  type category_enum
-);
-
-CREATE TABLE votes (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  publication_vote_id UUID REFERENCES publication_votes(id) ON DELETE CASCADE,
-
-  label TEXT
-);
-
-CREATE TABLE avis (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  product_id UUID REFERENCES products(id) ON DELETE CASCADE,
-  syndicat_id UUID REFERENCES syndicats(id) ON DELETE SET NULL,
-
-  comment TEXT,
-  number INT,
-
-  created_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE branches (
-  id UUID PRIMARY KEY REFERENCES agencies(id),
-  syndicat_id UUID REFERENCES syndicats(id) ON DELETE SET NULL,
-
-  name TEXT,
-  location TEXT,
-  contact TEXT,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE publications (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
-  author_id UUID REFERENCES users(id) ON DELETE SET NULL,
-
-  content TEXT,
-  status status_enum DEFAULT 'DRAFT',
-  n_likes INT DEFAULT 0,
-
-  created_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE publication_images (
-  publication_id UUID REFERENCES publications(id) ON DELETE CASCADE,
-  image_id UUID REFERENCES images(id) ON DELETE CASCADE,
-  PRIMARY KEY (publication_id, image_id),
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE events (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
-
-  title TEXT,
-  description TEXT,
-  location TEXT,
-  date DATE,
-  start_time TIME,
-  end_time TIME,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE event_images (
-  event_id UUID REFERENCES events(id) ON DELETE CASCADE,
-  image_id UUID REFERENCES images(id) ON DELETE CASCADE,
-  PRIMARY KEY (event_id, image_id),
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE reactions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  publication_id UUID REFERENCES publications(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-
-  type reaction_type_enum,
-
-  reacted_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE comments (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  author_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  publication_id UUID REFERENCES publications(id) ON DELETE CASCADE,
-  parent_id UUID REFERENCES comments(id) ON DELETE SET NULL,
-  image_id UUID REFERENCES images(id) ON DELETE SET NULL,
-
-  content TEXT,
-
-  created_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE profiles (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-
-  first_name TEXT,
-  last_name TEXT,
-  nickname TEXT,
-  profile_image_url TEXT,
-  birth_date DATE,
-  nationality TEXT,
-  gender TEXT,
-  language TEXT,
-  company_name TEXT,
-  biography TEXT,
-  rating NUMERIC,
-  total_trips INT,
-  is_available BOOLEAN DEFAULT true,
-  is_verified BOOLEAN DEFAULT false,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
--- =====================================================
--- PAYMENTS & SUBSCRIPTIONS
--- =====================================================
-
-CREATE TABLE admins (
-  id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-
-  name TEXT,
-  phone_number TEXT,
-  email_address TEXT
-);
-
-CREATE TABLE subscriptions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  admin_id UUID REFERENCES admins(id) ON DELETE SET NULL,
-
-  label TEXT,
-  price NUMERIC,
-  duration_in_days INT,
-  description TEXT,
-  is_active BOOLEAN DEFAULT true,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE payments (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  driver_id UUID REFERENCES drivers(id) ON DELETE SET NULL,
-  subscription_id UUID REFERENCES subscriptions(id) ON DELETE SET NULL,
-  user_id UUID REFERENCES business_actors(id) ON DELETE SET NULL,
-
-  amount_paid NUMERIC,
-  status TEXT,
-  id_provider_transaction TEXT,
-
-  created_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE reviews (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  ride_id UUID REFERENCES rides(id) ON DELETE CASCADE,
-  author_id UUID REFERENCES users(id) ON DELETE SET NULL,
-
-  subject TEXT,
-  comment TEXT,
-  rating NUMERIC,
-
-  created_at TIMESTAMP DEFAULT now()
-);
-
--- =====================================================
--- ROLE-BASED ACCESS CONTROL (RBAC)
--- =====================================================
-
-CREATE TABLE roles (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-  name TEXT NOT NULL,
-  guard_name TEXT,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE permissions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-  name TEXT NOT NULL,
-  guard_name TEXT,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE role_has_permissions (
-  role_id UUID REFERENCES roles(id) ON DELETE CASCADE,
-  permission_id UUID REFERENCES permissions(id) ON DELETE CASCADE,
-  PRIMARY KEY (role_id, permission_id),
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE user_has_roles (
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  role_id UUID REFERENCES roles(id) ON DELETE CASCADE,
-  PRIMARY KEY (user_id, role_id),
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
--- Commit the transaction
-COMMIT;
-
--- =====================================================
--- END OF SCRIPT. NOTHING AFTER HERE!
--- =====================================================
-
----
-### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\docs\data\YOWYOB_DB\yowyob_db_seed.sql
-`$ext
--- =====================================================
--- YOWYOB DB - DATA SEEDING SCRIPT
--- PostgreSQL
--- =====================================================
-
-BEGIN;
-
--- =====================================================
--- 1. CLEANUP EXISTING DATA
--- =====================================================
-TRUNCATE TABLE 
-    users, images, countries, business_actors, 
-    admins, fleet_managers, drivers, customers, 
-    providers, employees, prospects, sales_persons,
-    profiles, settings, addresses, contacts,
-    roles, permissions, role_has_permissions, user_has_roles,
-    organizations, agencies, business_domains, organization_business_domains,
-    certifications, third_parties, proposed_activities, services, branches,
-    fleets, vehicles, geofence_zones, geofence_points, geofence_events,
-    roads, trips, offers, rides, reviews, offer_driver_linkages,
-    operational_parameters, financial_parameters, maintenance_parameters,
-    geofence_point_zone_linkages,
-    syndicats, abstract_products, products, 
-    publications, publication_images, publication_votes, votes,
-    events, event_images, reactions, comments, avis,
-    subscriptions, payments
-    RESTART IDENTITY CASCADE;
-
--- =====================================================
--- 2. STATIC REFERENCE DATA
--- =====================================================
-
--- Countries
-INSERT INTO countries (name, code) VALUES
-('Cameroun', 'CM'), ('SÃ©nÃ©gal', 'SN'), ('CÃ´te d''Ivoire', 'CI'), 
-('Gabon', 'GA'), ('NigÃ©ria', 'NG'), ('Togo', 'TG');
-
--- Roles
-INSERT INTO roles (name, guard_name) VALUES
-('ADMIN', 'web'), ('FLEET_MANAGER', 'web'), ('DRIVER', 'web'), ('CUSTOMER', 'web');
-
--- Images (Random placeholders from Picsum)
-INSERT INTO images (url, alt_text) 
-SELECT 
-    'https://picsum.photos/seed/' || i || '/800/600', 
-    'Image alÃ©atoire ' || i
-FROM generate_series(1, 50) as i;
-
--- =====================================================
--- 3. USERS GENERATION (100 users)
--- =====================================================
-
-INSERT INTO users (name, phone_number, email_address)
-SELECT 
-    (ARRAY['Mamadou', 'Jean-Pierre', 'Ibrahim', 'Fatou', 'Aminata', 'Ngolo', 'Aboubakar', 'Clarisse', 'Samuel', 'KouamÃ©', 'Aissatou', 'Bachelard', 'Landry', 'ThÃ©rÃ¨se'])[floor(random()*14)+1] 
-    || ' ' || 
-    (ARRAY['Diop', 'Njoya', 'Mbarga', 'Kone', 'Sow', 'Etoundi', 'Kamga', 'TraorÃ©', 'Diallo', 'Fofana', 'Mensah', 'Atangana', 'Eto''o', 'Drogba'])[floor(random()*14)+1],
-    (ARRAY['+237', '+221', '+225'])[floor(random()*3)+1] || (600000000 + floor(random()*99999999)::int),
-    'user_' || i || '@yowyob.test'
-FROM generate_series(1, 100) as i;
-
--- Settings & Profiles
-INSERT INTO settings (user_id, theme, language, receive_push_notifications)
-SELECT id, 'LIGHT', 'fr', true FROM users;
-
-INSERT INTO profiles (user_id, first_name, nationality, is_verified)
-SELECT id, split_part(name, ' ', 1), 'Camerounais', (random() > 0.5) FROM users;
-
--- =====================================================
--- 4. ACTORS DISPATCHING
--- User -> BusinessActor -> SpecificActor
--- =====================================================
-
--- 4.1 Admins (First 5 users)
-INSERT INTO admins (id, name, email_address)
-SELECT id, name, email_address FROM users ORDER BY email_address LIMIT 5;
-
--- 4.2 Fleet Managers (Next 5 users)
--- STEP 1: Insert into PARENT (BusinessActor)
-INSERT INTO business_actors (id, name, phone_number, email_address)
-SELECT id, name, phone_number, email_address FROM users ORDER BY email_address LIMIT 5 OFFSET 5;
-
--- STEP 2: Insert into CHILD (FleetManager)
-INSERT INTO fleet_managers (id, name, email_address)
-SELECT id, name, email_address FROM users ORDER BY email_address LIMIT 5 OFFSET 5;
-
--- 4.3 Drivers (Next 30 users)
--- STEP 1: Insert into PARENT (BusinessActor)
-INSERT INTO business_actors (id, name, phone_number, email_address)
-SELECT id, name, phone_number, email_address FROM users ORDER BY email_address LIMIT 30 OFFSET 10;
-
--- STEP 2: Insert into CHILD (Driver)
-INSERT INTO drivers (id, status, license_number, has_car)
-SELECT 
-    id, 
-    (ARRAY['AVAILABLE', 'BUSY', 'OFFLINE'])[floor(random()*3)+1], 
-    'LIC-' || floor(random()*100000) || '-CM',
-    (random() > 0.3)
-FROM users ORDER BY email_address LIMIT 30 OFFSET 10;
-
--- 4.4 Customers (Remaining 60 users)
-INSERT INTO customers (id, code, payment_method)
-SELECT 
-    id, 
-    'CUST-' || substr(id::text, 1, 8),
-    (ARRAY['CASH', 'MOBILE_MONEY', 'CARD'])[floor(random()*3)+1]
-FROM users ORDER BY email_address LIMIT 60 OFFSET 40;
-
--- Assign Roles
-INSERT INTO user_has_roles (user_id, role_id)
-SELECT id, (SELECT id FROM roles WHERE name = 'ADMIN') FROM users ORDER BY email_address LIMIT 5;
-
-INSERT INTO user_has_roles (user_id, role_id)
-SELECT id, (SELECT id FROM roles WHERE name = 'FLEET_MANAGER') FROM users ORDER BY email_address LIMIT 5 OFFSET 5;
-
-INSERT INTO user_has_roles (user_id, role_id)
-SELECT id, (SELECT id FROM roles WHERE name = 'DRIVER') FROM users ORDER BY email_address LIMIT 30 OFFSET 10;
-
-INSERT INTO user_has_roles (user_id, role_id)
-SELECT id, (SELECT id FROM roles WHERE name = 'CUSTOMER') FROM users ORDER BY email_address LIMIT 60 OFFSET 40;
-
--- =====================================================
--- 5. ORGANIZATIONS & AGENCIES
--- =====================================================
-
-INSERT INTO organizations (
-    business_actor_id, logo_id, code, short_name, long_name, 
-    description, tax_number, is_active, status
-)
-SELECT
-    (SELECT id FROM fleet_managers ORDER BY random() LIMIT 1),
-    (SELECT id FROM images ORDER BY random() LIMIT 1),
-    'ORG-' || i,
-    'Transport ' || i,
-    'SociÃ©tÃ© de Transport ' || i,
-    'Description ' || i,
-    'TAX-' || floor(random()*1000000),
-    true,
-    'PUBLISHED'
-FROM generate_series(1, 35) as i;
-
-INSERT INTO agencies (
-    organization_id, manager_id, name, city, location, is_headquarter
-)
-SELECT 
-    id, 
-    (SELECT id FROM fleet_managers ORDER BY random() LIMIT 1),
-    'Agence Centrale',
-    (ARRAY['Douala', 'YaoundÃ©', 'Abidjan'])[floor(random()*3)+1],
-    'Rue Principale',
-    true
-FROM organizations;
-
--- =====================================================
--- 6. FLEETS & VEHICLES
--- =====================================================
-
-INSERT INTO fleets (fleet_manager_id, name, phone_number)
-SELECT 
-    id, 'Flotte de ' || name, '+237699000000'
-FROM fleet_managers;
-
--- Vehicles
-INSERT INTO vehicles (
-    fleet_id, user_id, driver_id, license_plate, brand, model, type, color, manufacturing_year
-)
-SELECT 
-    f.id,
-    f.fleet_manager_id,
-    (SELECT id FROM drivers ORDER BY random() LIMIT 1),
-    'LT-' || floor(random()*999)::text || '-AA',
-    (ARRAY['Toyota', 'Peugeot'])[floor(random()*2)+1],
-    (ARRAY['Yaris', 'Partner'])[floor(random()*2)+1],
-    (ARRAY['CAR', 'VAN'])[floor(random()*2)+1]::vehicle_type_enum,
-    'Jaune',
-    2020
-FROM fleets f;
-
--- =====================================================
--- 7. OFFERS & RIDES
--- =====================================================
-
-INSERT INTO offers (
-    passenger_id, start_point, end_point, price, state, created_at
-)
-SELECT 
-    (SELECT id FROM customers ORDER BY random() LIMIT 1),
-    'Point A', 'Point B', 
-    2000, 
-    'CHOSEN',
-    NOW()
-FROM generate_series(1, 60) as i;
-
--- Rides
-INSERT INTO rides (
-    offer_id, passenger_id, driver_id, 
-    distance, time_estimation, real_time, state, created_at
-)
-SELECT 
-    id, -- offer_id
-    passenger_id,
-    (SELECT id FROM drivers ORDER BY random() LIMIT 1),
-    15.5, 30, 35,
-    'COMPLETED',
-    created_at
-FROM offers 
-LIMIT 40;
-
--- Reviews
-INSERT INTO reviews (ride_id, author_id, subject, comment, rating)
-SELECT 
-    id,
-    passenger_id,
-    'Chauffeur',
-    'Bonne course, chauffeur ponctuel',
-    5
-FROM rides
-WHERE state = 'COMPLETED';
-
--- =====================================================
--- 8. PRODUCTS
--- =====================================================
-
-INSERT INTO products (
-    organization_id, name, description, standard_price, 
-    status, is_active, departure_location
-)
-SELECT 
-    (SELECT id FROM organizations ORDER BY random() LIMIT 1),
-    'Trajet SpÃ©cial ' || i,
-    'Description produit',
-    5000,
-    'PUBLISHED',
-    true,
-    'Douala'
-FROM generate_series(1, 40) as i;
-
--- =====================================================
--- 9. SUBSCRIPTIONS & PAYMENTS
--- =====================================================
-
-INSERT INTO subscriptions (
-    admin_id, label, price, duration_in_days, description, is_active
-) VALUES 
-((SELECT id FROM admins LIMIT 1), 'Pack Hebdo', 2500, 7, 'Standard', true),
-((SELECT id FROM admins LIMIT 1), 'Pack Mensuel', 10000, 30, 'Pro', true),
-((SELECT id FROM admins LIMIT 1), 'Pack Annuel', 100000, 365, 'VIP', true);
-
-INSERT INTO payments (
-    driver_id, user_id, subscription_id, amount_paid, status, id_provider_transaction, created_at
-)
-SELECT 
-    d.id, -- Driver ID
-    d.id, -- Payer ID
-    s.id, -- Subscription ID
-    s.price,
-    'SUCCESS',
-    'TXN-' || floor(random()*10000000),
-    NOW()
-FROM drivers d
-CROSS JOIN subscriptions s
-ORDER BY random()
-LIMIT 50;
-
--- =====================================================
--- 10. SOCIAL & ADDRESSES
--- =====================================================
-
-INSERT INTO syndicats (organization_id, name, is_approved)
-SELECT id, 'Syndicat Transports', true FROM organizations LIMIT 1;
-
-INSERT INTO branches (id, syndicat_id, name, location)
-SELECT 
-    ag.id,
-    (SELECT id FROM syndicats LIMIT 1),
-    'Branche ' || ag.name, 
-    ag.location 
-FROM agencies ag 
-LIMIT 10;
-
-INSERT INTO publications (branch_id, author_id, content, status, n_likes)
-SELECT 
-    (SELECT id FROM branches ORDER BY random() LIMIT 1),
-    (SELECT id FROM admins ORDER BY random() LIMIT 1),
-    'Info Trafic ' || i,
-    'PUBLISHED',
-    floor(random() * 50)::int
-FROM generate_series(1, 40) as i;
-
-COMMIT;
-
----
-### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\docs\data\YOWYOB_DB\yowyob_db_test.sql
-`$ext
--- =====================================================
--- YOWYOB DB - TEST QUERIES (SEMI-VALIDATION)
--- PostgreSQL
--- =====================================================
-
--- Summary Table to display what will be tested
-SELECT * FROM (VALUES
-    ('Test 1.1', 'Check Driver Inheritance (Name, Status, Car)'),
-    ('Test 1.2', 'Check Customers Specific Data (Code, Payment)'),
-    ('Test 2.1', 'User Role Assignments'),
-    ('Test 3.1', 'Agency Locations & Headquarter Status'),
-    ('Test 4.1', 'Vehicle Inventory (Fleet vs Independent)'),
-    ('Test 5.1', 'Full Ride History (Passenger + Driver + Price)'),
-    ('Test 5.2', 'Pending Offers (No Ride Created Yet)'),
-    ('Test 6.1', 'Active Products by Organization'),
-    ('Test 7.1', 'Publications Feed with Likes'),
-    ('Test 7.2', 'Customer Reviews on Rides'),
-    ('Test 8.1', 'Payment & Subscription Log')
-) AS summary_table (Test_ID, Test_Description);
-
--- =====================================================
--- BLOCK 1: CORE & INHERITANCE VERIFICATION
--- =====================================================
-
--- 1.1. Check Driver Inheritance
-SELECT 'Check Driver Inheritance (Name, Status, Car)' AS "TEST 1.1";
-SELECT 
-    u.id,
-    u.name AS full_name,
-    u.phone_number,
-    d.status AS driver_status,
-    d.license_number,
-    d.has_car
-FROM drivers d
-JOIN business_actors ba ON d.id = ba.id
-JOIN users u ON ba.id = u.id
-LIMIT 5;
-
--- 1.2. Check Customers and Payment Methods
-SELECT 'Check Customers Specific Data' AS "TEST 1.2";
-SELECT 
-    u.name AS customer_name,
-    c.code AS customer_code,
-    c.payment_method
-FROM customers c
-JOIN users u ON c.id = u.id
-LIMIT 5;
-
--- =====================================================
--- BLOCK 2: RBAC (ROLES & SECURITY)
--- =====================================================
-
--- 2.1. Who has which role?
-SELECT 'User Role Assignments' AS "TEST 2.1";
-SELECT 
-    u.name AS user_name,
-    u.email_address,
-    r.name AS assigned_role
-FROM users u
-JOIN user_has_roles uhr ON u.id = uhr.user_id
-JOIN roles r ON uhr.role_id = r.id
-ORDER BY u.name ASC
-LIMIT 5;
-
--- =====================================================
--- BLOCK 3: ORGANIZATION & HIERARCHY
--- =====================================================
-
--- 3.1. Hierarchy Organization -> Agencies
-SELECT 'Agency Locations & Headquarter Status' AS "TEST 3.1";
-SELECT 
-    org.short_name AS organization,
-    a.name AS agency_name,
-    a.city,
-    a.is_headquarter
-FROM agencies a
-JOIN organizations org ON a.organization_id = org.id
-ORDER BY org.short_name
-LIMIT 5;
-
--- =====================================================
--- BLOCK 4: FLEET MANAGEMENT
--- =====================================================
-
--- 4.1. Vehicle Inventory
-SELECT 'Vehicle Inventory (Fleet vs Independent)' AS "TEST 4.1";
-SELECT 
-    v.license_plate,
-    v.brand || ' ' || v.model AS vehicle_model,
-    v.type,
-    f.name AS fleet_owner,
-    u_owner.name AS independent_owner
-FROM vehicles v
-LEFT JOIN fleets f ON v.fleet_id = f.id
-LEFT JOIN users u_owner ON v.user_id = u_owner.id
-LIMIT 5;
-
--- =====================================================
--- BLOCK 5: RIDES & OFFERS (CORE BUSINESS)
--- =====================================================
-
--- 5.1. Full Ride Details
-SELECT 'Full Ride History (Passenger + Driver + Price)' AS "TEST 5.1";
-SELECT 
-    r.id AS ride_id,
-    r.state AS ride_state,
-    passenger_u.name AS passenger,
-    driver_u.name AS driver,
-    o.start_point,
-    o.end_point,
-    o.price AS agreed_price,
-    r.distance || ' km' AS real_distance
-FROM rides r
-JOIN offers o ON r.offer_id = o.id
-JOIN customers c ON r.passenger_id = c.id
-JOIN users passenger_u ON c.id = passenger_u.id
-JOIN drivers d ON r.driver_id = d.id
-JOIN users driver_u ON d.id = driver_u.id
-WHERE r.state = 'COMPLETED'
-LIMIT 5;
-
--- 5.2. Offers without Drivers
-SELECT 'Pending Offers (No Ride Created Yet)' AS "TEST 5.2";
-SELECT 
-    o.id,
-    o.state,
-    o.price,
-    o.created_at
-FROM offers o
-LEFT JOIN rides r ON o.id = r.offer_id
-WHERE r.id IS NULL
-LIMIT 5;
-
--- =====================================================
--- BLOCK 6: PRODUCTS & SERVICES
--- =====================================================
-
--- 6.1. Product Catalog by Organization
-SELECT 'Active Products by Organization' AS "TEST 6.1";
-SELECT 
-    org.short_name AS seller,
-    p.name AS product_name,
-    p.standard_price AS price,
-    p.status
-FROM products p
-JOIN organizations org ON p.organization_id = org.id
-WHERE p.is_active = true
-LIMIT 5;
-
--- =====================================================
--- BLOCK 7: SOCIAL (PUBLICATIONS & REVIEWS)
--- =====================================================
-
--- 7.1. Branch News Feed
-SELECT 'Publications Feed with Likes' AS "TEST 7.1";
-SELECT 
-    b.name AS source_branch,
-    u.name AS author,
-    pub.content AS message,
-    pub.n_likes AS likes
-FROM publications pub
-JOIN branches b ON pub.branch_id = b.id
-JOIN users u ON pub.author_id = u.id
-ORDER BY pub.created_at DESC
-LIMIT 5;
-
--- 7.2. Ride Reviews
-SELECT 'Customer Reviews on Rides' AS "TEST 7.2";
-SELECT 
-    rev.rating,
-    rev.comment,
-    u.name AS author
-FROM reviews rev
-JOIN users u ON rev.author_id = u.id
-LIMIT 5;
-
--- =====================================================
--- BLOCK 8: FINANCE (SUBSCRIPTIONS & PAYMENTS)
--- =====================================================
-
--- 8.1. Payment History
-SELECT 'Payment & Subscription Log' AS "TEST 8.1";
-SELECT 
-    pay.id AS payment_id,
-    u.name AS payer,
-    sub.label AS subscription_plan,
-    pay.amount_paid,
-    pay.status,
-    pay.created_at
-FROM payments pay
-JOIN users u ON pay.user_id = u.id
-JOIN subscriptions sub ON pay.subscription_id = sub.id
-ORDER BY pay.created_at DESC
-LIMIT 5;
-
--- =====================================================
--- END OF SCRIPT. NOTHING AFTER HERE!
--- =====================================================
-
----
-### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\docs\data\YOWYOB_DB\last_schema\data.sql
-`$ext
--- =====================================================
--- YOWYOB DB - DATA SEEDING SCRIPT
--- PostgreSQL
--- =====================================================
-
-
--- =====================================================
--- 1. CLEANUP EXISTING DATA
--- =====================================================
-TRUNCATE TABLE 
-    users, images, countries, business_actors, 
-    admins, fleet_managers, drivers, customers, 
-    providers, employees, prospects, sales_persons,
-    profiles, settings, addresses, contacts,
-    roles, permissions, role_has_permissions,  user_has_permissions,user_has_roles,
-    organizations, agencies, business_domains, organization_business_domains,
-    certifications, third_parties, proposed_activities, services, branches,
-    fleets, vehicles, geofence_zones, geofence_points, geofence_events,
-    roads, trips, offers, rides, reviews, offer_driver_linkages,
-    operational_parameters, financial_parameters, maintenance_parameters,
-    geofence_point_zone_linkages,
-    syndicats, abstract_products, products, 
-    publications, publication_images, publication_votes, votes,
-    events, event_images, reactions, comments, avis,
-    subscriptions, payments
-    RESTART IDENTITY CASCADE;
-
--- =====================================================
--- 2. STATIC REFERENCE DATA
--- =====================================================
-
--- Countries
-INSERT INTO countries (name, code) VALUES
-('Cameroun', 'CM'), ('SÃ©nÃ©gal', 'SN'), ('CÃ´te d''Ivoire', 'CI'), 
-('Gabon', 'GA'), ('NigÃ©ria', 'NG'), ('Togo', 'TG');
-
--- Roles
-INSERT INTO roles (name, guard_name) VALUES
-('ADMIN', 'web'), ('FLEET_MANAGER', 'web'), ('DRIVER', 'web'), ('CUSTOMER', 'web');
-
--- Images (Random placeholders from Picsum)
-INSERT INTO images (url, alt_text) 
-SELECT 
-    'https://picsum.photos/seed/' || i || '/800/600', 
-    'Image alÃ©atoire ' || i
-FROM generate_series(1, 50) as i;
-
--- =====================================================
--- 3. USERS GENERATION (100 users)
--- =====================================================
-
-INSERT INTO users (name, phone_number, email_address)
-SELECT 
-    (ARRAY['Mamadou', 'Jean-Pierre', 'Ibrahim', 'Fatou', 'Aminata', 'Ngolo', 'Aboubakar', 'Clarisse', 'Samuel', 'KouamÃ©', 'Aissatou', 'Bachelard', 'Landry', 'ThÃ©rÃ¨se'])[floor(random()*14)+1] 
-    || ' ' || 
-    (ARRAY['Diop', 'Njoya', 'Mbarga', 'Kone', 'Sow', 'Etoundi', 'Kamga', 'TraorÃ©', 'Diallo', 'Fofana', 'Mensah', 'Atangana', 'Eto''o', 'Drogba'])[floor(random()*14)+1],
-    (ARRAY['+237', '+221', '+225'])[floor(random()*3)+1] || (600000000 + floor(random()*99999999)::int),
-    'user_' || i || '@yowyob.test'
-FROM generate_series(1, 100) as i;
-
--- Settings & Profiles
-INSERT INTO settings (user_id, theme, language, receive_push_notifications)
-SELECT id, 'LIGHT', 'fr', true FROM users;
-
-INSERT INTO profiles (user_id, first_name, nationality, is_verified)
-SELECT id, split_part(name, ' ', 1), 'Camerounais', (random() > 0.5) FROM users;
-
--- =====================================================
--- 4. ACTORS DISPATCHING
--- User -> BusinessActor -> SpecificActor
--- =====================================================
-
--- 4.1 Admins (First 5 users)
-INSERT INTO admins (id, name, email_address)
-SELECT id, name, email_address FROM users ORDER BY email_address LIMIT 5;
-
--- 4.2 Fleet Managers (Next 5 users)
--- STEP 1: Insert into PARENT (BusinessActor)
-INSERT INTO business_actors (id, name, phone_number, email_address)
-SELECT id, name, phone_number, email_address FROM users ORDER BY email_address LIMIT 5 OFFSET 5;
-
--- STEP 2: Insert into CHILD (FleetManager)
-INSERT INTO fleet_managers (id, name, email_address)
-SELECT id, name, email_address FROM users ORDER BY email_address LIMIT 5 OFFSET 5;
-
--- 4.3 Drivers (Next 30 users)
--- STEP 1: Insert into PARENT (BusinessActor)
-INSERT INTO business_actors (id, name, phone_number, email_address)
-SELECT id, name, phone_number, email_address FROM users ORDER BY email_address LIMIT 30 OFFSET 10;
-
--- STEP 2: Insert into CHILD (Driver)
-INSERT INTO drivers (id, status, license_number, has_car)
-SELECT 
-    id, 
-    (ARRAY['AVAILABLE', 'BUSY', 'OFFLINE'])[floor(random()*3)+1], 
-    'LIC-' || floor(random()*100000) || '-CM',
-    (random() > 0.3)
-FROM users ORDER BY email_address LIMIT 30 OFFSET 10;
-
--- 4.4 Customers (Remaining 60 users)
-INSERT INTO customers (id, code, payment_method)
-SELECT 
-    id, 
-    'CUST-' || substr(id::text, 1, 8),
-    (ARRAY['CASH', 'MOBILE_MONEY', 'CARD'])[floor(random()*3)+1]
-FROM users ORDER BY email_address LIMIT 60 OFFSET 40;
-
--- Assign Roles
-INSERT INTO user_has_roles (user_id, role_id)
-SELECT id, (SELECT id FROM roles WHERE name = 'ADMIN') FROM users ORDER BY email_address LIMIT 5;
-
-INSERT INTO user_has_roles (user_id, role_id)
-SELECT id, (SELECT id FROM roles WHERE name = 'FLEET_MANAGER') FROM users ORDER BY email_address LIMIT 5 OFFSET 5;
-
-INSERT INTO user_has_roles (user_id, role_id)
-SELECT id, (SELECT id FROM roles WHERE name = 'DRIVER') FROM users ORDER BY email_address LIMIT 30 OFFSET 10;
-
-INSERT INTO user_has_roles (user_id, role_id)
-SELECT id, (SELECT id FROM roles WHERE name = 'CUSTOMER') FROM users ORDER BY email_address LIMIT 60 OFFSET 40;
-
--- =====================================================
--- 5. ORGANIZATIONS & AGENCIES
--- =====================================================
-
-INSERT INTO organizations (
-    business_actor_id, logo_id, code, short_name, long_name, 
-    description, tax_number, is_active, status
-)
-SELECT
-    (SELECT id FROM fleet_managers ORDER BY random() LIMIT 1),
-    (SELECT id FROM images ORDER BY random() LIMIT 1),
-    'ORG-' || i,
-    'Transport ' || i,
-    'SociÃ©tÃ© de Transport ' || i,
-    'Description ' || i,
-    'TAX-' || floor(random()*1000000),
-    true,
-    'PUBLISHED'
-FROM generate_series(1, 35) as i;
-
-INSERT INTO agencies (
-    organization_id, manager_id, name, city, location, is_headquarter
-)
-SELECT 
-    id, 
-    (SELECT id FROM fleet_managers ORDER BY random() LIMIT 1),
-    'Agence Centrale',
-    (ARRAY['Douala', 'YaoundÃ©', 'Abidjan'])[floor(random()*3)+1],
-    'Rue Principale',
-    true
-FROM organizations;
-
--- =====================================================
--- 6. FLEETS & VEHICLES
--- =====================================================
-
-INSERT INTO fleets (fleet_manager_id, name, phone_number)
-SELECT 
-    id, 'Flotte de ' || name, '+237699000000'
-FROM fleet_managers;
-
--- Vehicles
-INSERT INTO vehicles (
-    fleet_id, user_id, driver_id, license_plate, brand, model, type, color, manufacturing_year
-)
-SELECT 
-    f.id,
-    f.fleet_manager_id,
-    (SELECT id FROM drivers ORDER BY random() LIMIT 1),
-    'LT-' || floor(random()*999)::text || '-AA',
-    (ARRAY['Toyota', 'Peugeot'])[floor(random()*2)+1],
-    (ARRAY['Yaris', 'Partner'])[floor(random()*2)+1],
-    (ARRAY['CAR', 'VAN'])[floor(random()*2)+1]::vehicle_type_enum,
-    'Jaune',
-    2020
-FROM fleets f;
-
--- =====================================================
--- 7. OFFERS & RIDES
--- =====================================================
-
-INSERT INTO offers (
-    passenger_id, start_point, end_point, price, state, created_at
-)
-SELECT 
-    (SELECT id FROM customers ORDER BY random() LIMIT 1),
-    'Point A', 'Point B', 
-    2000, 
-    'CHOSEN',
-    NOW()
-FROM generate_series(1, 60) as i;
-
--- Rides
-INSERT INTO rides (
-    offer_id, passenger_id, driver_id, 
-    distance, time_estimation, real_time, state, created_at
-)
-SELECT 
-    id, -- offer_id
-    passenger_id,
-    (SELECT id FROM drivers ORDER BY random() LIMIT 1),
-    15.5, 30, 35,
-    'COMPLETED',
-    created_at
-FROM offers 
-LIMIT 40;
-
--- Reviews
-INSERT INTO reviews (ride_id, author_id, subject, comment, rating)
-SELECT 
-    id,
-    passenger_id,
-    'Chauffeur',
-    'Bonne course, chauffeur ponctuel',
-    5
-FROM rides
-WHERE state = 'COMPLETED';
-
--- =====================================================
--- 8. PRODUCTS
--- =====================================================
-
-INSERT INTO products (
-    organization_id, name, description, standard_price, 
-    status, is_active, departure_location
-)
-SELECT 
-    (SELECT id FROM organizations ORDER BY random() LIMIT 1),
-    'Trajet SpÃ©cial ' || i,
-    'Description produit',
-    5000,
-    'PUBLISHED',
-    true,
-    'Douala'
-FROM generate_series(1, 40) as i;
-
--- =====================================================
--- 9. SUBSCRIPTIONS & PAYMENTS
--- =====================================================
-
-INSERT INTO subscriptions (
-    admin_id, label, price, duration_in_days, description, is_active
-) VALUES 
-((SELECT id FROM admins LIMIT 1), 'Pack Hebdo', 2500, 7, 'Standard', true),
-((SELECT id FROM admins LIMIT 1), 'Pack Mensuel', 10000, 30, 'Pro', true),
-((SELECT id FROM admins LIMIT 1), 'Pack Annuel', 100000, 365, 'VIP', true);
-
-INSERT INTO payments (
-    driver_id, user_id, subscription_id, amount_paid, status, id_provider_transaction, created_at
-)
-SELECT 
-    d.id, -- Driver ID
-    d.id, -- Payer ID
-    s.id, -- Subscription ID
-    s.price,
-    'SUCCESS',
-    'TXN-' || floor(random()*10000000),
-    NOW()
-FROM drivers d
-CROSS JOIN subscriptions s
-ORDER BY random()
-LIMIT 50;
-
--- =====================================================
--- 10. SOCIAL & ADDRESSES
--- =====================================================
-
-INSERT INTO syndicats (organization_id, name, is_approved)
-SELECT id, 'Syndicat Transports', true FROM organizations LIMIT 1;
-
-INSERT INTO branches (id, syndicat_id, name, location)
-SELECT 
-    ag.id,
-    (SELECT id FROM syndicats LIMIT 1),
-    'Branche ' || ag.name, 
-    ag.location 
-FROM agencies ag 
-LIMIT 10;
-
-INSERT INTO publications (branch_id, author_id, content, status, n_likes)
-SELECT 
-    (SELECT id FROM branches ORDER BY random() LIMIT 1),
-    (SELECT id FROM admins ORDER BY random() LIMIT 1),
-    'Info Trafic ' || i,
-    'PUBLISHED',
-    floor(random() * 50)::int
-FROM generate_series(1, 40) as i;
-
--- =====================================================
--- SEEDING DIRECT PERMISSIONS (Test)
--- =====================================================
-
--- On crÃ©e quelques permissions
-INSERT INTO permissions (id, name) VALUES 
-(uuid_generate_v4(), 'extra:special_access'),
-(uuid_generate_v4(), 'fleet:emergency_stop');
-
--- On donne la premiÃ¨re permission au premier utilisateur (Admin 1)
-INSERT INTO user_has_permissions (user_id, permission_id)
-VALUES (
-    (SELECT id FROM users ORDER BY email_address LIMIT 1),
-    (SELECT id FROM permissions WHERE name = 'extra:special_access' LIMIT 1)
-);
-
----
-### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\docs\data\YOWYOB_DB\last_schema\guide_database_setup.md
-`$ext
-# ðŸ—„ï¸ Database Setup Guide (Local Development)
-
-This guide explains how to set up and initialize the Fleet Management database on your local machine. This process is fully automated for both **Linux** and **Windows**.
-
-## ðŸ“‹ Prerequisites
-
-Ensure you have the following installed:
-- **Docker** & **Docker Compose**
-  - *Linux*: `sudo apt install docker-compose`
-  - *Windows*: Install [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-
-## ðŸš€ Step 1: Start the Database Container
-
-Open a terminal at the root of the project and run:
-
-```bash
-# Start the PostgreSQL 16 container in the background
-docker-compose up -d
-```
-
-*Note: This will automatically pull the official Postgres 16 image and create a database named `yowyob_db`.*
-
-## âš™ï¸ Step 2: Configure the Application
-
-The application is configured to use a **Hybrid Mode** (Local DB + Remote Kafka/Redis).
-
-1. Open `src/main/resources/application.yml`.
-2. Ensure the active profile is set to `local`:
-   ```yaml
-   spring:
-     profiles:
-       active: local
-   ```
-3. (Optional) In the `LOCAL CONFIGURATION` block, verify that the credentials match those in `docker-compose.yml` (default: `fleet_admin` / `fleet_password`).
-
-## ðŸ› ï¸ Step 3: Run and Auto-Initialize
-
-Simply start the application. The system will detect the local environment and automatically:
-1. Create all tables and ENUM types (from `resources/local/schema.sql`).
-2. Inject 100 test users and sample data (from `resources/local/data.sql`).
-
-**Run Command:**
-```bash
-# Linux / macOS
-./mvnw clean spring-boot:run
-
-# Windows (CMD / PowerShell)
-mvnw.cmd clean spring-boot:run
-```
-
-## âœ… Step 4: Verify the Setup
-
-Once the log shows `ðŸš€ LOCAL DATABASE READY!`, open your browser:
-
-- **Swagger UI**: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
-- **Check Data**: Find the `health-check-controller` and execute `/api/v1/health/users-count`. You should see `users_in_db: 100`.
-
-## âŒ Troubleshooting
-
-- **Port 5432 already in use**: If you have a local PostgreSQL installed outside of Docker, stop it or change the port mapping in `docker-compose.yml`.
-- **DNS/Pull Issues**: If Docker fails to pull the image, try:
-  ```bash
-  docker pull postgres:16
-  ```
-
----
-### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\docs\data\YOWYOB_DB\last_schema\schema.sql
-`$ext
--- =====================================================
--- YOWYOB DB - INIT SCRIPT
--- PostgreSQL
--- Structure: Core -> Organization -> RBAC
--- =====================================================
-
--- Clean up existing tables and types to ensure a fresh start
--- We drop them in reverse order of dependency
-DROP TABLE IF EXISTS user_has_roles CASCADE;
-DROP TABLE IF EXISTS role_has_permissions CASCADE;
-DROP TABLE IF EXISTS permissions CASCADE;
-DROP TABLE IF EXISTS roles CASCADE;
-DROP TABLE IF EXISTS reviews CASCADE;
-DROP TABLE IF EXISTS payments CASCADE;
-DROP TABLE IF EXISTS subscriptions CASCADE;
-DROP TABLE IF EXISTS admins CASCADE;
-DROP TABLE IF EXISTS profiles CASCADE;
-DROP TABLE IF EXISTS comments CASCADE;
-DROP TABLE IF EXISTS reactions CASCADE;
-DROP TABLE IF EXISTS event_images CASCADE;
-DROP TABLE IF EXISTS events CASCADE;
-DROP TABLE IF EXISTS publication_images CASCADE;
-DROP TABLE IF EXISTS publications CASCADE;
-DROP TABLE IF EXISTS branches CASCADE;
-DROP TABLE IF EXISTS avis CASCADE;
-DROP TABLE IF EXISTS votes CASCADE;
-DROP TABLE IF EXISTS publication_votes CASCADE;
-DROP TABLE IF EXISTS products CASCADE;
-DROP TABLE IF EXISTS abstract_products CASCADE;
-DROP TABLE IF EXISTS syndicats CASCADE;
-DROP TABLE IF EXISTS offer_driver_linkages CASCADE;
-DROP TABLE IF EXISTS geofence_events CASCADE;
-DROP TABLE IF EXISTS geofence_point_zone_linkages CASCADE;
-DROP TABLE IF EXISTS geofence_points CASCADE;
-DROP TABLE IF EXISTS maintenance_parameters CASCADE;
-DROP TABLE IF EXISTS financial_parameters CASCADE;
-DROP TABLE IF EXISTS operational_parameters CASCADE;
-DROP TABLE IF EXISTS trips CASCADE;
-DROP TABLE IF EXISTS roads CASCADE;
-DROP TABLE IF EXISTS vehicles CASCADE;
-DROP TABLE IF EXISTS geofence_zones CASCADE;
-DROP TABLE IF EXISTS fleets CASCADE;
-DROP TABLE IF EXISTS fleet_managers CASCADE;
-DROP TABLE IF EXISTS rides CASCADE;
-DROP TABLE IF EXISTS offers CASCADE;
-DROP TABLE IF EXISTS drivers CASCADE;
-DROP TABLE IF EXISTS services CASCADE;
-DROP TABLE IF EXISTS customers CASCADE;
-DROP TABLE IF EXISTS sales_persons CASCADE;
-DROP TABLE IF EXISTS prospects CASCADE;
-DROP TABLE IF EXISTS employees CASCADE;
-DROP TABLE IF EXISTS providers CASCADE;
-DROP TABLE IF EXISTS addresses CASCADE;
-DROP TABLE IF EXISTS proposed_activities CASCADE;
-DROP TABLE IF EXISTS settings CASCADE;
-DROP TABLE IF EXISTS third_parties CASCADE;
-DROP TABLE IF EXISTS certifications CASCADE;
-DROP TABLE IF EXISTS organization_business_domains CASCADE;
-DROP TABLE IF EXISTS contacts CASCADE;
-DROP TABLE IF EXISTS business_domains CASCADE;
-DROP TABLE IF EXISTS agencies CASCADE;
-DROP TABLE IF EXISTS organizations CASCADE;
-DROP TABLE IF EXISTS business_actors CASCADE;
-DROP TABLE IF EXISTS countries CASCADE;
-DROP TABLE IF EXISTS images CASCADE;
-DROP TABLE IF EXISTS users CASCADE;
-
--- Drop existing types
-DROP TYPE IF EXISTS reaction_type_enum CASCADE;
-DROP TYPE IF EXISTS type_enum CASCADE;
-DROP TYPE IF EXISTS role_type_enum CASCADE;
-DROP TYPE IF EXISTS engine_status_enum CASCADE;
-DROP TYPE IF EXISTS maintenance_status_enum CASCADE;
-DROP TYPE IF EXISTS event_type_enum CASCADE;
-DROP TYPE IF EXISTS ride_state_enum CASCADE;
-DROP TYPE IF EXISTS offer_state_enum CASCADE;
-DROP TYPE IF EXISTS vehicle_type_enum CASCADE;
-DROP TYPE IF EXISTS action_enum CASCADE;
-DROP TYPE IF EXISTS category_enum CASCADE;
-DROP TYPE IF EXISTS status_enum CASCADE;
-
--- Re-enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
-
--- =====================================================
--- ENUM TYPES
--- =====================================================
-
-CREATE TYPE status_enum AS ENUM (
-  'DRAFT', 'WAITING_CONFIRMATION', 'PUBLISHED', 'IN_PROGRESS', 'CANCELLED', 'EXPIRED'
-);
-
-CREATE TYPE category_enum AS ENUM (
-  'ANNOUNCE', 'PLANNING', 'VEHICLE', 'ADDRESS', 'EXPERIENCE'
-);
-
-CREATE TYPE action_enum AS ENUM (
-  'CREATE', 'UPDATE', 'READ', 'DELETE'
-);
-
-CREATE TYPE vehicle_type_enum AS ENUM (
-  'CAR', 'VAN', 'TRUCK', 'BIKE'
-);
-
-CREATE TYPE offer_state_enum AS ENUM (
-  'NEW', 'PENDING', 'CHOSEN', 'TERMINATED', 'CANCELED'
-);
-
-CREATE TYPE ride_state_enum AS ENUM (
-  'CONFIRMED', 'ONGOING', 'COMPLETED', 'CANCELED'
-);
-
-CREATE TYPE event_type_enum AS ENUM (
-  'ENTRY', 'EXIT'
-);
-
-CREATE TYPE maintenance_status_enum AS ENUM (
-  'UP_TO_DATE', 'PENDING', 'OVERDUE'
-);
-
-CREATE TYPE engine_status_enum AS ENUM (
-  'OK', 'NEED_SERVICE', 'OUT_OF_SERVICE'
-);
-
-CREATE TYPE role_type_enum AS ENUM (
-  'CUSTOMER', 'DRIVER', 'FLEET_MANAGER', 'ADMIN', 'PASSENGER', 'PRESIDENT', 'MODERATOR', 'CLIENT'
-);
-
-CREATE TYPE type_enum AS ENUM (
-  'NOTIFICATION', 'CHAT', 'PAYMENT', 'MEDIA'
-);
-
-CREATE TYPE reaction_type_enum AS ENUM (
-  'LIKE', 'LOVE', 'HAHA', 'WOW', 'SAD', 'ANGRY'
-);
-
--- =====================================================
--- CORE TABLES
--- =====================================================
-
-CREATE TABLE users (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT NOT NULL,
-  phone_number TEXT,
-  email_address TEXT UNIQUE
-);
-
-CREATE TABLE images (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  url TEXT NOT NULL,
-  alt_text TEXT,
-  uploaded_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE countries (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT NOT NULL,
-  code TEXT NOT NULL UNIQUE,
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE business_actors (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT,
-  phone_number TEXT,
-  email_address TEXT,
-  CONSTRAINT fk_business_actor_user
-    FOREIGN KEY (id) REFERENCES users(id)
-    ON DELETE CASCADE
-);
-
--- =====================================================
--- ORGANIZATION TABLES
--- =====================================================
-
-CREATE TABLE organizations (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  business_actor_id UUID REFERENCES business_actors(id),
-  logo_id UUID REFERENCES images(id),
-
-  code TEXT,
-  service TEXT,
-  is_individual_business BOOLEAN DEFAULT false,
-  email TEXT,
-  short_name TEXT,
-  long_name TEXT,
-  description TEXT,
-  logo_uri TEXT,
-  website_url TEXT,
-  social_network TEXT,
-  business_registration_number TEXT,
-  tax_number TEXT,
-  capital_share NUMERIC,
-  ceo_name TEXT,
-  year_founded INT,
-  keywords TEXT,
-  number_of_employees INT,
-  legal_form TEXT,
-  is_active BOOLEAN DEFAULT true,
-  status status_enum DEFAULT 'DRAFT',
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now(),
-  deleted_at TIMESTAMP
-);
-
-CREATE TABLE agencies (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE, -- Must belong to an org
-
-  owner_id UUID REFERENCES business_actors(id),
-  manager_id UUID REFERENCES business_actors(id),
-  logo_id UUID REFERENCES images(id),
-
-  code TEXT,
-  name TEXT,
-  location TEXT,
-  description TEXT,
-  transferable BOOLEAN DEFAULT false,
-  is_active BOOLEAN DEFAULT true,
-  logo_uri TEXT,
-  short_name TEXT,
-  long_name TEXT,
-  is_individual_business BOOLEAN DEFAULT false,
-  is_headquarter BOOLEAN DEFAULT false,
-  country TEXT,
-  city TEXT,
-  latitude NUMERIC,
-  longitude NUMERIC,
-  open_time TIME,
-  close_time TIME,
-  phone TEXT,
-  email TEXT,
-  whatsapp TEXT,
-  greeting_message TEXT,
-  average_revenue NUMERIC,
-  capital_share NUMERIC,
-  registration_number TEXT,
-  social_network TEXT,
-  tax_number TEXT,
-  keywords TEXT,
-  is_public BOOLEAN DEFAULT false,
-  is_business BOOLEAN DEFAULT true,
-  total_affiliated_customers INT DEFAULT 0,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now(),
-  deleted_at TIMESTAMP
-);
-
-CREATE TABLE business_domains (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  organization_id UUID REFERENCES organizations(id) ON DELETE SET NULL, -- optional link to organization
-  parent_id UUID REFERENCES business_domains(id) ON DELETE SET NULL,   -- self-referential for hierarchy
-  image_id UUID REFERENCES images(id),
-
-  code TEXT,
-  service TEXT,
-  name TEXT,
-  image_uri TEXT,
-  type TEXT,
-  type_label TEXT,
-  description TEXT,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now(),
-  deleted_at TIMESTAMP
-);
-
-CREATE TABLE organization_business_domains (
-  organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
-  business_domain_id UUID REFERENCES business_domains(id) ON DELETE CASCADE,
-  PRIMARY KEY (organization_id, business_domain_id)
-);
-
-CREATE TABLE contacts (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  contactable_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
-
-  contactable_type TEXT,
-  first_name TEXT,
-  last_name TEXT,
-  title TEXT,
-  is_email_verified BOOLEAN DEFAULT false,
-  is_phone_number_verified BOOLEAN DEFAULT false,
-  is_favorite BOOLEAN DEFAULT false,
-  phone_number TEXT,
-  secondary_phone_number TEXT,
-  fax_number TEXT,
-  email TEXT,
-  secondary_email TEXT,
-  email_verified_at TIMESTAMP,
-  phone_verified_at TIMESTAMP,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now(),
-  deleted_at TIMESTAMP
-);
-
-CREATE TABLE certifications (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
-
-  type TEXT,
-  name TEXT,
-  description TEXT,
-  obtainment_date DATE,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now(),
-  deleted_at TIMESTAMP
-);
-
-CREATE TABLE third_parties (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
-  logo_id UUID REFERENCES images(id),
-
-  code TEXT,
-  type TEXT,
-  legal_form TEXT,
-  unique_identification_number TEXT,
-  trade_registration_number TEXT,
-  name TEXT,
-  acronym TEXT,
-  long_name TEXT,
-  logo_uri TEXT,
-  accounting_account_numbers TEXT,
-  authorized_payment_methods TEXT,
-  authorized_credit_limit NUMERIC,
-  max_discount_rate NUMERIC,
-  vat_subject BOOLEAN,
-  operations_balance NUMERIC,
-  opening_balance NUMERIC,
-  pay_term_number INT,
-  pay_term_type TEXT,
-  third_party_family TEXT,
-  classification TEXT,
-  tax_number TEXT,
-  loyalty_points NUMERIC,
-  loyalty_points_used NUMERIC,
-  loyalty_points_expired NUMERIC,
-  enabled BOOLEAN DEFAULT true,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now(),
-  deleted_at TIMESTAMP
-);
-
-CREATE TABLE settings (
-  user_id UUID PRIMARY KEY REFERENCES users(id),
-  theme TEXT,
-  language TEXT,
-  long_ride_enabled BOOLEAN DEFAULT false,
-  short_ride_enabled BOOLEAN DEFAULT false,
-  privacy_enable BOOLEAN DEFAULT true,
-  allow_calls BOOLEAN DEFAULT true,
-  allow_messages BOOLEAN DEFAULT true,
-  notify_new_rides BOOLEAN DEFAULT true,
-  notify_ratings BOOLEAN DEFAULT true,
-  notify_practical_tips BOOLEAN DEFAULT true,
-  notify_promotions BOOLEAN DEFAULT true,
-  notify_policy_updates BOOLEAN DEFAULT true,
-  notify_peak_hour_recommendations BOOLEAN DEFAULT true,
-  receive_email BOOLEAN DEFAULT true,
-  receive_sms BOOLEAN DEFAULT true,
-  receive_push_notifications BOOLEAN DEFAULT true,
-  receive_whatsapp BOOLEAN DEFAULT true,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE proposed_activities (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
-
-  type TEXT,
-  name TEXT,
-  rate NUMERIC,
-  description TEXT,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE addresses (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  addressable_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
-  country_id UUID REFERENCES countries(id) ON DELETE SET NULL,
-
-  addressable_type TEXT,
-  type TEXT,
-  address_line_1 TEXT,
-  address_line_2 TEXT,
-  city TEXT,
-  state TEXT,
-  locality TEXT,
-  zip_code TEXT,
-  postal_code TEXT,
-  po_box TEXT,
-  is_default BOOLEAN DEFAULT false,
-  neighbor_hood TEXT,
-  informal_description TEXT,
-  latitude NUMERIC,
-  longitude NUMERIC,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now(),
-  deleted_at TIMESTAMP
-);
-
--- =====================================================
--- USERS EXTENDED
--- =====================================================
-
-CREATE TABLE providers (
-  id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-
-  code TEXT,
-  contact_info TEXT,
-  address TEXT,
-  is_active BOOLEAN DEFAULT true,
-  product_service_type TEXT,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now(),
-  deleted_at TIMESTAMP
-);
-
-CREATE TABLE employees (
-  id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-
-  code TEXT,
-  is_manager BOOLEAN DEFAULT false,
-  role TEXT,
-  department TEXT,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now(),
-  deleted_at TIMESTAMP
-);
-
-CREATE TABLE prospects (
-  id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-
-  code TEXT,
-  payment_method TEXT,
-  amount_paid NUMERIC,
-  interest_level TEXT,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE sales_persons (
-  id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-
-  code TEXT,
-  commission_rate NUMERIC,
-  credit NUMERIC,
-  current_balance NUMERIC,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now(),
-  deleted_at TIMESTAMP
-);
-
-CREATE TABLE customers (
-  id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-
-  code TEXT,
-  payment_method TEXT,
-  amount_paid NUMERIC,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now(),
-  deleted_at TIMESTAMP
-);
-
-CREATE TABLE services (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-  name TEXT,
-  phone_number TEXT,
-  email_address TEXT
-);
-
--- =====================================================
--- RIDE & FLEET MANAGEMENT
--- =====================================================
-
-CREATE TABLE drivers (
-  id UUID PRIMARY KEY REFERENCES business_actors(id) ON DELETE CASCADE,
-
-  status TEXT,
-  license_number TEXT,
-  has_car BOOLEAN DEFAULT false
-);
-
-CREATE TABLE offers (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  passenger_id UUID REFERENCES customers(id) ON DELETE CASCADE,
-
-  start_point TEXT,
-  end_point TEXT,
-  price NUMERIC,
-  state offer_state_enum DEFAULT 'NEW',
-  ids_interested_drivers TEXT,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE rides (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  offer_id UUID REFERENCES offers(id) ON DELETE SET NULL,
-  passenger_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  driver_id UUID REFERENCES drivers(id) ON DELETE SET NULL,
-
-  distance NUMERIC,
-  time_estimation NUMERIC,
-  real_time NUMERIC,
-  state ride_state_enum DEFAULT 'CONFIRMED',
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE fleet_managers (
-  id UUID PRIMARY KEY REFERENCES business_actors(id) ON DELETE CASCADE,
-
-  name TEXT,
-  phone_number TEXT,
-  email_address TEXT
-);
-
-CREATE TABLE fleets (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  fleet_manager_id UUID REFERENCES fleet_managers(id) ON DELETE SET NULL,
-
-  name TEXT,
-  phone_number TEXT,
-  email_address TEXT,
-
-  created_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE geofence_zones (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-  surface_area NUMERIC,
-  perimeter NUMERIC
-);
-
-CREATE TABLE vehicles (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  driver_id UUID REFERENCES drivers(id) ON DELETE SET NULL,
-  fleet_id UUID REFERENCES fleets(id) ON DELETE SET NULL,
-  zone_id UUID REFERENCES geofence_zones(id) ON DELETE SET NULL,
-
-  license_plate TEXT,
-  model TEXT,
-  brand TEXT,
-  manufacturing_year INT,
-  type vehicle_type_enum,
-  color TEXT
-);
-
-CREATE TABLE roads (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-  start_point TEXT,
-  end_point TEXT
-);
-
-CREATE TABLE trips (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  road_id UUID REFERENCES roads(id) ON DELETE SET NULL,
-  driver_id UUID REFERENCES drivers(id) ON DELETE SET NULL,
-
-  start_date DATE,
-  end_date DATE,
-  start_time TIME,
-  end_time TIME,
-  type TEXT,
-  color TEXT
-);
-
-CREATE TABLE operational_parameters (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  vehicle_id UUID REFERENCES vehicles(id) ON DELETE CASCADE,
-  trip_id UUID REFERENCES trips(id) ON DELETE CASCADE,
-
-  statut TEXT,
-  current_location TEXT,
-  current_speed NUMERIC,
-  fuel_level NUMERIC,
-  mileage NUMERIC,
-  odometer_reading NUMERIC,
-  bearing NUMERIC,
-
-  timestamp TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE financial_parameters (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  vehicle_id UUID REFERENCES vehicles(id) ON DELETE CASCADE,
-  trip_id UUID REFERENCES trips(id) ON DELETE CASCADE,
-
-  insurance_number TEXT,
-  insurance_expired_at DATE,
-  registered_at DATE,
-  purchased_at DATE,
-  depreciation_rate NUMERIC,
-  cost_per_km NUMERIC
-);
-
-CREATE TABLE maintenance_parameters (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  vehicle_id UUID REFERENCES vehicles(id) ON DELETE CASCADE,
-  trip_id UUID REFERENCES trips(id) ON DELETE CASCADE,
-
-  last_maintenance_at DATE,
-  next_maintenance_at DATE,
-  engine_status engine_status_enum DEFAULT 'OK',
-  battery_health TEXT,
-  maintenance_status maintenance_status_enum DEFAULT 'UP_TO_DATE'
-);
-
-CREATE TABLE geofence_points (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-  latitude NUMERIC,
-  longitude NUMERIC
-);
-
-CREATE TABLE geofence_point_zone_linkages (
-  point_id UUID REFERENCES geofence_points(id) ON DELETE CASCADE,
-  zone_id UUID REFERENCES geofence_zones(id) ON DELETE CASCADE,
-  PRIMARY KEY (point_id, zone_id)
-);
-
-CREATE TABLE geofence_events (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  vehicle_id UUID REFERENCES vehicles(id) ON DELETE CASCADE,
-  zone_id UUID REFERENCES geofence_zones(id) ON DELETE SET NULL,
-  point_id UUID REFERENCES geofence_points(id) ON DELETE SET NULL,
-
-  type event_type_enum,
-
-  timestamp TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE offer_driver_linkages (
-  offer_id UUID REFERENCES offers(id) ON DELETE CASCADE,
-  driver_id UUID REFERENCES drivers(id) ON DELETE CASCADE,
-  PRIMARY KEY (offer_id, driver_id),
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
--- =====================================================
--- OTHERS: PRODUCTS, SYNDICATS, PUBLICATIONS & REVIEWS
--- =====================================================
-
-CREATE TABLE syndicats (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
-
-  is_approved BOOLEAN DEFAULT false,
-  name TEXT,
-  description TEXT,
-  domain TEXT,
-  type TEXT,
-  charte_url TEXT,
-  status_url TEXT,
-  members_list_url TEXT,
-  commitment_certificate_url TEXT,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE abstract_products (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  syndicat_id UUID REFERENCES syndicats(id) ON DELETE SET NULL,
-
-  name TEXT,
-  description TEXT,
-
-  created_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE products (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
-  abstract_product_id UUID REFERENCES abstract_products(id) ON DELETE SET NULL,
-
-  name TEXT,
-  description TEXT,
-  is_active BOOLEAN DEFAULT true,
-  standard_price NUMERIC,
-  departure_location TEXT,
-  arrival_location TEXT,
-  start_date DATE,
-  start_time TIME,
-  end_date DATE,
-  end_time TIME,
-  baggage_info TEXT,
-  is_negotiable BOOLEAN DEFAULT false,
-  payment_method TEXT,
-  title TEXT,
-  status status_enum DEFAULT 'DRAFT',
-  product_urls TEXT,
-  regular_amount NUMERIC,
-  discount_percentage NUMERIC,
-  discounted_amount NUMERIC,
-  metadata JSONB,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE publication_votes (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-  title TEXT,
-  description TEXT,
-  closing_at TIMESTAMP,
-  type category_enum
-);
-
-CREATE TABLE votes (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  publication_vote_id UUID REFERENCES publication_votes(id) ON DELETE CASCADE,
-
-  label TEXT
-);
-
-CREATE TABLE avis (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  product_id UUID REFERENCES products(id) ON DELETE CASCADE,
-  syndicat_id UUID REFERENCES syndicats(id) ON DELETE SET NULL,
-
-  comment TEXT,
-  number INT,
-
-  created_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE branches (
-  id UUID PRIMARY KEY REFERENCES agencies(id),
-  syndicat_id UUID REFERENCES syndicats(id) ON DELETE SET NULL,
-
-  name TEXT,
-  location TEXT,
-  contact TEXT,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE publications (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
-  author_id UUID REFERENCES users(id) ON DELETE SET NULL,
-
-  content TEXT,
-  status status_enum DEFAULT 'DRAFT',
-  n_likes INT DEFAULT 0,
-
-  created_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE publication_images (
-  publication_id UUID REFERENCES publications(id) ON DELETE CASCADE,
-  image_id UUID REFERENCES images(id) ON DELETE CASCADE,
-  PRIMARY KEY (publication_id, image_id),
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE events (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
-
-  title TEXT,
-  description TEXT,
-  location TEXT,
-  date DATE,
-  start_time TIME,
-  end_time TIME,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE event_images (
-  event_id UUID REFERENCES events(id) ON DELETE CASCADE,
-  image_id UUID REFERENCES images(id) ON DELETE CASCADE,
-  PRIMARY KEY (event_id, image_id),
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE reactions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  publication_id UUID REFERENCES publications(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-
-  type reaction_type_enum,
-
-  reacted_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE comments (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  author_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  publication_id UUID REFERENCES publications(id) ON DELETE CASCADE,
-  parent_id UUID REFERENCES comments(id) ON DELETE SET NULL,
-  image_id UUID REFERENCES images(id) ON DELETE SET NULL,
-
-  content TEXT,
-
-  created_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE profiles (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-
-  first_name TEXT,
-  last_name TEXT,
-  nickname TEXT,
-  profile_image_url TEXT,
-  birth_date DATE,
-  nationality TEXT,
-  gender TEXT,
-  language TEXT,
-  company_name TEXT,
-  biography TEXT,
-  rating NUMERIC,
-  total_trips INT,
-  is_available BOOLEAN DEFAULT true,
-  is_verified BOOLEAN DEFAULT false,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
--- =====================================================
--- PAYMENTS & SUBSCRIPTIONS
--- =====================================================
-
-CREATE TABLE admins (
-  id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-
-  name TEXT,
-  phone_number TEXT,
-  email_address TEXT
-);
-
-CREATE TABLE subscriptions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  admin_id UUID REFERENCES admins(id) ON DELETE SET NULL,
-
-  label TEXT,
-  price NUMERIC,
-  duration_in_days INT,
-  description TEXT,
-  is_active BOOLEAN DEFAULT true,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE payments (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  driver_id UUID REFERENCES drivers(id) ON DELETE SET NULL,
-  subscription_id UUID REFERENCES subscriptions(id) ON DELETE SET NULL,
-  user_id UUID REFERENCES business_actors(id) ON DELETE SET NULL,
-
-  amount_paid NUMERIC,
-  status TEXT,
-  id_provider_transaction TEXT,
-
-  created_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE reviews (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  ride_id UUID REFERENCES rides(id) ON DELETE CASCADE,
-  author_id UUID REFERENCES users(id) ON DELETE SET NULL,
-
-  subject TEXT,
-  comment TEXT,
-  rating NUMERIC,
-
-  created_at TIMESTAMP DEFAULT now()
-);
-
--- =====================================================
--- ROLE-BASED ACCESS CONTROL (RBAC)
--- =====================================================
-
-CREATE TABLE roles (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-  name TEXT NOT NULL,
-  guard_name TEXT,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE permissions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-  name TEXT NOT NULL,
-  guard_name TEXT,
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE role_has_permissions (
-  role_id UUID REFERENCES roles(id) ON DELETE CASCADE,
-  permission_id UUID REFERENCES permissions(id) ON DELETE CASCADE,
-  PRIMARY KEY (role_id, permission_id),
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE user_has_roles (
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  role_id UUID REFERENCES roles(id) ON DELETE CASCADE,
-  PRIMARY KEY (user_id, role_id),
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
--- =====================================================
--- FIX: DIRECT PERMISSIONS (USER <-> PERMISSIONS)
--- =====================================================
-
--- Table de liaison pour les permissions accordÃ©es directement Ã  un utilisateur
-CREATE TABLE IF NOT EXISTS user_has_permissions (
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  permission_id UUID REFERENCES permissions(id) ON DELETE CASCADE,
-  PRIMARY KEY (user_id, permission_id),
-
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
--- Commit the transaction
-
-
--- =====================================================
--- END OF SCRIPT. NOTHING AFTER HERE!
--- =====================================================
-
----
 ### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\docs\prompts\gabriel.md
 `$ext
-# ðŸ¤– Master Prompt : Senior Pair Programmer WebFlux
+# ðŸ¤– Master Prompt : Senior Pair Programmer WebFlux (v2.0)
 
-Tu es mon Senior Pair Programmer expert en Java **Spring Boot WebFlux (RÃ©actif)**.
-Nous dÃ©veloppons l'API **Fleet Management et Geofencing** (Projet TraEnSys).
+Tu es un Senior Pair Programmer expert en Java **Spring Boot WebFlux (RÃ©actif)** et en Architecture Hexagonale.
+Ton rÃ´le est d'accompagner Gabriel dans le dÃ©veloppement de l'API **Fleet Management & Geofencing** (Projet TraEnSys).
 
-### ðŸ“‹ Ta MÃ©thode de Travail (IMPÃ‰RATIF)
-Pour chaque tÃ¢che demandÃ©e, tu dois obligatoirement suivre ces Ã©tapes :
+### ðŸ“‹ Ton Workflow ImpÃ©ratif (4 Ã‰tapes)
 
 **Ã‰tape 1 : Conception fonctionnelle**
-- Analyse du besoin, user stories et ajustement du modÃ¨le de donnÃ©es.Discuter avec moi de cette conception
-- **Attente de ma validation explicite avant d'aller plus loin.**
+- Analyse du besoin, ajustement du modÃ¨le de donnÃ©es (Tables/Enums).
+- Discussion sur les User Stories.
+- **INTERDICTION** de proposer du code ici.
+- **ATTENTE :** Validation explicite de Gabriel ("OK Ã©tape 1" ou "Discussion technique").
 
-**Ã‰tape 2 : Discussion Technique**
-- Avant de coder, explique briÃ¨vement comment l'architechture sera gÃ©rÃ©e pour cette tÃ¢che.ne pas hesiter a dire les fichiers qui entrent en jeu,leur role et ce qu'on y ferra.pose moi les questions si a certains endroits tu as des doutes ou si tu as besoin de clarification,pas d'initiatives sans me consulter,pas de code mock,toujours me demander comment faire,car je veux faire une api robuste.c'est une phase de discussion
-- **Attente de ma validation explicite avant d'aller plus loin.**
+**Ã‰tape 2 : Discussion Technique & Architecture**
+- Expliquer l'impact sur l'architecture hexagonale.
+- Lister les fichiers impactÃ©s (Nouveaux et existants) et leurs rÃ´les.
+- Expliquer la logique rÃ©active (Mono/Flux).
+- Poser des questions sur les cas limites (Edge cases).
+- **INTERDICTION** de gÃ©nÃ©rer le code complet ici.
+- **ATTENTE :** Validation explicite de Gabriel ("OK Ã©tape 2" ou "ImplÃ©mentation").
 
-**Ã‰tape 3 : ImplÃ©mentation**
-- Fournis le code complet par blocs Markdown copiables.
-- Respecte l'architecture hexagonale du projet.
--respecte egalement mes consignes
+**Ã‰tape 3 : ImplÃ©mentation (Code)**
+- Appliquer les rÃ¨gles de sortie de code (voir section "RÃ¨gles de Code").
+- Respecter l'isolation du schÃ©ma `fleet` (le local est souverain).
+- ImplÃ©menter une gestion d'erreurs modulaire via `DomainException`.
 
 **Ã‰tape 4 : Tests & Validation**
-- Instructions pour tester via swagger .
+- Instructions prÃ©cises pour tester via Swagger ou Logs.
 
-### ðŸš« Tes RÃ¨gles de Conduite
+### ðŸš« Tes RÃ¨gles de Conduite (IMPÃ‰RATIF)
 1. **ZÃ©ro code non sollicitÃ©** : Ne propose aucune solution technique avant l'Ã‰tape 3.
-2. **Focus** : RÃ©ponds uniquement Ã  la question posÃ©e, de maniÃ¨re synthÃ©tique et prÃ©cise.
-3. **Fichiers complets** : Sauf mention contraire, donne toujours le code complet du fichier pour Ã©viter les erreurs de copier-coller.
-4. **PÃ©dagogie** : Si une opÃ©ration risque de bloquer un thread (ex: JDBC classique, thread sleep), arrÃªte-moi et propose l'alternative non-bloquante.
+2. **Cycle de discussion** : Si Gabriel pose une question, rÃ©ponds de maniÃ¨re pragmatique et honnÃªte (analyse coÃ»ts/bÃ©nÃ©fices) sans passer Ã  l'Ã©tape suivante.
+3. **PÃ©dagogie RÃ©active** : Bloque immÃ©diatement Gabriel s'il propose une opÃ©ration bloquante (JDBC, Thread.sleep, etc.).
+4. **Le Local est souverain** : Toujours prioriser la base de donnÃ©es locale (`fleet.users`, `is_active`) pour la sÃ©curitÃ©, mÃªme si les services externes (Pynfi) rÃ©pondent OK.
 
+### ðŸ› ï¸ RÃ¨gles de Sortie de Code
+- **Modification Mineure (< 5 lignes)** : Donne uniquement le bloc de code Ã  remplacer avec son contexte (mÃ©thode environnante).
+- **Modification Majeure ou Nouveau Fichier** : Fournis systÃ©matiquement le **FICHIER COMPLET** pour Ã©viter les erreurs de copier-coller.
+- **Annotations** : Utilise Lombok (`@RequiredArgsConstructor`, `@Data`) pour la clartÃ©.
 ### ðŸ“‚ Contexte
 Le code source complet est disponible dans le fichier `project_context.txt`.
 La roadmap est suivie dans `todo.md`.
 
 
-### Premiere mission
-je viens de merger mon travail ,moi gabriel avec celui de mes colalborateurs,la'pi est fonctionnelle,deployee. maisntenant on doit finaliser.chacun connait deja ses taches donc on va juste mettre dans la todo les taches sous la forme,finaliser le module:
-moi en temos que chef du proejt backend,j'ai la plus grosse tache.
--on va d;abord mettre a jour la todo,ensuite on va se oncentrer sur les modules qui me concernent
 
-objectifs:
-- reorganiser l'odre des modules du swagger pour plus de clarte et de logique(moi)
--finalisation gestion du geofence: hassana
--finalisation gestion des paiements: raphael
--teste et finalisations des autres modules: gabriel(monitoring,auth,account,superamdnins,admins,managers,drivers,vehicles,flottes,courses) pour chaque module il faudra teste et completer.
+Tu travailles avec Gabriel, le Chef de Projet Backend de TraEnSys. 
+Gabriel attend de toi une rigueur absolue, de la franchise technique et une autonomie respectueuse de ses consignes.
 
-ton role est de ma'ccampagner dans ce processus,ta premeire mission est de ma;ider a proposer une todo en md,datee d'ajour'dui selon le modele de l'ancien sausf que ici il n'yaura pas le detail des taches des autres,chacun sait quoi faire,peut etre juste tester et finaliser partout
-"
-toute fosi tu m'aides d'abord a rfesourdre les soucis que le merge a cause et a lancer l'applicorrectement:" git stash push -m "backup avant checkout raphael"
-No local changes to save
-gabriel@gabriel-pc:~/Documents/projects/ecole/5GI/projet-synthese/fleet-management/code$ git checkout -b raphael origin/raphael
-Branch 'raphael' set up to track remote branch 'raphael' from 'origin'.
-Switched to a new branch 'raphael'
-gabriel@gabriel-pc:~/Documents/projects/ecole/5GI/projet-synthese/fleet-management/code$ # Passer sur main
-git checkout main
+### ðŸŽ¯ Ã‰tat d'esprit de la collaboration
+- **Pragmatisme :** Si une solution est Ã©lÃ©gante mais trop complexe pour les dÃ©lais, signale-le.
+- **ModularitÃ© :** Chaque module (parmi les 11) doit Ãªtre conÃ§u pour fonctionner mÃªme si les autres sont en maintenance.
+- **Validation en boucle :** Gabriel aime discuter en profondeur avant de coder. Ne le presse jamais.
 
-# S'assurer que main est Ã  jour
-git reset --hard origin/main
+### ðŸ“‚ Contexte du Projet
+- **Framework :** Spring Boot 3+ WebFlux.
+- **Persistence :** R2DBC (PostgreSQL).
+- **Architecture :** Hexagonale (Domain, Application, Infrastructure).
+- **Isolation :** Les donnÃ©es vitales sont dans le schÃ©ma `fleet`. Les appels distants (Pynfi) sont mappÃ©s vers des exceptions locales.
 
-# Merger Raphael
-git merge raphael
-Switched to branch 'main'
-Your branch is up to date with 'origin/main'.
-HEAD is now at b76d587 resolution des conflits de merge sur le geofence, vehicules et paiements
-Auto-merging src/main/java/com/yowyob/fleet/infrastructure/config/SecurityConfig.java
-CONFLICT (content): Merge conflict in src/main/java/com/yowyob/fleet/infrastructure/config/SecurityConfig.java
-Auto-merging src/main/java/com/yowyob/fleet/infrastructure/config/WebClientConfig.java
-CONFLICT (content): Merge conflict in src/main/java/com/yowyob/fleet/infrastructure/config/WebClientConfig.java
-Automatic merge failed; fix conflicts and then commit the result.
-gabriel@gabriel-pc:~/Documents/projects/ecole/5GI/projet-synthese/fleet-management/code$ git status
-On branch main
-Your branch is up to date with 'origin/main'.
+### ðŸš€ DÃ©marrage de session
+aide moi a debugger ca,avant qu'on aille discuter de la gestion du module account
 
-You have unmerged paths.
-  (fix conflicts and run "git commit")
-  (use "git merge --abort" to abort the merge)
+erreur:"register reussi mais sans photo,il faut dianostiquer:"
+YowYob Fleet Management API
 
-Changes to be committed:
-        modified:   import_context_window.ps1
-        new file:   project_context_2.txt
-        new file:   project_context_3.txt
-        new file:   project_context_4.txt
-        new file:   project_context_5.txt
-        modified:   src/main/java/com/yowyob/fleet/domain/ports/out/ExternalPaymentPort.java
-        new file:   src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/PaymentController.java
-        deleted:    src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/TestPaymentController.java
-        modified:   src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/external/PaymentApiAdapter.java
-        deleted:    src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/external/client/PaymentApiClient.java
-        new file:   src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/external/dto/TransactionExternalRequest.java
-        new file:   src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/external/dto/TransactionExternalResponse.java
+ 1.0.0 
 
-Unmerged paths:
-  (use "git add <file>..." to mark resolution)
-        both modified:   src/main/java/com/yowyob/fleet/infrastructure/config/SecurityConfig.java
-        both modified:   src/main/java/com/yowyob/fleet/infrastructure/config/WebClientConfig.java
+OAS 3.0
 
-gabriel@gabriel-pc:~/Documents/projects/ecole/5GI/projet-synthese/fleet-management/code$ " j'ai fais un premier essaide correction mais dans webclientconig ca ne egrre pas,il y'a le rouge,payment apiclientnot found
+/v3/api-docs
+
+API RÃ©active pour la gestion de flottes et le gÃ©orepÃ©rage.
+Contact Gabriel Nomo
+Servers
+01. Monitoring
+
+Endpoints de diagnostic et statistiques publiques
+GET
+/api/v1/health/public-stats
+Statistiques publiques (Landing Page)
+GET
+/api/v1/health/diagnostic
+Diagnostic SystÃ¨me profond (Multi-Service)
+02. Auth
+
+Endpoints publics (Login, Register, Refresh)
+POST
+/api/v1/auth/register
+Inscription Utilisateur
+
+CrÃ©ation de compte. Remplir le JSON dans 'user' et l'image dans 'file'.
+Parameters
+
+No parameters
+Request body
+user *
+object
+	
+{
+"username": "gabriel_manager5",
+"password": "password123",
+"email": "gabriel.manager5@test.com",
+"phone": "+237600000005",
+"firstName": "Gabriel",
+"lastName": "Lead",
+"roles": ["FLEET_MANAGER"]
+}
+file
+string($binary)
+	
+Send empty value
+Responses
+Curl
+
+curl -X 'POST' \
+  'http://localhost:8080/api/v1/auth/register' \
+  -H 'accept: */*' \
+  -H 'Content-Type: multipart/form-data' \
+  -F 'user={
+"username": "gabriel_manager5",
+"password": "password123",
+"email": "gabriel.manager5@test.com",
+"phone": "+237600000005",
+"firstName": "Gabriel",
+"lastName": "Lead",
+"roles": ["FLEET_MANAGER"]
+};type=application/json' \
+  -F 'file=@Screenshot from 2026-02-06 08-51-02.png;type=image/png'
+
+Request URL
+
+http://localhost:8080/api/v1/auth/register
+
+Server response
+Code	Details
+200	
+Response body
+
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiIwNjg2NTM5Yi1lYWZmLTQyM2YtODY1NC0zMjQ4ZGUzYWMwMTciLCJzdWIiOiI0OWYwYjY5ZC0yMTM2LTQxMGUtODE0ZS04ZWE3MDhiNTRjMzUiLCJpc3MiOiJhdXRoLXNlcnZpY2UiLCJ1c2VybmFtZSI6ImdhYnJpZWxfbWFuYWdlcjUiLCJwZXJtaXNzaW9ucyI6W10sInJvbGVzIjpbIkZMRUVUX01BTkFHRVIiXSwiaWF0IjoxNzcwMzc4OTgyLCJleHAiOjE3NzA2MzgxODJ9.wDOvhs3Iaj1KtQ4asleKMtJiV8oijHKCLvIK5WeQsho",
+  "refreshToken": "eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJmZDVkNzlmZS02NTMwLTRkMzgtODhlZi05ODQ1MGUwNTk3ZTAiLCJzdWIiOiI0OWYwYjY5ZC0yMTM2LTQxMGUtODE0ZS04ZWE3MDhiNTRjMzUiLCJpc3MiOiJhdXRoLXNlcnZpY2UiLCJpYXQiOjE3NzAzNzg5ODIsImV4cCI6MTc3Mjk3MDk4Mn0.jvgLa3GdnvC_e0A-jgSo8pnlmZ73rCLKdOzwQk0mAsE",
+  "user": {
+    "id": "49f0b69d-2136-410e-814e-8ea708b54c35",
+    "username": "gabriel_manager5",
+    "email": "gabriel.manager5@test.com",
+    "phone": "+237600000005",
+    "firstName": "Gabriel",
+    "lastName": "Lead",
+    "service": "FLEET_MANAGEMENT",
+    "roles": [
+      "FLEET_MANAGER"
+    ],
+    "permissions": [],
+    "photoUrl": null,
+    "companyName": null,
+    "licenceNumber": null,
+    "vehicleId": null
+  }
+}
+
+Response headers
+
+ cache-control: no-cache,no-store,max-age=0,must-revalidate 
+ content-length: 981 
+ content-type: application/json 
+ expires: 0 
+ pragma: no-cache 
+ referrer-policy: no-referrer 
+ x-content-type-options: nosniff 
+ x-frame-options: DENY 
+ x-xss-protection: 0 
+
+Responses
+Code	Description	Links
+200	
+
+OK
+Media type
+Controls Accept header.
+
+{
+  "accessToken": "string",
+  "refreshToken": "string",
+  "user": {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "username": "string",
+    "email": "string",
+    "phone": "string",
+    "firstName": "string",
+    "lastName": "string",
+    "service": "string",
+    "roles": [
+      "string"
+    ],
+    "permissions": [
+      "string"
+    ],
+    "photoUrl": "string",
+    "companyName": "string",
+    "licenceNumber": "string",
+    "vehicleId": "string"
+  }
+}
+
+	No links
+POST
+/api/v1/auth/refresh
+RafraÃ®chir le token
+POST
+/api/v1/auth/login
+Connexion utilisateur
+03. Account
+
+Gestion du profil personnel (IdentitÃ©)
+GET
+/api/v1/account
+Voir mon profil
+PUT
+/api/v1/account
+Mettre Ã  jour mon identitÃ©
+DELETE
+/api/v1/account
+Supprimer mon compte
+PUT
+/api/v1/account/password
+Changer mon mot de passe
+POST
+/api/v1/account/picture
+Changer ma photo de profil
+GET
+/api/v1/notifications
+Get my notifications
+04. Super Admin
+
+Gestion des Administrateurs Fleet
+POST
+/api/v1/admin/users/create-admin
+Nommer un Administrateur
+GET
+/api/v1/admin/users
+Lister tous les utilisateurs de l'Ã©cosystÃ¨me Fleet
+GET
+/api/v1/admin/users/{id}
+05. Admin
+
+Statistiques et Supervision
+PUT
+/api/v1/admin/references/vehicle-types/{id}
+Modifier un type de vÃ©hicule
+DELETE
+/api/v1/admin/references/vehicle-types/{id}
+Supprimer un type
+POST
+/api/v1/admin/references/vehicle-types
+Ajouter un type de vÃ©hicule
+GET
+/api/v1/admin/stats
+Statistiques Globales (Admin)
+06. Fleet Managers
+
+Administration des entreprises (RÃ©servÃ© ADMIN)
+GET
+/api/v1/admin/managers/{id}
+DÃ©tails d'un manager
+PUT
+/api/v1/admin/managers/{id}
+Mettre Ã  jour l'entreprise
+GET
+/api/v1/admin/managers
+Lister tous les managers
+07. Drivers
+
+Gestion des chauffeurs (CrÃ©ation & Recrutement)
+POST
+/api/v1/fleets/{fleetId}/drivers/register
+CrÃ©er un nouveau Chauffeur
+POST
+/api/v1/fleets/{fleetId}/drivers/recruit
+POST
+/api/v1/drivers/{userId}/unassign-vehicle
+POST
+/api/v1/drivers/{userId}/assign-vehicle
+Assigner un vÃ©hicule (Smart Swap)
+GET
+/api/v1/drivers
+GET
+/api/v1/drivers/{userId}
+DELETE
+/api/v1/fleets/{fleetId}/drivers/{userId}
+08. Vehicles
+
+Gestion unifiÃ©e des mÃ©dias
+PUT
+/api/v1/vehicles/{vehicleId}/media/vin
+Uploader photo VIN
+PUT
+/api/v1/vehicles/{vehicleId}/media/registration
+Uploader photo Carte Grise
+PUT
+/api/v1/vehicles/{vehicleId}/maintenance-parameters
+Mise Ã  jour paramÃ¨tres maintenance
+PUT
+/api/v1/vehicles/{vehicleId}/financial-parameters
+Mise Ã  jour paramÃ¨tres financiers
+GET
+/api/v1/vehicles
+Lister les vÃ©hicules (SynchronisÃ©s)
+POST
+/api/v1/vehicles
+CrÃ©er un vÃ©hicule
+POST
+/api/v1/vehicles/{vehicleId}/media/gallery
+Ajouter photo galerie
+GET
+/api/v1/vehicles/{vehicleId}
+DÃ©tails complets d'un vÃ©hicule
+DELETE
+/api/v1/vehicles/{vehicleId}
+Supprimer un vÃ©hicule
+PATCH
+/api/v1/vehicles/{vehicleId}
+Mise Ã  jour partielle
+GET
+/api/v1/vehicles/lookup/{resource}
+RÃ©cupÃ©rer des listes de rÃ©fÃ©rence (Proxy)
+DELETE
+/api/v1/vehicles/{vehicleId}/media/gallery/{imageId}
+Supprimer photo galerie
+09. Fleets
+
+Gestion des flottes (SÃ©curisÃ© par PropriÃ©taire)
+GET
+/api/v1/fleets/{id}
+DÃ©tails d'une flotte
+PUT
+/api/v1/fleets/{id}
+Mettre Ã  jour une flotte
+DELETE
+/api/v1/fleets/{id}
+Supprimer une flotte
+GET
+/api/v1/fleets
+Lister les flottes
+POST
+/api/v1/fleets
+CrÃ©er une flotte
+GET
+/api/v1/fleets/{id}/stats
+Statistiques de la flotte
+10. Trips
+
+Gestion des courses et tÃ©lÃ©mÃ©trie
+POST
+/api/v1/trips/{id}/telemetry
+Envoyer un point GPS (Driver)
+POST
+/api/v1/trips/{id}/end
+Terminer une course (Driver)
+POST
+/api/v1/trips/start
+DÃ©marrer une course (Driver)
+GET
+/api/v1/trips/{id}
+DÃ©tail d'une course (Manager)
+GET
+/api/v1/trips/current
+RÃ©cupÃ©rer ma course en cours (Driver)
+12. Payments
+
+IntÃ©gration Service Paiement
+POST
+/api/v1/payments/wallet
+Initialiser mon wallet
+POST
+/api/v1/payments/simulate-debit
+TEST: Simuler un paiement
+POST
+/api/v1/payments/recharge
+Recharger mon compte
+GET
+/api/v1/payments/balance
+Consulter mon solde
+10. RÃ©fÃ©rences
+
+DonnÃ©es statiques (Types de vÃ©hicules, etc.)
+GET
+/api/v1/references/vehicle-types
+Lister les types de vÃ©hicules disponibles
+11. Geofencing
+GET
+/api/v1/geofence/{type}/{id}
+RÃ©cupÃ©rer une gÃ©ofence (par type + id)
+PUT
+/api/v1/geofence/{type}/{id}
+Modifier une gÃ©ofence
+DELETE
+/api/v1/geofence/{type}/{id}
+Supprimer une gÃ©ofence
+POST
+/api/v1/geofence/zones
+CrÃ©er une nouvelle gÃ©ofence
+GET
+/api/v1/geofence
+RÃ©cupÃ©rer toutes mes gÃ©ofences
+GET
+/api/v1/geofence/polygons
+RÃ©cupÃ©rer mes zones polygonales
+GET
+/api/v1/geofence/circles
+RÃ©cupÃ©rer mes zones circulaires
+GET
+/api/v1/geofence/alerts
+RÃ©cupÃ©rer toutes mes alertes
+Schemas
+Financial
+Location
+Maintenance
+Operational
+Vehicle
+FleetRequest
+FleetResponse
+VehicleTypeRequest
+VehicleTypeEntity
+UpdateManagerRequest
+UpdateProfileRequest
+UserDetail
+ChangePasswordRequest
+VehicleRequest
+TelemetryRequest
+LocalTime
+Trip
+StartTripRequest
+WalletExternalResponse
+CircleData
+GeofenceZoneDTORequest
+PolygonData
+GeofencePoint
+GeofenceZone
+DriverRegistrationRequest
+Driver
+RecruitDriverRequest
+VehicleAssignRequest
+RegisterRequest
+AuthResponse
+TokenRefreshRequest
+LoginRequest
+CreateAdminRequest
+Notification
+PagedResultNotification
+FleetStatsResponse
+GlobalStatsResponse
+FleetManagerResponse
+""
 
 ---
 ### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\docs\prompts\master_pair_programmer.md
 `$ext
-# ðŸ¤– Master Prompt : Senior Pair Programmer WebFlux
+# ðŸ¤– Master Prompt : Senior Pair Programmer WebFlux (v2.0)
 
-Tu es mon Senior Pair Programmer expert en Java **Spring Boot WebFlux (RÃ©actif)**.
-Nous dÃ©veloppons l'API **Fleet Management et Geofencing** (Projet TraEnSys).
+Tu es un Senior Pair Programmer expert en Java **Spring Boot WebFlux (RÃ©actif)** et en Architecture Hexagonale.
+Ton rÃ´le est d'accompagner Gabriel dans le dÃ©veloppement de l'API **Fleet Management & Geofencing** (Projet TraEnSys).
 
-### ðŸ“‹ Ta MÃ©thode de Travail (IMPÃ‰RATIF)
-Pour chaque tÃ¢che demandÃ©e, tu dois obligatoirement suivre ces Ã©tapes :
+### ðŸ“‹ Ton Workflow ImpÃ©ratif (4 Ã‰tapes)
 
 **Ã‰tape 1 : Conception fonctionnelle**
-- Analyse du besoin, user stories et ajustement du modÃ¨le de donnÃ©es.Discuter avec moi de cette conception
-- **Attente de ma validation explicite avant d'aller plus loin.**
+- Analyse du besoin, ajustement du modÃ¨le de donnÃ©es (Tables/Enums).
+- Discussion sur les User Stories.
+- **INTERDICTION** de proposer du code ici.
+- **ATTENTE :** Validation explicite de Gabriel ("OK Ã©tape 1" ou "Discussion technique").
 
-**Ã‰tape 2 : Discussion Technique**
-- Avant de coder, explique briÃ¨vement comment l'architechture sera gÃ©rÃ©e pour cette tÃ¢che.ne pas hesiter a dire les fichiers qui entrent en jeu,leur role et ce qu'on y ferra.pose moi les questions si a certains endroits tu as des doutes ou si tu as besoin de clarification,pas d'initiatives sans me consulter,pas de code mock,toujours me demander comment faire,car je veux faire une api robuste.c'est une phase de discussion
-- **Attente de ma validation explicite avant d'aller plus loin.**
+**Ã‰tape 2 : Discussion Technique & Architecture**
+- Expliquer l'impact sur l'architecture hexagonale.
+- Lister les fichiers impactÃ©s (Nouveaux et existants) et leurs rÃ´les.
+- Expliquer la logique rÃ©active (Mono/Flux).
+- Poser des questions sur les cas limites (Edge cases).
+- **INTERDICTION** de gÃ©nÃ©rer le code complet ici.
+- **ATTENTE :** Validation explicite de Gabriel ("OK Ã©tape 2" ou "ImplÃ©mentation").
 
-**Ã‰tape 3 : ImplÃ©mentation**
-- Fournis le code complet par blocs Markdown copiables.
-- Respecte l'architecture hexagonale du projet.
--respecte egalement mes consignes
+**Ã‰tape 3 : ImplÃ©mentation (Code)**
+- Appliquer les rÃ¨gles de sortie de code (voir section "RÃ¨gles de Code").
+- Respecter l'isolation du schÃ©ma `fleet` (le local est souverain).
+- ImplÃ©menter une gestion d'erreurs modulaire via `DomainException`.
 
 **Ã‰tape 4 : Tests & Validation**
-- Instructions pour tester via swagger .
+- Instructions prÃ©cises pour tester via Swagger ou Logs.
 
-### ðŸš« Tes RÃ¨gles de Conduite
+### ðŸš« Tes RÃ¨gles de Conduite (IMPÃ‰RATIF)
 1. **ZÃ©ro code non sollicitÃ©** : Ne propose aucune solution technique avant l'Ã‰tape 3.
-2. **Focus** : RÃ©ponds uniquement Ã  la question posÃ©e, de maniÃ¨re synthÃ©tique et prÃ©cise.
-3. **Fichiers complets** : Sauf mention contraire, donne toujours le code complet du fichier pour Ã©viter les erreurs de copier-coller.
-4. **PÃ©dagogie** : Si une opÃ©ration risque de bloquer un thread (ex: JDBC classique, thread sleep), arrÃªte-moi et propose l'alternative non-bloquante.
+2. **Cycle de discussion** : Si Gabriel pose une question, rÃ©ponds de maniÃ¨re pragmatique et honnÃªte (analyse coÃ»ts/bÃ©nÃ©fices) sans passer Ã  l'Ã©tape suivante.
+3. **PÃ©dagogie RÃ©active** : Bloque immÃ©diatement Gabriel s'il propose une opÃ©ration bloquante (JDBC, Thread.sleep, etc.).
+4. **Le Local est souverain** : Toujours prioriser la base de donnÃ©es locale (`fleet.users`, `is_active`) pour la sÃ©curitÃ©, mÃªme si les services externes (Pynfi) rÃ©pondent OK.
 
+### ðŸ› ï¸ RÃ¨gles de Sortie de Code
+- **Modification Mineure (< 5 lignes)** : Donne uniquement le bloc de code Ã  remplacer avec son contexte (mÃ©thode environnante).
+- **Modification Majeure ou Nouveau Fichier** : Fournis systÃ©matiquement le **FICHIER COMPLET** pour Ã©viter les erreurs de copier-coller.
+- **Annotations** : Utilise Lombok (`@RequiredArgsConstructor`, `@Data`) pour la clartÃ©.
 ### ðŸ“‚ Contexte
 Le code source complet est disponible dans le fichier `project_context.txt`.
 La roadmap est suivie dans `todo.md`.
@@ -9116,13 +6711,19 @@ import com.yowyob.fleet.domain.ports.in.AuthUseCase;
 import com.yowyob.fleet.domain.ports.out.AuthPort;
 import com.yowyob.fleet.domain.ports.out.DriverPersistencePort;
 import com.yowyob.fleet.domain.ports.out.FleetManagerPersistencePort;
+import com.yowyob.fleet.domain.exception.AuthException;
 import com.yowyob.fleet.domain.model.Driver;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.UserLocalEntity;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.UserLocalR2dbcRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.util.UUID;
 import java.util.List;
 
@@ -9132,38 +6733,98 @@ import java.util.List;
 public class AuthService implements AuthUseCase {
 
     private final AuthPort authPort;
+    private final UserLocalR2dbcRepository userRepo;
     private final DriverPersistencePort driverPort;
     private final FleetManagerPersistencePort managerPort;
 
     @Override
     public Mono<AuthPort.AuthResponse> login(String identifier, String password) {
         return authPort.login(identifier, password)
-                .flatMap(response -> syncLocalProfile(response.user()).thenReturn(response));
+                .flatMap(response -> pullSyncLocalUser(response.user())
+                        .then(checkUserAccess(response.user().id()))
+                        .thenReturn(response));
     }
 
     @Override
     public Mono<AuthPort.AuthResponse> register(RegisterCommand command) {
         return ensureRolesExist(command.roles())
                 .then(authPort.registerInRemote(command))
-                .flatMap(response -> createLocalProfile(response.user()).thenReturn(response));
+                .flatMap(response -> createLocalProfile(response.user())
+                        .then(pullSyncLocalUser(response.user()))
+                        .thenReturn(response));
     }
 
     @Override
     public Mono<AuthPort.AuthResponse> refreshToken(String refreshToken) {
-        return authPort.refresh(refreshToken);
+        return authPort.refresh(refreshToken)
+                .flatMap(response -> pullSyncLocalUser(response.user())
+                        .then(checkUserAccess(response.user().id()))
+                        .thenReturn(response));
     }
 
     @Override
     public Mono<AuthPort.UserDetail> me(String token) {
         return authPort.getUserProfile(token)
+                .flatMap(remote -> pullSyncLocalUser(remote).thenReturn(remote))
                 .flatMap(this::enrichWithLocalData);
+    }
+
+    /**
+     * PULL SYNC : Met Ã  jour le cache local fleet.users depuis les donnÃ©es distantes.
+     */
+    private Mono<Void> pullSyncLocalUser(AuthPort.UserDetail remote) {
+        return userRepo.findById(remote.id())
+                .flatMap(local -> {
+                    local.setUsername(remote.username());
+                    local.setEmail(remote.email());
+                    local.setFirstName(remote.firstName());
+                    local.setLastName(remote.lastName());
+                    local.setPhotoUrl(remote.photoUrl());
+                    local.setLastLoginAt(Instant.now());
+                    local.setNew(false);
+                    return userRepo.save(local);
+                })
+                .switchIfEmpty(Mono.defer(() -> {
+                    UserLocalEntity newLocal = UserLocalEntity.builder()
+                            .id(remote.id())
+                            .username(remote.username())
+                            .email(remote.email())
+                            .firstName(remote.firstName())
+                            .lastName(remote.lastName())
+                            .photoUrl(remote.photoUrl())
+                            .isActive(true) // Par dÃ©faut actif Ã  la premiÃ¨re sync
+                            .lastLoginAt(Instant.now())
+                            .build();
+                    newLocal.setNew(true);
+                    return userRepo.save(newLocal);
+                }))
+                .then();
+    }
+
+    /**
+     * VERROU LOCAL : VÃ©rifie si l'utilisateur n'est pas banni ou supprimÃ© en local.
+     */
+/**
+     * VERROU LOCAL : VÃ©rifie si l'utilisateur n'est pas banni ou supprimÃ© en local.
+     */
+    private Mono<Void> checkUserAccess(UUID userId) {
+        return userRepo.findById(userId)
+                .flatMap(user -> {
+                    // Utilisation de nos exceptions modulaires au lieu de ResponseStatusException
+                    if (user.getDeletedAt() != null) {
+                        return Mono.error(AuthException.accountDeleted()); // Lance AUTH_003
+                    }
+                    if (!user.isActive()) {
+                        return Mono.error(AuthException.accountLocked());  // Lance AUTH_002
+                    }
+                    return Mono.empty();
+                });
     }
 
     @Override
     public Mono<AuthPort.UserDetail> updateProfile(UUID userId, String token, UpdateProfileCommand command) {
-        // Nettoyage : On ne touche plus qu'au service distant ici.
-        // La mise Ã  jour des donnÃ©es mÃ©tier (Company, Licence) se fait via des endpoints dÃ©diÃ©s.
         return authPort.updateUserProfile(userId, token, command)
+                .flatMap(remote -> pullSyncLocalUser(remote).thenReturn(remote))
                 .flatMap(this::enrichWithLocalData);
     }
 
@@ -9178,14 +6839,19 @@ public class AuthService implements AuthUseCase {
     }
 
     @Override
-      public Mono<Void> deleteAccount(UUID userId, String token) {
-        // SOFT DELETE : On change le service vers USER_DELETED
-        return authPort.moveUserToService(userId, "USER_DELETED", token)
-                // Si le service auth n'est pas encore prÃªt, on peut logger
-                .doOnSuccess(v -> log.info("Compte {} marquÃ© comme supprimÃ© (Soft Delete)", userId));
+    public Mono<Void> deleteAccount(UUID userId, String token) {
+        // SOFT DELETE LOCAL
+        return userRepo.findById(userId)
+                .flatMap(user -> {
+                    user.setDeletedAt(Instant.now());
+                    user.setActive(false);
+                    user.setNew(false);
+                    return userRepo.save(user);
+                })
+                .then(authPort.moveUserToService(userId, "USER_DELETED", token));
     }
 
-    // --- LOGIQUE INTERNE ---
+    // --- HELPERS EXISTANTS ---
     
     private Mono<Void> ensureRolesExist(List<String> roles) {
         return Flux.fromIterable(roles)
@@ -9203,10 +6869,6 @@ public class AuthService implements AuthUseCase {
             return driverPort.save(driver).then();
         }
         return Mono.empty();
-    }
-
-    private Mono<Void> syncLocalProfile(AuthPort.UserDetail user) {
-        return createLocalProfile(user).onErrorResume(e -> Mono.empty());
     }
 
     private Mono<AuthPort.UserDetail> enrichWithLocalData(AuthPort.UserDetail remoteUser) {
@@ -10471,6 +8133,72 @@ public class VehicleTypeService {
 }
 
 ---
+### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\src\main\java\com\yowyob\fleet\domain\exception\AuthException.java
+`$ext
+package com.yowyob.fleet.domain.exception;
+
+import org.springframework.http.HttpStatus;
+
+public class AuthException extends DomainException {
+
+    public AuthException(String message, HttpStatus status, String code) {
+        super(message, status, code);
+    }
+
+    public static AuthException invalidCredentials() {
+        return new AuthException("Identifiants ou mot de passe incorrects.", HttpStatus.UNAUTHORIZED, "AUTH_001");
+    }
+
+    public static AuthException accountLocked() {
+        return new AuthException("Votre compte est suspendu localement. Contactez un admin.", HttpStatus.FORBIDDEN, "AUTH_002");
+    }
+
+    public static AuthException accountDeleted() {
+        return new AuthException("Ce compte n'existe plus dans le systÃ¨me.", HttpStatus.FORBIDDEN, "AUTH_003");
+    }
+
+    public static AuthException userAlreadyExists() {
+        return new AuthException("Un utilisateur avec cet email ou ce nom d'utilisateur existe dÃ©jÃ .", HttpStatus.CONFLICT, "AUTH_004");
+    }
+
+    public static AuthException tokenExpired() {
+        return new AuthException("Votre session a expirÃ©. Veuillez vous reconnecter.", HttpStatus.UNAUTHORIZED, "AUTH_005");
+    }
+
+    public static AuthException remoteServiceUnavailable() {
+        return new AuthException("Le service d'authentification central est indisponible.", HttpStatus.SERVICE_UNAVAILABLE, "AUTH_006");
+    }
+    
+    public static AuthException generic(String message, HttpStatus status) {
+        return new AuthException(message, status, "AUTH_GENERIC");
+    }
+}
+
+---
+### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\src\main\java\com\yowyob\fleet\domain\exception\DomainException.java
+`$ext
+package com.yowyob.fleet.domain.exception;
+
+import lombok.Getter;
+import org.springframework.http.HttpStatus;
+
+import java.time.Instant;
+
+@Getter
+public abstract class DomainException extends RuntimeException {
+    private final HttpStatus status;
+    private final String businessCode;
+    private final Instant timestamp;
+
+    protected DomainException(String message, HttpStatus status, String businessCode) {
+        super(message);
+        this.status = status;
+        this.businessCode = businessCode;
+        this.timestamp = Instant.now();
+    }
+}
+
+---
 ### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\src\main\java\com\yowyob\fleet\domain\model\Driver.java
 `$ext
 package com.yowyob.fleet.domain.model;
@@ -11035,32 +8763,25 @@ import java.util.List;
 import java.util.UUID;
 
 public interface AuthPort {
-    // Auth pure
     Mono<AuthResponse> login(String identifier, String password);
-    Mono<AuthResponse> refresh(String refreshToken);
+    Mono<AuthResponse> refresh(String refreshToken); 
 
-    // Gestion Utilisateur Distant
     Mono<AuthResponse> registerInRemote(AuthUseCase.RegisterCommand command);
     Mono<UserDetail> getUserProfile(String token);
     Mono<UserDetail> getUserById(UUID userId, String token);
     
-    // Listes
     Flux<UserDetail> getUsersByService(String serviceName, String token);
-    Flux<UserDetail> getAllUsers(String token); // Pour Super Admin
+    Flux<UserDetail> getAllUsers(String token);
 
     Mono<UserDetail> updateUserProfile(UUID userId, String token, AuthUseCase.UpdateProfileCommand command);
     Mono<Void> changePassword(UUID userId, String token, String currentPwd, String newPwd);
     Mono<Void> deleteRemoteAccount(UUID userId, String token);
-    
-    // NOUVEAU : Soft Delete (Changement de service)
     Mono<Void> moveUserToService(UUID userId, String newServiceName, String token);
-
     Mono<Void> updateProfilePicture(UUID userId, String token, AuthUseCase.FileContent file);
     
     Mono<Boolean> roleExists(String roleName);
     Mono<Void> createRole(String roleName);
 
-    // DTOs
     record AuthResponse(String accessToken, String refreshToken, UserDetail user) {}
 
     record UserDetail(
@@ -11705,32 +9426,41 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Encoding;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.SchemaProperty;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.multipart.FilePart;
-import org.springframework.http.codec.multipart.Part; // <--- L'interface gÃ©nÃ©rique
+import org.springframework.http.codec.multipart.Part;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
-@Tag(name = "02. Auth", description = "Endpoints publics (Login, Register)")
+@Tag(name = "02. Auth", description = "Endpoints publics (Login, Register, Refresh)")
 public class AuthController {
 
     private final AuthUseCase authUseCase;
 
     @PostMapping("/login")
+    @Operation(summary = "Connexion utilisateur", description = "Retourne les tokens et dÃ©clenche la synchronisation du profil local.")
     public Mono<AuthPort.AuthResponse> login(@RequestBody LoginRequest request) {
         return authUseCase.login(request.identifier(), request.password());
+    }
+
+    @PostMapping("/refresh")
+    @Operation(summary = "RafraÃ®chir le token", description = "Utilisez le refreshToken pour obtenir un nouvel accessToken.")
+    public Mono<AuthPort.AuthResponse> refresh(@RequestBody TokenRefreshRequest request) {
+        return authUseCase.refreshToken(request.refreshToken());
     }
 
     @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
         summary = "Inscription Utilisateur",
-        description = "CrÃ©ation de compte avec rÃ´le (MANAGER ou DRIVER) et photo optionnelle.",
+        description = "CrÃ©ation de compte. Collez le JSON dans 'user' et l'image dans 'file'.",
         requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
             content = @Content(
                 mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -11740,13 +9470,9 @@ public class AuthController {
     )
     public Mono<AuthPort.AuthResponse> register(
             @RequestPart("user") RegisterRequest dto,
-            // CORRECTION : On accepte 'Part' gÃ©nÃ©rique pour Ã©viter le crash si Swagger envoie un champ texte vide
-            @RequestPart(value = "file", required = false) Part filePart 
+            @RequestPart(value = "file", required = false) FilePart filePart 
     ) {
         Mono<AuthUseCase.FileContent> photoMono = Mono.justOrEmpty(filePart)
-                // SÃ©curitÃ© : On ne traite que si c'est un vrai fichier (FilePart)
-                .filter(part -> part instanceof FilePart)
-                .cast(FilePart.class)
                 .flatMap(fp -> DataBufferUtils.join(fp.content())
                         .map(dataBuffer -> {
                             byte[] bytes = new byte[dataBuffer.readableByteCount()];
@@ -11770,12 +9496,6 @@ public class AuthController {
                 )))
                 .flatMap(authUseCase::register);
     }
-
-    // @PostMapping("/refresh")
-    // @Operation(summary = "Refresh access token")
-    // public Mono<AuthPort.AuthResponse> refresh(@RequestBody TokenRefreshRequest request) {
-    //     return authUseCase.refreshToken(request.refreshToken());
-    // }
 
     public record TokenRefreshRequest(String refreshToken) {}
 }
@@ -12176,106 +9896,70 @@ public Flux<Map<String, Object>> getMyZones(org.springframework.security.core.Au
 `$ext
 package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
 
+import com.yowyob.fleet.domain.exception.DomainException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.support.WebExchangeBindException;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
 import java.util.stream.Collectors;
 
-/**
- * Gestionnaire global des exceptions pour l'API.
- * Utilise le standard RFC 7807 (Problem Details for HTTP APIs).
- */
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     /**
-     * GÃ¨re les erreurs provenant des appels aux services distants (Auth, Vehicle Service, etc.)
+     * LE COEUR : GÃ¨re n'importe quelle exception du domaine (Auth, Fleet, Trip, etc.)
      */
-    @ExceptionHandler(WebClientResponseException.class)
-    public ProblemDetail handleWebClientException(WebClientResponseException ex) {
-        String remoteResponseBody = ex.getResponseBodyAsString();
-        log.error("âŒ Erreur API Distante ({}): {}", ex.getStatusCode(), remoteResponseBody);
-
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(ex.getStatusCode(), remoteResponseBody);
-        problem.setTitle("Erreur Service Distant");
-        problem.setType(URI.create("about:blank"));
+    @ExceptionHandler(DomainException.class)
+    public ProblemDetail handleDomainException(DomainException ex) {
+        log.warn("âš ï¸ Business Exception [{}] : {}", ex.getBusinessCode(), ex.getMessage());
         
-        // Ajout de l'URL pour faciliter le debug
-        if (ex.getRequest() != null) {
-            problem.setProperty("remote_url", ex.getRequest().getURI().toString());
-        }
-        
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(ex.getStatus(), ex.getMessage());
+        problem.setTitle("Business Error");
+        problem.setProperty("code", ex.getBusinessCode());
+        problem.setProperty("timestamp", ex.getTimestamp());
         return problem;
     }
 
     /**
-     * GÃ¨re les erreurs de validation des DTOs (ex: @NotBlank, @NotNull)
+     * GÃ¨re les erreurs de validation des DTOs (@Valid)
      */
     @ExceptionHandler(WebExchangeBindException.class)
     public ProblemDetail handleValidationException(WebExchangeBindException ex) {
-        String errors = ex.getBindingResult().getAllErrors().stream()
-                .map(DefaultMessageSourceResolvable::getDefaultMessage)
+        String details = ex.getBindingResult().getFieldErrors().stream()
+                .map(e -> e.getField() + ": " + e.getDefaultMessage())
                 .collect(Collectors.joining(", "));
         
-        log.warn("âš ï¸ Erreur de Validation : {}", errors);
-
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, errors);
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, details);
         problem.setTitle("Validation Failed");
-        problem.setProperty("fields", ex.getBindingResult().getFieldErrors().stream()
-                .collect(Collectors.toMap(e -> e.getField(), e -> e.getDefaultMessage(), (a, b) -> a)));
-        
+        problem.setType(URI.create("https://traensys.com/errors/validation"));
         return problem;
     }
 
     /**
-     * GÃ¨re les exceptions mÃ©tier lancÃ©es via ResponseStatusException
-     */
-    @ExceptionHandler(ResponseStatusException.class)
-    public ProblemDetail handleResponseStatusException(ResponseStatusException ex) {
-        log.warn("ðŸ’¡ Erreur MÃ©tier : {}", ex.getReason());
-        
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(ex.getStatusCode(), ex.getReason());
-        
-        // Fix Spring Boot 3 : HttpStatusCode n'a pas getReasonPhrase(), on cast en HttpStatus
-        HttpStatusCode status = ex.getStatusCode();
-        if (status instanceof HttpStatus httpStatus) {
-            problem.setTitle(httpStatus.getReasonPhrase());
-        } else {
-            problem.setTitle("Business Logic Error");
-        }
-        
-        return problem;
-    }
-
-    /**
-     * GÃ¨re toutes les autres exceptions non capturÃ©es (Erreurs 500)
+     * FALLBACK : Toutes les autres erreurs imprÃ©vues
      */
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGeneralException(Exception ex) {
-        log.error("ðŸ’¥ Erreur Serveur Non GÃ©rÃ©e", ex);
-        
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                HttpStatus.INTERNAL_SERVER_ERROR, 
-                "Une erreur technique est survenue. Veuillez contacter l'administrateur."
-        );
+        log.error("ðŸ’¥ Critical error caught : ", ex);
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, 
+            "Une erreur technique imprÃ©vue est survenue sur le serveur.");
         problem.setTitle("Internal Server Error");
-        
-        // On peut ajouter la classe de l'exception pour aider au debug en dev
-        problem.setProperty("exception_class", ex.getClass().getSimpleName());
-        if (ex.getMessage() != null) {
-            problem.setProperty("exception_message", ex.getMessage());
-        }
-        
+        return problem;
+    }
+
+    /**
+     * GÃ¨re les exceptions de Spring
+     */
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    public ProblemDetail handleResponseStatusException(org.springframework.web.server.ResponseStatusException ex) {
+        // On respecte le statut demandÃ© par Spring mais on reste propre
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(ex.getStatusCode(), ex.getReason());
+        problem.setTitle("Protocol Error");
         return problem;
     }
 }
@@ -13558,6 +11242,8 @@ import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.Geofenc
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.GeofenceAuthClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -13681,46 +11367,72 @@ public class GeofenceApiAdapter implements ExternalGeofencePort {
     }
     // Dans GeofenceApiAdapter.java
 
+    // Helper pour construire le JSON complexe attendu par Geofence
     private Map<String, Object> buildGeofenceMap(GeofenceZone zone) {
         Map<String, Object> request = new HashMap<>();
-
-        // --- CORRECTION ICI ---
-        // On n'ajoute l'ID au payload que s'il existe (cas du PUT).
-        // Pour le POST, zone.id() est null, donc on ne met rien.
-        if (zone.id() != null) {
-            request.put("id", zone.id().toString());
-        }
-        // ----------------------
-
+        
+        // Champs obligatoires
         request.put("title", zone.name());
-        request.put("description", zone.description());
+        request.put("description", zone.description() != null ? zone.description() : ""); // Eviter null
+        
+        // BoolÃ©ens avec valeurs par dÃ©faut
         request.put("isTemporalEnabled", Boolean.TRUE.equals(zone.getIsTemporalEnabled()));
         request.put("isConditionalEnabled", Boolean.TRUE.equals(zone.getIsConditionalEnabled()));
-        request.put("startTime", zone.startTime());
-        request.put("endTime", zone.endTime());
+        request.put("isActive", true);
 
+        // Dates : On ne les met que si elles existent, et on les formate en String pour Ãªtre sÃ»r
+        if (zone.startTime() != null) {
+            request.put("startTime", zone.startTime().toString()); // ex: "08:00:00"
+        }
+        if (zone.endTime() != null) {
+            request.put("endTime", zone.endTime().toString());
+        }
+
+        // Gestion Typage (Circle vs Polygon)
+        // L'API de Kamga semble attendre "type": "circle" ou "polygon" (minuscule souvent prÃ©fÃ©rÃ© en JSON)
         if ("CIRCLE".equalsIgnoreCase(zone.zoneType())) {
             request.put("type", "circle");
-            request.put("center", Map.of("coordinates", Arrays.asList(zone.centerLongitude(), zone.centerLatitude())));
-            request.put("radius", zone.radius());
+            
+            // Format GeoJSON standard pour le point
+            request.put("center", Map.of(
+                "type", "Point",
+                "coordinates", Arrays.asList(zone.centerLongitude(), zone.centerLatitude())
+            ));
+            
+            // S'assurer que le radius est un nombre valide
+            request.put("radius", zone.radius() != null ? zone.radius() : 100.0);
+            
         } else {
             request.put("type", "polygon");
-            // VÃ©rification de sÃ©curitÃ© sur les vertices pour Ã©viter un autre NPE
-            if (zone.vertices() != null && !zone.vertices().isEmpty()) {
-                List<List<Double>> ring = new ArrayList<>(zone.vertices().stream()
+            
+            // Construction du Polygone GeoJSON
+            // Note: GeoJSON exige que le dernier point soit le mÃªme que le premier (fermeture)
+            List<List<Double>> ring = new ArrayList<>();
+            if (zone.vertices() != null) {
+                ring = new ArrayList<>(zone.vertices().stream()
                         .map(v -> Arrays.asList(v.longitude(), v.latitude())).toList());
-
-                // Fermeture du polygone si nÃ©cessaire (le premier point doit Ãªtre Ã©gal au
-                // dernier)
-                if (!ring.get(0).equals(ring.get(ring.size() - 1))) {
+                
+                // Fermeture du polygone si nÃ©cessaire
+                if (!ring.isEmpty() && !ring.get(0).equals(ring.get(ring.size()-1))) {
                     ring.add(ring.get(0));
                 }
-                request.put("polygon", Map.of("type", "Polygon", "coordinates", List.of(ring)));
             }
+            
+            request.put("polygon", Map.of(
+                "type", "Polygon", 
+                "coordinates", List.of(ring)
+            ));
         }
+        
+        // Log pour debug (Ã  retirer en prod si trop verbeux)
+        try {
+            log.info("ðŸ“¤ Payload envoyÃ© Ã  Geofence: {}", objectMapper.writeValueAsString(request));
+        } catch (JsonProcessingException e) {
+            log.error("Erreur log payload", e);
+        }
+
         return request;
     }
-
     @Override
     public Flux<Map<String, Object>> getZonesByManager(UUID managerId, String category) {
         // On dÃ©lÃ¨gue Ã  la mÃ©thode de listing interne qui gÃ¨re dÃ©jÃ  l'appel API et le
@@ -13956,16 +11668,18 @@ public class PaymentApiAdapter implements ExternalPaymentPort {
 `$ext
 package com.yowyob.fleet.infrastructure.adapters.outbound.external;
 
+import com.yowyob.fleet.domain.exception.AuthException;
 import com.yowyob.fleet.domain.ports.in.AuthUseCase;
 import com.yowyob.fleet.domain.ports.out.AuthPort;
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.AuthApiClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.web.reactive.function.client.WebClient;
-
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -13988,19 +11702,25 @@ public class RemoteAuthAdapter implements AuthPort {
     @Override
     public Mono<AuthResponse> login(String identifier, String password) {
         return authApiClient.authenticate(new AuthApiClient.LoginRequest(identifier, password))
-                .map(this::mapToAuthResponse);
+                .map(this::mapToAuthResponse)
+                .onErrorResume(this::mapExternalError);
+    }
+
+    @Override
+    public Mono<AuthResponse> refresh(String refreshToken) {
+        return authApiClient.refreshToken(new AuthApiClient.RefreshRequest(refreshToken))
+                .map(this::mapToAuthResponse)
+                .onErrorResume(this::mapExternalError);
     }
 
     @Override
     public Mono<AuthResponse> registerInRemote(AuthUseCase.RegisterCommand command) {
         MultipartBodyBuilder builder = new MultipartBodyBuilder();
-        
         AuthApiClient.RegisterRequest registerRequest = new AuthApiClient.RegisterRequest(
             command.username(), command.password(), command.email(), 
             command.phone(), command.firstName(), command.lastName(), 
             SERVICE_NAME, command.roles()
         );
-        
         builder.part("data", registerRequest);
 
         if (command.photo() != null && command.photo().data() != null) {
@@ -14017,32 +11737,35 @@ public class RemoteAuthAdapter implements AuthPort {
                 .retrieve()
                 .bodyToMono(AuthApiClient.TraMaSysResponse.class)
                 .map(this::mapToAuthResponse)
-                .doOnError(e -> log.error("Erreur Register Distant : {}", e.getMessage()));
+                .onErrorResume(this::mapExternalError);
     }
 
     @Override
     public Mono<UserDetail> getUserProfile(String token) {
         return authApiClient.getCurrentUser(ensureBearer(token))
-                .map(this::mapToDomainUserDetail);
+                .map(this::mapToDomainUserDetail)
+                .onErrorResume(this::mapExternalError);
     }
 
     @Override
     public Mono<UserDetail> getUserById(UUID userId, String token) {
         return authApiClient.getUserById(userId, ensureBearer(token))
-                .map(this::mapToDomainUserDetail);
+                .map(this::mapToDomainUserDetail)
+                .onErrorResume(this::mapExternalError);
     }
 
     @Override
     public Flux<UserDetail> getAllUsers(String token) {
         return authApiClient.getAllUsers(ensureBearer(token))
-                .map(this::mapToDomainUserDetail);
+                .map(this::mapToDomainUserDetail)
+                .onErrorResume(this::mapExternalErrorFlux);
     }
 
     @Override
     public Flux<UserDetail> getUsersByService(String serviceName, String token) {
         return authApiClient.getUsersByService(serviceName, ensureBearer(token))
                 .map(this::mapToDomainUserDetail)
-                .onErrorResume(e -> Flux.empty());
+                .onErrorResume(e -> Flux.empty()); // On accepte un flux vide si le service est injoignable
     }
 
     @Override
@@ -14050,7 +11773,6 @@ public class RemoteAuthAdapter implements AuthPort {
         AuthApiClient.UpdateUserRequest req = new AuthApiClient.UpdateUserRequest(
             command.firstName(), command.lastName(), command.phone(), command.email()
         );
-        
         return webClientBuilder.build()
                 .put()
                 .uri(authServiceUrl + "/api/users/" + userId)
@@ -14058,7 +11780,8 @@ public class RemoteAuthAdapter implements AuthPort {
                 .bodyValue(req)
                 .retrieve()
                 .bodyToMono(AuthApiClient.UserDetailResponse.class)
-                .map(this::mapToDomainUserDetail);
+                .map(this::mapToDomainUserDetail)
+                .onErrorResume(this::mapExternalError);
     }
 
     @Override
@@ -14070,30 +11793,34 @@ public class RemoteAuthAdapter implements AuthPort {
                 .header("Authorization", ensureBearer(token))
                 .bodyValue(req)
                 .retrieve()
-                .bodyToMono(Void.class);
+                .bodyToMono(Void.class)
+                .onErrorResume(this::mapExternalError);
     }
 
     @Override
     public Mono<Void> moveUserToService(UUID userId, String newServiceName, String token) {
-        // Logique de Soft Delete / Changement de service
-        Map<String, Object> updates = new HashMap<>();
-        updates.put("service", newServiceName);
+        Map<String, Object> body = new HashMap<>();
+        body.put("service", newServiceName);
 
-        log.info("Tentative de dÃ©placement de l'user {} vers le service {}", userId, newServiceName);
-
-        // TODO: DÃ©commenter quand le Service Auth supportera le PATCH
-        /*
-        return authApiClient.patchUser(userId, updates, ensureBearer(token))
-                .then();
-        */
-        
-        // En attendant, on simule un succÃ¨s pour ne pas bloquer le code mÃ©tier
-        return Mono.empty();
+        return webClientBuilder.build()
+                .patch()
+                .uri(authServiceUrl + "/api/users/" + userId)
+                .header("Authorization", ensureBearer(token))
+                .bodyValue(body)
+                .retrieve()
+                .toBodilessEntity()
+                .timeout(java.time.Duration.ofSeconds(3))
+                .then()
+                .onErrorResume(e -> {
+                    log.warn("âš ï¸ Soft Delete distant Ã©chouÃ© pour {}, verrou local prioritaire.", userId);
+                    return Mono.empty();
+                });
     }
 
     @Override
     public Mono<Void> deleteRemoteAccount(UUID userId, String token) {
-        return authApiClient.deleteUser(userId, ensureBearer(token));
+        return authApiClient.deleteUser(userId, ensureBearer(token))
+                .onErrorResume(this::mapExternalError);
     }
 
     @Override
@@ -14110,13 +11837,8 @@ public class RemoteAuthAdapter implements AuthPort {
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .bodyValue(builder.build())
                 .retrieve()
-                .bodyToMono(Void.class);
-    }
-
-    @Override
-    public Mono<AuthResponse> refresh(String refreshToken) {
-        return authApiClient.refreshToken(new AuthApiClient.RefreshRequest(refreshToken))
-                .map(this::mapToAuthResponse);
+                .bodyToMono(Void.class)
+                .onErrorResume(this::mapExternalError);
     }
 
     @Override
@@ -14129,7 +11851,8 @@ public class RemoteAuthAdapter implements AuthPort {
         return Mono.empty();
     }
 
-    // Mappers
+    // --- HELPERS MAPPING ---
+
     private String ensureBearer(String token) {
         if (token == null) return "";
         return token.startsWith("Bearer ") ? token : "Bearer " + token;
@@ -14144,10 +11867,33 @@ public class RemoteAuthAdapter implements AuthPort {
         return new UserDetail(
             res.id(), res.username(), res.email(), res.phone(),
             res.firstName(), res.lastName(), res.service(),
-            res.roles(), res.permissions(), 
-            null, 
+            res.roles(), res.permissions(), res.photoUrl(),
             null, null, null
         );
+    }
+
+    /**
+     * Transforme les erreurs techniques WebClient en AuthException mÃ©tier (Mono).
+     */
+    private <T> Mono<T> mapExternalError(Throwable e) {
+        if (e instanceof WebClientResponseException ex) {
+            return switch (ex.getStatusCode().value()) {
+                case 401 -> Mono.error(AuthException.invalidCredentials());
+                case 409 -> Mono.error(AuthException.userAlreadyExists());
+                case 403 -> Mono.error(AuthException.accountLocked());
+                case 503, 502, 504 -> Mono.error(AuthException.remoteServiceUnavailable());
+                default -> Mono.error(AuthException.generic("Service Auth : " + ex.getStatusText(), (HttpStatus) ex.getStatusCode()));
+            };
+        }
+        return Mono.error(e);
+    }
+
+   /**
+     * Transforme les erreurs techniques WebClient en AuthException mÃ©tier (Flux).
+     */
+    private <T> Flux<T> mapExternalErrorFlux(Throwable e) {
+        // .thenMany permet de convertir le signal (ici l'erreur) en Flux<T>
+        return this.<T>mapExternalError(e).thenMany(Flux.empty());
     }
 }
 
@@ -14301,18 +12047,17 @@ import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PostExchange;
 import org.springframework.web.service.annotation.PutExchange;
-import org.springframework.web.service.annotation.PatchExchange; // Ajout
+import org.springframework.web.service.annotation.PatchExchange;
 
 import reactor.core.publisher.Flux; 
 import reactor.core.publisher.Mono;
 import java.util.List;
-import java.util.Map; // Ajout
+import java.util.Map;
 import java.util.UUID;
 
 @HttpExchange("/api")
 public interface AuthApiClient {
     
-    // --- AUTH ---
     @PostExchange("/auth/login")
     Mono<TraMaSysResponse> authenticate(@RequestBody LoginRequest request);
 
@@ -14325,10 +12070,8 @@ public interface AuthApiClient {
     @PostExchange("/auth/refresh")
     Mono<TraMaSysResponse> refreshToken(@RequestBody RefreshRequest request);
 
-    // --- USERS ---
-    
     @GetExchange("/users")
-    Flux<UserDetailResponse> getAllUsers(@RequestHeader("Authorization") String bearerToken); // Pour Super Admin
+    Flux<UserDetailResponse> getAllUsers(@RequestHeader("Authorization") String bearerToken);
 
     @GetExchange("/users/{id}")
     Mono<UserDetailResponse> getUserById(@PathVariable UUID id, @RequestHeader("Authorization") String bearerToken);
@@ -14339,7 +12082,6 @@ public interface AuthApiClient {
     @PutExchange("/users/{id}")
     Mono<UserDetailResponse> updateUser(@PathVariable UUID id, @RequestBody UpdateUserRequest request);
 
-    // NOUVEAU : Patch gÃ©nÃ©rique pour update partiel (ex: service)
     @PatchExchange("/users/{id}")
     Mono<UserDetailResponse> patchUser(@PathVariable UUID id, @RequestBody Map<String, Object> updates, @RequestHeader("Authorization") String bearerToken);
 
@@ -14348,7 +12090,6 @@ public interface AuthApiClient {
 
     @DeleteExchange("/users/{id}") 
     Mono<Void> deleteUser(@PathVariable UUID id, @RequestHeader("Authorization") String bearerToken);
-
 
     // DTOs
     record LoginRequest(String identifier, String password) {}
@@ -14366,7 +12107,8 @@ public interface AuthApiClient {
     record UserDetailResponse(
         UUID id, String username, String email, String phone,
         String firstName, String lastName, String service,
-        List<String> roles, List<String> permissions
+        List<String> roles, List<String> permissions,
+        String photoUrl 
     ) {}    
 }
 
@@ -16087,6 +13829,69 @@ public class TripEntity implements Persistable<UUID> {
 }
 
 ---
+### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\src\main\java\com\yowyob\fleet\infrastructure\adapters\outbound\persistence\entity\UserLocalEntity.java
+`$ext
+package com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.domain.Persistable;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
+
+import java.time.Instant;
+import java.util.UUID;
+
+@Table(name = "users", schema = "fleet")
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserLocalEntity implements Persistable<UUID> {
+
+    @Id
+    private UUID id;
+    private String username;
+    private String email;
+    
+    @Column("first_name")
+    private String firstName;
+    
+    @Column("last_name")
+    private String lastName;
+
+    @Column("photo_url") 
+    private String photoUrl;
+    
+    @Column("is_active")
+    @Builder.Default
+    private boolean isActive = true;
+    
+    @Column("last_login_at")
+    private Instant lastLoginAt;
+    
+    @Column("deleted_at")
+    private Instant deletedAt;
+
+    @Transient
+    @Builder.Default
+    private boolean isNewRecord = false;
+
+    @Override
+    public boolean isNew() {
+        return isNewRecord || id == null;
+    }
+
+    public void setNew(boolean isNew) {
+        this.isNewRecord = isNew;
+    }
+}
+
+---
 ### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\src\main\java\com\yowyob\fleet\infrastructure\adapters\outbound\persistence\entity\VehicleIllustrationImageEntity.java
 `$ext
 package com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity;
@@ -16463,6 +14268,21 @@ public interface TripR2dbcRepository extends ReactiveCrudRepository<TripEntity, 
             "JOIN fleet.vehicles v ON t.vehicle_id = v.id " +
             "WHERE v.fleet_id = :fleetId")
     Mono<Double> getTotalDistanceByFleetId(UUID fleetId);
+}
+
+---
+### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\src\main\java\com\yowyob\fleet\infrastructure\adapters\outbound\persistence\repository\UserLocalR2dbcRepository.java
+`$ext
+package com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository;
+
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.UserLocalEntity;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.UUID;
+
+@Repository
+public interface UserLocalR2dbcRepository extends ReactiveCrudRepository<UserLocalEntity, UUID> {
 }
 
 ---
@@ -17115,7 +14935,6 @@ public class WebClientConfig {
     }
 
     @Bean
-<<<<<<< HEAD
     public GeofenceAuthClient geofenceAuthClient(WebClient.Builder builder,
                                                  @Value("${application.external.geofence-service-url}") String url) {
         WebClient webClient = builder.baseUrl(url).build();
@@ -17131,15 +14950,6 @@ public class WebClientConfig {
     // }
 
     // Helper gÃ©nÃ©rique
-=======
-    public GeofenceAuthClient geofenceAuthClient(@Value("${application.external.geofence-service-url}") String url) {
-        WebClient webClient = createInsecureWebClient(url).build();
-        return createProxy(webClient, GeofenceAuthClient.class);
-    }
-
-    // --- HELPERS ---
-
->>>>>>> 2128c8c50b35149a511973b5435f100961c9449c
     private <S> S createProxy(WebClient webClient, Class<S> serviceClass) {
         WebClientAdapter adapter = WebClientAdapter.create(webClient);
         HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(adapter).build();
@@ -17313,10 +15123,11 @@ public class BearerTokenServerAuthenticationConverter implements ServerAuthentic
 `$ext
 package com.yowyob.fleet.infrastructure.config.security;
 
+import com.yowyob.fleet.domain.exception.AuthException;
 import com.yowyob.fleet.domain.ports.out.AuthPort;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.UserLocalR2dbcRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.BadCredentialsException; // Import ajoutÃ©
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -17332,32 +15143,41 @@ import java.util.stream.Collectors;
 public class JwtAuthenticationManager implements ReactiveAuthenticationManager {
 
     private final AuthPort authPort;
+    private final UserLocalR2dbcRepository userRepo;
 
     @Override
     public Mono<Authentication> authenticate(Authentication authentication) {
         String token = (String) authentication.getCredentials();
 
-        // On appelle le service distant pour valider le token
         return authPort.getUserProfile(token)
+                .flatMap(userDetail -> 
+                    // On vÃ©rifie en DB locale si l'utilisateur est banni ou supprimÃ©
+                    userRepo.findById(userDetail.id())
+                        .flatMap(localUser -> {
+                            if (localUser.getDeletedAt() != null) {
+                                return Mono.<AuthPort.UserDetail>error(AuthException.accountDeleted());
+                            }
+                            if (!localUser.isActive()) {
+                                return Mono.<AuthPort.UserDetail>error(AuthException.accountLocked());
+                            }
+                            return Mono.just(userDetail);
+                        })
+                        // Si l'utilisateur n'est pas encore en DB locale, on accepte (la synchro suivra dans AuthService)
+                        .defaultIfEmpty(userDetail)
+                )
                 .map(userDetail -> {
-                    log.debug("Token validÃ© pour user: {}", userDetail.username());
-                    
                     var authorities = userDetail.roles().stream()
                             .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                             .collect(Collectors.toList());
 
-                    Authentication auth = new UsernamePasswordAuthenticationToken(
-                            userDetail, 
-                            token, 
-                            authorities
-                    );
-                    
-                    return auth;
+                    // On crÃ©e le token d'authentification
+                    return new UsernamePasswordAuthenticationToken(userDetail, token, authorities);
                 })
-                // CORRECTION : On ne retourne plus Mono.empty() mais une erreur explicite
+                // âœ… LE FIX : On force le cast en Authentication pour rassurer le compilateur
+                .cast(Authentication.class) 
                 .onErrorResume(e -> {
-                    log.warn("Authentification Ã©chouÃ©e : {}", e.getMessage());
-                    return Mono.error(new BadCredentialsException("Token invalide ou expirÃ©"));
+                    log.warn("ðŸ” Access Denied for token: {}", e.getMessage());
+                    return Mono.error(e);
                 });
     }
 }
@@ -17595,7 +15415,7 @@ spring:
     active: local
 
   # R2DBC (Application Runtime)
-  # âœ… CORRECTION: Utiliser yowyob_db au lieu de yowyob
+
   r2dbc:
     url: r2dbc:postgresql://localhost:5432/yowyob_db
     username: fleet_admin
@@ -17815,8 +15635,8 @@ application:
       admin-validation: 7 # ID template: admin a validÃ© le profil du driver
  
   geofence-system-user:
-    username: "fleetmanagementuser"
-    password: "system_password_secure" # Ã€ changer en prod
+    username: "yowyob_fleet_internal_admin"
+    password: "system_password_secure_2026" 
     organization-id: "723e4567-e89b-12d3-a456-426614174000" # UUID de notre application dans
  
   bootstrap:
@@ -18032,25 +15852,57 @@ CREATE TABLE IF NOT EXISTS fleet.routes (
   end_point_id UUID REFERENCES fleet.geofence_points(id)
 );
 
--- CREATE TABLE IF NOT EXISTS fleet.geofence_point_zone_linkages (
---   point_id UUID REFERENCES fleet.geofence_points(id) ON DELETE CASCADE,
---   zone_id UUID REFERENCES fleet.geofence_zones(id) ON DELETE CASCADE,
---   vertex_order INT,
---   PRIMARY KEY (point_id, zone_id)
--- );
+CREATE TABLE IF NOT EXISTS fleet.geofence_point_zone_linkages (
+  point_id UUID REFERENCES fleet.geofence_points(id) ON DELETE CASCADE,
+  zone_id UUID REFERENCES fleet.geofence_zones(id) ON DELETE CASCADE,
+  vertex_order INT,
+  PRIMARY KEY (point_id, zone_id)
+);
 
 -- 10. Ã‰VÃ‰NEMENTS
--- CREATE TABLE IF NOT EXISTS fleet.geofence_events (
---   id UUID PRIMARY KEY,
---   vehicle_id UUID REFERENCES fleet.vehicles(id) ON DELETE CASCADE,
---   zone_id UUID REFERENCES fleet.geofence_zones(id) ON DELETE SET NULL,
---   type VARCHAR(50) CHECK (type IN ('ENTRY', 'EXIT')),
---   timestamp TIMESTAMP DEFAULT now()
--- );
+CREATE TABLE IF NOT EXISTS fleet.geofence_events (
+  id UUID PRIMARY KEY,
+  vehicle_id UUID REFERENCES fleet.vehicles(id) ON DELETE CASCADE,
+  zone_id UUID REFERENCES fleet.geofence_zones(id) ON DELETE SET NULL,
+  type VARCHAR(50) CHECK (type IN ('ENTRY', 'EXIT')),
+  timestamp TIMESTAMP DEFAULT now()
+);
 
--- On crÃ©e une table lÃ©gÃ¨re d'association
--- L'ID est celui gÃ©nÃ©rÃ© par l'API Distante (ou gÃ©nÃ©rÃ© par nous et envoyÃ© Ã  l'API)
+---
+### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\src\main\resources\db\changelog\changes\003-create-notification-settings.sql
+`$ext
+-- liquibase formatted sql
 
+-- changeset yowyob:003-create-notification-settings
+-- comment: Table pour stocker les prÃ©fÃ©rences de notification des utilisateurs
+
+CREATE TABLE IF NOT EXISTS fleet.notification_settings (
+    user_id UUID PRIMARY KEY,
+    enable_email BOOLEAN DEFAULT TRUE,
+    enable_sms BOOLEAN DEFAULT FALSE,
+    enable_push BOOLEAN DEFAULT TRUE,
+    enable_whatsapp BOOLEAN DEFAULT FALSE,
+    updated_at TIMESTAMP DEFAULT NOW(),
+    CONSTRAINT fk_notif_settings_user FOREIGN KEY (user_id) REFERENCES fleet.users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS fleet.notifications (
+    id UUID PRIMARY KEY,
+    user_id UUID NOT NULL,
+    title VARCHAR(255),
+    message TEXT,
+    type VARCHAR(50), -- INFO, WARNING, SUCCESS
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    data TEXT, 
+    CONSTRAINT fk_notification_user FOREIGN KEY (user_id) REFERENCES fleet.users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_notif_user_date ON fleet.notifications(user_id, created_at DESC);
+
+---
+### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\src\main\resources\db\changelog\changes\003-update_geofence_tables.sql
+`$ext
 DROP TABLE IF EXISTS fleet.geofence_zones CASCADE;
 
 CREATE TABLE fleet.geofence_zones (
@@ -18066,53 +15918,84 @@ CREATE INDEX idx_geofence_fleet_link ON fleet.geofence_zones(fleet_id);
 CREATE INDEX idx_geofence_zone_type ON fleet.geofence_zones(zone_type);
 
 ---
-### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\src\main\resources\db\changelog\changes\003-create-notification-settings.sql
+### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\src\main\resources\db\changelog\changes\005-move-users-to-fleet.sql
 `$ext
--- liquibase formatted sql
+--liquibase formatted sql
 
--- changeset yowyob:003-create-notification-settings
--- comment: Table pour stocker les prÃ©fÃ©rences de notification des utilisateurs
+--changeset gabriel:move-users-to-fleet-schema-v3 splitStatements:false
+--comment: Migration vers fleet.users avec SQL dynamique pour supporter email_address
 
-CREATE TABLE IF NOT EXISTS notification_settings (
-    user_id UUID PRIMARY KEY,
-    enable_email BOOLEAN DEFAULT TRUE,
-    enable_sms BOOLEAN DEFAULT FALSE,
-    enable_push BOOLEAN DEFAULT TRUE,
-    enable_whatsapp BOOLEAN DEFAULT FALSE,
-    updated_at TIMESTAMP DEFAULT NOW(),
-    CONSTRAINT fk_notif_settings_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
-
-CREATE TABLE IF NOT EXISTS notifications (
+-- 1. CRÃ‰ATION DE LA TABLE SOUVERAINE
+CREATE TABLE IF NOT EXISTS fleet.users (
     id UUID PRIMARY KEY,
-    user_id UUID NOT NULL,
-    title VARCHAR(255),
-    message TEXT,
-    type VARCHAR(50), -- INFO, WARNING, SUCCESS
-    is_read BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT NOW(),
-    data JSONB, -- Pour stocker les mÃ©tadonnÃ©es (offerId, price, etc.)
-    CONSTRAINT fk_notification_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    username VARCHAR(100) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    photo_url VARCHAR(255),
+    is_active BOOLEAN DEFAULT TRUE,
+    last_login_at TIMESTAMP,
+    deleted_at TIMESTAMP
 );
 
-CREATE INDEX idx_notif_user_date ON notifications(user_id, created_at DESC);
+-- 2. BLOC PROCÃ‰DURAL ROBUSTE
+DO $$ 
+BEGIN 
+    -- Migration des donnÃ©es via SQL Dynamique pour Ã©viter l'erreur de compilation sur la colonne 'email'
+    IF EXISTS (SELECT FROM information_schema.columns 
+               WHERE table_schema = 'public' 
+               AND table_name = 'users' 
+               AND column_name = 'email_address') THEN
+        
+        EXECUTE 'INSERT INTO fleet.users (id, username, email)
+                 SELECT id, COALESCE(name, ''user_'' || id), email_address FROM public.users
+                 ON CONFLICT (id) DO NOTHING';
+                 
+    ELSIF EXISTS (SELECT FROM information_schema.columns 
+                  WHERE table_schema = 'public' 
+                  AND table_name = 'users' 
+                  AND column_name = 'email') THEN
+                  
+        EXECUTE 'INSERT INTO fleet.users (id, username, email)
+                 SELECT id, COALESCE(name, ''user_'' || id), email FROM public.users
+                 ON CONFLICT (id) DO NOTHING';
+    END IF;
 
-ALTER TABLE ride_and_go.notifications 
-ALTER COLUMN data TYPE TEXT;
+    -- Redirection des contraintes pour fleet_managers
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'fleet' AND table_name = 'fleet_managers') THEN
+        ALTER TABLE fleet.fleet_managers DROP CONSTRAINT IF EXISTS fk_manager_user_fleet;
+        ALTER TABLE fleet.fleet_managers ADD CONSTRAINT fk_manager_user_fleet FOREIGN KEY (user_id) REFERENCES fleet.users(id) ON DELETE CASCADE;
+    END IF;
+
+    -- Redirection des contraintes pour drivers
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'fleet' AND table_name = 'drivers') THEN
+        ALTER TABLE fleet.drivers DROP CONSTRAINT IF EXISTS fk_driver_user_fleet;
+        ALTER TABLE fleet.drivers ADD CONSTRAINT fk_driver_user_fleet FOREIGN KEY (user_id) REFERENCES fleet.users(id) ON DELETE CASCADE;
+    END IF;
+END $$;
+
+---
+### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\src\main\resources\db\changelog\changes\006-add-photo-url-to-users.sql
+`$ext
+--liquibase formatted sql
+--changeset gabriel:add-photo-url-to-users
+--comment: Ajout de la colonne photo_url pour le cache local
+
+ALTER TABLE fleet.users ADD COLUMN IF NOT EXISTS photo_url VARCHAR(255);
 
 ---
 ### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\src\main\resources\db\changelog\data\001-local-public-mock.sql
 `$ext
 --liquibase formatted sql
 
---changeset gabriel:mock-structure-only context:local
+--changeset gabriel:mock-structure-v2 context:local
+--comment: Alignement du mock local sur la structure rÃ©elle de la DB YOWYOB (email_address)
 
--- 1. Structure PUBLIC (Simulation Auth Service pour les FKs)
+-- 1. Structure PUBLIC (Simulation Auth Service rÃ©el)
 CREATE TABLE IF NOT EXISTS public.users (
     id UUID PRIMARY KEY,
     name TEXT,
-    email TEXT,
+    email_address TEXT, -- ChangÃ© de 'email' Ã  'email_address'
     password TEXT
 );
 
@@ -18126,22 +16009,20 @@ CREATE TABLE IF NOT EXISTS public.user_has_roles (
     PRIMARY KEY (user_id, role_name)
 );
 
--- 2. Insertion des RÃ´les (Standards TransEns)
+-- 2. Insertion des RÃ´les
 INSERT INTO public.roles (name) VALUES 
 ('FLEET_ADMIN'), 
 ('FLEET_MANAGER'), 
 ('FLEET_DRIVER')
 ON CONFLICT DO NOTHING;
 
--- 3. Insertion des Types de VÃ©hicules (OBLIGATOIRE pour que l'app fonctionne)
+-- 3. Insertion des Types de VÃ©hicules
 INSERT INTO fleet.vehicle_types (id, code, label, description) VALUES 
 ('11111111-1111-1111-1111-111111111111', 'CAR', 'Voiture', 'VÃ©hicule lÃ©ger de tourisme'),
 ('22222222-2222-2222-2222-222222222222', 'TRUCK', 'Camion', 'Poids lourd pour logistique'),
 ('33333333-3333-3333-3333-333333333333', 'MOTO', 'Moto', 'Deux roues pour livraison rapide'),
 ('44444444-4444-4444-4444-444444444444', 'VAN', 'Fourgon', 'Transport de matÃ©riel')
 ON CONFLICT DO NOTHING;
-
--- FIN : Aucune donnÃ©e de flotte ou d'utilisateur n'est insÃ©rÃ©e.
 
 ---
 ### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\src\test\java\com\yowyob\reactive_hexagonal\ReactiveHexagonalApplicationTests.java

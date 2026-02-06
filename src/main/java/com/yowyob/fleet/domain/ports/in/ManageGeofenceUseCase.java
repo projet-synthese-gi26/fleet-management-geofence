@@ -17,8 +17,9 @@ public interface ManageGeofenceUseCase {
      * Récupère les zones depuis le moteur externe.
      * @param category : "all", "circles" ou "polygons"
      */
-
-    /**
+    
+    Flux<Map<String, Object>> getMyExternalZones(String category);
+     /**
      * Récupère le détail d'une zone spécifique par son type et son ID.
      */
     Mono<Map<String, Object>> getExternalZoneDetails(String type, UUID id);
@@ -56,9 +57,6 @@ public interface ManageGeofenceUseCase {
 
     Flux<GeofenceZone> getMyZones(UUID managerId);
 
-    Flux<Map<String, Object>> getMyZones(UUID managerId, String category);
-    
-
     Mono<Void> deleteZone(UUID zoneId, String type, UUID managerId);
 
     Flux<Map<String, Object>> getZonesByManager(UUID managerId, String category);
@@ -68,6 +66,9 @@ public interface ManageGeofenceUseCase {
     Mono<Map<String, Object>> getZoneDetails(UUID zoneId, UUID managerId);
 
     Mono<GeofenceZone> createZone(GeofenceZone zone);
-
+    Mono<Void> assignZoneToFleet(UUID zoneId, UUID fleetId, UUID managerId);
+    Flux<GeofenceZone> getZonesByFleet1(UUID fleetId);
+    
     Flux<Map<String, Object>> getAllExternalZones(String category);
+
 }
