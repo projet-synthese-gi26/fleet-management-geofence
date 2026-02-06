@@ -9,3 +9,5 @@ databaseChangeLog:
       file: db/changelog/changes/003-create-notification-settings.sql
   - include:
       file: db/changelog/changes/003-update_geofence_tables.sql
+  - include:
+      file: db/changelog/changes/006-add-photo-url-to-users.sql

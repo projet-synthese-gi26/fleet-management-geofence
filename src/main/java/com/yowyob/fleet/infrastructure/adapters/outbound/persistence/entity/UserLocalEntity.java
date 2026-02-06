@@ -30,6 +30,9 @@ public class UserLocalEntity implements Persistable<UUID> {
     
     @Column("last_name")
     private String lastName;
+
+    @Column("photo_url") 
+    private String photoUrl;
     
     @Column("is_active")
     @Builder.Default

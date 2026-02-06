@@ -9,7 +9,7 @@ spring:
     active: local
 
   # R2DBC (Application Runtime)
-  # ✅ CORRECTION: Utiliser yowyob_db au lieu de yowyob
+
   r2dbc:
     url: r2dbc:postgresql://localhost:5432/yowyob_db
     username: fleet_admin

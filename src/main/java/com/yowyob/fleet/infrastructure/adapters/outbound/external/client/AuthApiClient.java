@@ -8,18 +8,17 @@ import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PostExchange;
 import org.springframework.web.service.annotation.PutExchange;
-import org.springframework.web.service.annotation.PatchExchange; // Ajout
+import org.springframework.web.service.annotation.PatchExchange;
 
 import reactor.core.publisher.Flux; 
 import reactor.core.publisher.Mono;
 import java.util.List;
-import java.util.Map; // Ajout
+import java.util.Map;
 import java.util.UUID;
 
 @HttpExchange("/api")
 public interface AuthApiClient {
     
-    // --- AUTH ---
     @PostExchange("/auth/login")
     Mono<TraMaSysResponse> authenticate(@RequestBody LoginRequest request);
 
@@ -32,10 +31,8 @@ public interface AuthApiClient {
     @PostExchange("/auth/refresh")
     Mono<TraMaSysResponse> refreshToken(@RequestBody RefreshRequest request);
 
-    // --- USERS ---
-    
     @GetExchange("/users")
-    Flux<UserDetailResponse> getAllUsers(@RequestHeader("Authorization") String bearerToken); // Pour Super Admin
+    Flux<UserDetailResponse> getAllUsers(@RequestHeader("Authorization") String bearerToken);
 
     @GetExchange("/users/{id}")
     Mono<UserDetailResponse> getUserById(@PathVariable UUID id, @RequestHeader("Authorization") String bearerToken);
@@ -46,7 +43,6 @@ public interface AuthApiClient {
     @PutExchange("/users/{id}")
     Mono<UserDetailResponse> updateUser(@PathVariable UUID id, @RequestBody UpdateUserRequest request);
 
-    // NOUVEAU : Patch générique pour update partiel (ex: service)
     @PatchExchange("/users/{id}")
     Mono<UserDetailResponse> patchUser(@PathVariable UUID id, @RequestBody Map<String, Object> updates, @RequestHeader("Authorization") String bearerToken);
 
@@ -55,7 +51,6 @@ public interface AuthApiClient {
 
     @DeleteExchange("/users/{id}") 
     Mono<Void> deleteUser(@PathVariable UUID id, @RequestHeader("Authorization") String bearerToken);
-
 
     // DTOs
     record LoginRequest(String identifier, String password) {}
@@ -73,6 +68,7 @@ public interface AuthApiClient {
     record UserDetailResponse(
         UUID id, String username, String email, String phone,
         String firstName, String lastName, String service,
-        List<String> roles, List<String> permissions
+        List<String> roles, List<String> permissions,
+        String photoUrl 
     ) {}    
 }

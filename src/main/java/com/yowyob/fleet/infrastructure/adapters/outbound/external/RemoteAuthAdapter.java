@@ -199,8 +199,8 @@ public class RemoteAuthAdapter implements AuthPort {
         return new UserDetail(
             res.id(), res.username(), res.email(), res.phone(),
             res.firstName(), res.lastName(), res.service(),
-            res.roles(), res.permissions(), 
-            null, null, null, null
+            res.roles(), res.permissions(), res.photoUrl(),
+            null, null, null
         );
     }
 

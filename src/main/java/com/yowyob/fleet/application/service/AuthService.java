@@ -72,6 +72,7 @@ public class AuthService implements AuthUseCase {
                     local.setEmail(remote.email());
                     local.setFirstName(remote.firstName());
                     local.setLastName(remote.lastName());
+                    local.setPhotoUrl(remote.photoUrl());
                     local.setLastLoginAt(Instant.now());
                     local.setNew(false);
                     return userRepo.save(local);
@@ -83,6 +84,7 @@ public class AuthService implements AuthUseCase {
                             .email(remote.email())
                             .firstName(remote.firstName())
                             .lastName(remote.lastName())
+                            .photoUrl(remote.photoUrl())
                             .isActive(true) // Par défaut actif à la première sync
                             .lastLoginAt(Instant.now())
                             .build();
