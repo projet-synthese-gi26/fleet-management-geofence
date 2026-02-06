@@ -5,11 +5,8 @@ import com.yowyob.fleet.domain.ports.out.AuthPort;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.LoginRequest;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.RegisterRequest;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Encoding;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.media.SchemaProperty;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.buffer.DataBufferUtils;
@@ -52,20 +49,25 @@ public class AuthController {
     )
     public Mono<AuthPort.AuthResponse> register(
             @RequestPart("user") RegisterRequest dto,
-            @RequestPart(value = "file", required = false) FilePart filePart 
+            @RequestPart(value = "file", required = false) Part filePart 
     ) {
         Mono<AuthUseCase.FileContent> photoMono = Mono.justOrEmpty(filePart)
-                .flatMap(fp -> DataBufferUtils.join(fp.content())
+                .flatMap(fp -> {
+                    // FIX: On extrait le nom de fichier de manière sécurisée
+                    String filename = (fp instanceof FilePart file) ? file.filename() : "profile_picture";
+                    
+                    return DataBufferUtils.join(fp.content())
                         .map(dataBuffer -> {
                             byte[] bytes = new byte[dataBuffer.readableByteCount()];
                             dataBuffer.read(bytes);
                             DataBufferUtils.release(dataBuffer);
                             return new AuthUseCase.FileContent(
-                                    fp.filename(),
+                                    filename,
                                     fp.headers().getContentType() != null ? fp.headers().getContentType().toString() : "image/jpeg",
                                     bytes
                             );
-                        }));
+                        });
+                });
 
         return photoMono
                 .map(photo -> new AuthUseCase.RegisterCommand(

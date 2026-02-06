@@ -45,33 +45,7 @@ public class RemoteAuthAdapter implements AuthPort {
                 .onErrorResume(this::mapExternalError);
     }
 
-    @Override
-    public Mono<AuthResponse> registerInRemote(AuthUseCase.RegisterCommand command) {
-        MultipartBodyBuilder builder = new MultipartBodyBuilder();
-        AuthApiClient.RegisterRequest registerRequest = new AuthApiClient.RegisterRequest(
-            command.username(), command.password(), command.email(), 
-            command.phone(), command.firstName(), command.lastName(), 
-            SERVICE_NAME, command.roles()
-        );
-        builder.part("data", registerRequest);
-
-        if (command.photo() != null && command.photo().data() != null) {
-            builder.part("file", command.photo().data())
-                   .filename(command.photo().filename())
-                   .header("Content-Type", command.photo().contentType());
-        }
-
-        return webClientBuilder.build()
-                .post()
-                .uri(authServiceUrl + "/api/auth/register")
-                .contentType(MediaType.MULTIPART_FORM_DATA)
-                .bodyValue(builder.build())
-                .retrieve()
-                .bodyToMono(AuthApiClient.TraMaSysResponse.class)
-                .map(this::mapToAuthResponse)
-                .onErrorResume(this::mapExternalError);
-    }
-
+   
     @Override
     public Mono<UserDetail> getUserProfile(String token) {
         return authApiClient.getCurrentUser(ensureBearer(token))
@@ -155,24 +129,7 @@ public class RemoteAuthAdapter implements AuthPort {
                 .onErrorResume(this::mapExternalError);
     }
 
-    @Override
-    public Mono<Void> updateProfilePicture(UUID userId, String token, AuthUseCase.FileContent file) {
-        MultipartBodyBuilder builder = new MultipartBodyBuilder();
-        builder.part("file", file.data())
-               .filename(file.filename())
-               .header("Content-Type", file.contentType());
-
-        return webClientBuilder.build()
-                .post()
-                .uri(authServiceUrl + "/api/users/" + userId + "/picture")
-                .header("Authorization", ensureBearer(token))
-                .contentType(MediaType.MULTIPART_FORM_DATA)
-                .bodyValue(builder.build())
-                .retrieve()
-                .bodyToMono(Void.class)
-                .onErrorResume(this::mapExternalError);
-    }
-
+    
     @Override
     public Mono<Boolean> roleExists(String roleName) {
         return Mono.just(true); 
@@ -199,7 +156,7 @@ public class RemoteAuthAdapter implements AuthPort {
         return new UserDetail(
             res.id(), res.username(), res.email(), res.phone(),
             res.firstName(), res.lastName(), res.service(),
-            res.roles(), res.permissions(), res.photoUrl(),
+            res.roles(), res.permissions(), res.photoUri(),
             null, null, null
         );
     }
@@ -209,16 +166,20 @@ public class RemoteAuthAdapter implements AuthPort {
      */
     private <T> Mono<T> mapExternalError(Throwable e) {
         if (e instanceof WebClientResponseException ex) {
+            log.error("❌ Erreur Auth Distante [{}]: {}", ex.getStatusCode(), ex.getResponseBodyAsString());
+            
             return switch (ex.getStatusCode().value()) {
-                case 401 -> Mono.error(AuthException.invalidCredentials());
+                case 401 -> Mono.error(AuthException.tokenExpired());
                 case 409 -> Mono.error(AuthException.userAlreadyExists());
                 case 403 -> Mono.error(AuthException.accountLocked());
-                case 503, 502, 504 -> Mono.error(AuthException.remoteServiceUnavailable());
-                default -> Mono.error(AuthException.generic("Service Auth : " + ex.getStatusText(), (HttpStatus) ex.getStatusCode()));
+                case 404 -> Mono.error(new AuthException("Ressource introuvable sur le service d'identité.", HttpStatus.NOT_FOUND, "AUTH_404"));
+                default -> Mono.error(AuthException.generic("Erreur Service Identité : " + ex.getStatusText(), (HttpStatus) ex.getStatusCode()));
             };
         }
         return Mono.error(e);
     }
+
+
 
    /**
      * Transforme les erreurs techniques WebClient en AuthException métier (Flux).
@@ -226,5 +187,55 @@ public class RemoteAuthAdapter implements AuthPort {
     private <T> Flux<T> mapExternalErrorFlux(Throwable e) {
         // .thenMany permet de convertir le signal (ici l'erreur) en Flux<T>
         return this.<T>mapExternalError(e).thenMany(Flux.empty());
+    }
+
+
+
+    @Override
+    public Mono<AuthResponse> registerInRemote(AuthUseCase.RegisterCommand command) {
+        // 1. On prépare le DTO
+        AuthApiClient.RegisterRequest registerRequest = new AuthApiClient.RegisterRequest(
+            command.username(), command.password(), command.email(), 
+            command.phone(), command.firstName(), command.lastName(), 
+            SERVICE_NAME, command.roles()
+        );
+
+        // 2. On DOIT utiliser un MultipartBodyBuilder car Pynfi attend une partie "data"
+        MultipartBodyBuilder builder = new MultipartBodyBuilder();
+        builder.part("data", registerRequest, MediaType.APPLICATION_JSON);
+
+        // On utilise webClientBuilder directement ici pour avoir le contrôle total sur le Multipart
+        return webClientBuilder.build()
+                .post()
+                .uri(authServiceUrl + "/api/auth/register")
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .bodyValue(builder.build())
+                .retrieve()
+                .bodyToMono(AuthApiClient.TraMaSysResponse.class)
+                .map(this::mapToAuthResponse)
+                .onErrorResume(this::mapExternalError);
+    }
+    @Override
+    public Mono<Void> updateProfilePicture(UUID userId, String token, AuthUseCase.FileContent file) {
+        // Construction ultra-robuste du Multipart pour Pynfi
+        org.springframework.core.io.ByteArrayResource resource = new org.springframework.core.io.ByteArrayResource(file.data()) {
+            @Override public String getFilename() { return file.filename(); }
+        };
+
+        MultipartBodyBuilder builder = new MultipartBodyBuilder();
+        builder.part("file", resource, MediaType.parseMediaType(file.contentType()));
+
+        return webClientBuilder.build()
+                .post()
+                .uri(authServiceUrl + "/api/users/" + userId + "/picture")
+                .header("Authorization", ensureBearer(token))
+                .bodyValue(builder.build())
+                .retrieve()
+                .toBodilessEntity()
+                .then()
+                .onErrorResume(e -> {
+                    log.error("⚠️ Échec upload photo chez Pynfi pour {}: {}", userId, e.getMessage());
+                    return Mono.error(e); // L'erreur sera gérée dans le service
+                });
     }
 }

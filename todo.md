@@ -15,13 +15,13 @@
     - [x] **3.5 :** Gestion des erreurs : Créer un mapper d'exceptions pour traduire proprement les codes d'erreur du service distant (401, 409, etc.).
     - [x] **3.6 :** Validation Swagger : Scénario d'inscription, login, accès bloqué (en forçant `is_active: false` en DB) et rafraîchissement de token.
 
-- [-] **Tâche 4 :** Test et finalisation module Account.
-    - [ ] **4.1 :** Agrégation du profil (`/me`) : Fusionner les données de l'Auth central avec les données locales (`fleet_managers` ou `drivers`) en un seul objet.
-    - [ ] **4.2 :** Mise à jour de l'identité : Implémenter le flux de modification (Nom, Prénom, Phone) avec synchronisation bidirectionnelle (Distant <-> Local).
-    - [ ] **4.3 :** Gestion de l'image : Endpoint de mise à jour de la photo de profil (traitement Multipart et propagation au service distant).
-    - [ ] **4.4 :** **Soft Delete Métier** : Implémenter l'endpoint de suppression de compte qui active `deleted_at` et `is_active = false` en local.
-    - [ ] **4.5 :** **Logique de Libération (Clean-up)** : Créer le service qui, lors d'un Soft Delete, désassigne automatiquement le véhicule si l'utilisateur est un chauffeur (Driver).
-    - [ ] **4.6 :** Validation Swagger : Tester la modification de profil, l'upload de photo et vérifier qu'un compte supprimé est immédiatement banni par le `JwtAuthenticationManager`.
+- [x] **Tâche 4 :** Test et finalisation module Account.
+    - [x] **Tâche 4.1 :** **Agrégation & Synchro Profile** : Garantir un `pullSync` systématique sur le `GET /me` et enrichir l'objet avec les données métier complètes (Manager/Driver).
+    - [x] **Tâche 4.2 :** **Mise à jour Identité** : Implémenter le `PUT /account` avec propagation immédiate des modifications vers le cache local `fleet.users`.
+    - [x] **Tâche 4.3 :** **Soft Delete & Nettoyage** : Implémenter la suppression logique (is_active/deleted_at) et créer le service de libération automatique du véhicule pour les Chauffeurs.
+    - [x] **Tâche 4.4 :** **Tests & Debug Médias** : Valider l'upload de photo (`POST /picture`) et le changement de mot de passe avec le service distant.
+    - [x] **Tâche 4.5 :** **Blindage des Erreurs** : Mapper les codes d'erreur spécifiques du service Auth (401, 403, 409) vers nos `DomainException` pour des retours API clairs.
+
 
 
 - [ ] **Tâche 5 :** Test et finalisation module Super Admin.

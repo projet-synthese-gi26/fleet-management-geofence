@@ -1,21 +1,23 @@
 package com.yowyob.fleet.application.service;
 
 import com.yowyob.fleet.domain.ports.in.AuthUseCase;
-import com.yowyob.fleet.domain.ports.out.AuthPort;
-import com.yowyob.fleet.domain.ports.out.DriverPersistencePort;
-import com.yowyob.fleet.domain.ports.out.FleetManagerPersistencePort;
+import com.yowyob.fleet.domain.ports.in.ManageDriverUseCase;
+import com.yowyob.fleet.domain.ports.out.*;
 import com.yowyob.fleet.domain.exception.AuthException;
 import com.yowyob.fleet.domain.model.Driver;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.UserLocalEntity;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.UserLocalR2dbcRepository;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.FleetR2dbcRepository;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.FleetManagerR2dbcRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 import java.util.List;
@@ -29,11 +31,15 @@ public class AuthService implements AuthUseCase {
     private final UserLocalR2dbcRepository userRepo;
     private final DriverPersistencePort driverPort;
     private final FleetManagerPersistencePort managerPort;
+    private final FleetManagerR2dbcRepository managerRepo;
+    private final FleetR2dbcRepository fleetRepo;
+    private final ManageDriverUseCase driverUseCase;
 
     @Override
     public Mono<AuthPort.AuthResponse> login(String identifier, String password) {
         return authPort.login(identifier, password)
                 .flatMap(response -> pullSyncLocalUser(response.user())
+                        .then(ensureRoleProfileExists(response.user())) // SELF-HEALING
                         .then(checkUserAccess(response.user().id()))
                         .thenReturn(response));
     }
@@ -42,76 +48,81 @@ public class AuthService implements AuthUseCase {
     public Mono<AuthPort.AuthResponse> register(RegisterCommand command) {
         return ensureRolesExist(command.roles())
                 .then(authPort.registerInRemote(command))
-                .flatMap(response -> createLocalProfile(response.user())
-                        .then(pullSyncLocalUser(response.user()))
-                        .thenReturn(response));
-    }
+                 // --- AJOUT ICI ---
+                .onErrorResume(e -> {
+                    if (e instanceof AuthException ae && ae.getBusinessCode().equals("AUTH_004")) { // 409 Conflict
+                        return userRepo.findByUsername(command.username()) // On cherche en local
+                                .flatMap(u -> {
+                                    if (!u.isActive()) {
+                                        return Mono.<AuthPort.AuthResponse>error(new AuthException(
+                                            "Ce compte est désactivé. Veuillez contacter un administrateur pour le réactiver.", 
+                                            HttpStatus.FORBIDDEN, "AUTH_007"));
+                                    }
+                                    return Mono.<AuthPort.AuthResponse>error(e);
+                                })
+                                .switchIfEmpty(Mono.error(e));
+                    }
+                    return Mono.error(e);
+                })
+                // --- FIN AJOUT ---
+                .flatMap(res -> {
+                    String token = res.accessToken();
+                    UUID userId = res.user().id();
 
-    @Override
-    public Mono<AuthPort.AuthResponse> refreshToken(String refreshToken) {
-        return authPort.refresh(refreshToken)
-                .flatMap(response -> pullSyncLocalUser(response.user())
-                        .then(checkUserAccess(response.user().id()))
-                        .thenReturn(response));
+                    // 1. TENTATIVE PHOTO (NON-BLOQUANTE)
+                    Mono<Void> photoFlow = (command.photo() != null) ?
+                            this.updateProfilePicture(userId, token, command.photo())
+                                    .onErrorResume(e -> {
+                                        log.warn("📸 Photo ignorée au register suite à erreur distante.");
+                                        return Mono.empty();
+                                    }) : Mono.empty();
+
+                    // 2. CHAINAGE : Photo -> Fetch Final -> Sync Local
+                    return photoFlow
+                            .then(authPort.getUserById(userId, token))
+                            .flatMap(freshUser -> pullSyncLocalUser(freshUser)
+                                    .then(ensureRoleProfileExists(freshUser))
+                                    .thenReturn(new AuthPort.AuthResponse(token, res.refreshToken(), freshUser)));
+                });
     }
 
     @Override
     public Mono<AuthPort.UserDetail> me(String token) {
         return authPort.getUserProfile(token)
-                .flatMap(remote -> pullSyncLocalUser(remote).thenReturn(remote))
+                .flatMap(summary -> authPort.getUserById(summary.id(), token))
+                .flatMap(remote -> pullSyncLocalUser(remote)
+                        .then(ensureRoleProfileExists(remote)) // SELF-HEALING
+                        .thenReturn(remote))
                 .flatMap(this::enrichWithLocalData);
     }
 
     /**
-     * PULL SYNC : Met à jour le cache local fleet.users depuis les données distantes.
+     * FONCTION CENTRALE : Garantit que Hassana voit ses managers/drivers en DB locale.
      */
-    private Mono<Void> pullSyncLocalUser(AuthPort.UserDetail remote) {
-        return userRepo.findById(remote.id())
-                .flatMap(local -> {
-                    local.setUsername(remote.username());
-                    local.setEmail(remote.email());
-                    local.setFirstName(remote.firstName());
-                    local.setLastName(remote.lastName());
-                    local.setPhotoUrl(remote.photoUrl());
-                    local.setLastLoginAt(Instant.now());
-                    local.setNew(false);
-                    return userRepo.save(local);
-                })
-                .switchIfEmpty(Mono.defer(() -> {
-                    UserLocalEntity newLocal = UserLocalEntity.builder()
-                            .id(remote.id())
-                            .username(remote.username())
-                            .email(remote.email())
-                            .firstName(remote.firstName())
-                            .lastName(remote.lastName())
-                            .photoUrl(remote.photoUrl())
-                            .isActive(true) // Par défaut actif à la première sync
-                            .lastLoginAt(Instant.now())
-                            .build();
-                    newLocal.setNew(true);
-                    return userRepo.save(newLocal);
-                }))
-                .then();
+    private Mono<Void> ensureRoleProfileExists(AuthPort.UserDetail user) {
+        if (user.roles().contains("FLEET_MANAGER")) {
+            return managerRepo.existsById(user.id())
+                    .flatMap(exists -> exists ? Mono.empty() : managerPort.createProfile(user.id(), "Société de " + user.lastName()));
+        }
+        if (user.roles().contains("FLEET_DRIVER")) {
+            return driverPort.findById(user.id())
+                    .flatMap(exists -> Mono.<Void>empty()) // Existe déjà
+                    .switchIfEmpty(Mono.defer(() -> {
+                        Driver d = new Driver(user.id(), null, "PENDING-" + user.id().toString().substring(0, 8), "ACTIVE", null, "");
+                        return driverPort.save(d).then();
+                    }));
+        }
+        return Mono.empty();
     }
 
-    /**
-     * VERROU LOCAL : Vérifie si l'utilisateur n'est pas banni ou supprimé en local.
-     */
-/**
-     * VERROU LOCAL : Vérifie si l'utilisateur n'est pas banni ou supprimé en local.
-     */
-    private Mono<Void> checkUserAccess(UUID userId) {
-        return userRepo.findById(userId)
-                .flatMap(user -> {
-                    // Utilisation de nos exceptions modulaires au lieu de ResponseStatusException
-                    if (user.getDeletedAt() != null) {
-                        return Mono.error(AuthException.accountDeleted()); // Lance AUTH_003
-                    }
-                    if (!user.isActive()) {
-                        return Mono.error(AuthException.accountLocked());  // Lance AUTH_002
-                    }
-                    return Mono.empty();
-                });
+    // --- AUTRES MÉTHODES (SYCHRONISÉES) ---
+
+    @Override
+    public Mono<AuthPort.AuthResponse> refreshToken(String refreshToken) {
+        return authPort.refresh(refreshToken)
+                .flatMap(response -> pullSyncLocalUser(response.user())
+                        .then(ensureRoleProfileExists(response.user()))
+                        .thenReturn(response));
     }
 
     @Override
@@ -122,68 +133,86 @@ public class AuthService implements AuthUseCase {
     }
 
     @Override
-    public Mono<Void> changePassword(UUID userId, String token, String currentPwd, String newPwd) {
-        return authPort.changePassword(userId, token, currentPwd, newPwd);
-    }
-
-    @Override
     public Mono<Void> updateProfilePicture(UUID userId, String token, FileContent file) {
-        return authPort.updateProfilePicture(userId, token, file);
+        return authPort.updateProfilePicture(userId, token, file)
+                .delayElement(Duration.ofMillis(600)) // Sécurité stockage
+                .then(authPort.getUserById(userId, token))
+                .flatMap(this::pullSyncLocalUser);
     }
 
     @Override
+    @Transactional
     public Mono<Void> deleteAccount(UUID userId, String token) {
-        // SOFT DELETE LOCAL
-        return userRepo.findById(userId)
-                .flatMap(user -> {
-                    user.setDeletedAt(Instant.now());
-                    user.setActive(false);
-                    user.setNew(false);
-                    return userRepo.save(user);
-                })
-                .then(authPort.moveUserToService(userId, "USER_DELETED", token));
+        return authPort.getUserProfile(token)
+            .flatMap(user -> {
+                if (user.roles().contains("FLEET_MANAGER")) {
+                    return fleetRepo.findAllByManagerId(userId).hasElements()
+                        .flatMap(has -> has ? Mono.<Void>error(new AuthException("Supprimez vos flottes d'abord.", HttpStatus.CONFLICT, "ACC_001")) : Mono.empty());
+                }
+                if (user.roles().contains("FLEET_DRIVER")) {
+                    return driverUseCase.unassignVehicle(userId, userId);
+                }
+                return Mono.<Void>empty();
+            })
+            .then(userRepo.findById(userId))
+            .flatMap(local -> {
+                local.setActive(false);
+                local.setDeletedAt(Instant.now());
+                local.setNew(false);
+                return userRepo.save(local);
+            })
+            .then(authPort.moveUserToService(userId, "DELETED_USER", token));
     }
 
-    // --- HELPERS EXISTANTS ---
-    
+    private Mono<Void> pullSyncLocalUser(AuthPort.UserDetail remote) {
+        return userRepo.findById(remote.id())
+                .flatMap(local -> {
+                    local.setUsername(remote.username());
+                    local.setEmail(remote.email());
+                    local.setFirstName(remote.firstName());
+                    local.setLastName(remote.lastName());
+                    local.setPhotoUrl(remote.photoUrl());
+                    local.setNew(false);
+                    return userRepo.save(local);
+                })
+                .switchIfEmpty(Mono.defer(() -> {
+                    UserLocalEntity n = UserLocalEntity.builder().id(remote.id()).username(remote.username()).email(remote.email())
+                            .firstName(remote.firstName()).lastName(remote.lastName()).photoUrl(remote.photoUrl())
+                            .isActive(true).lastLoginAt(Instant.now()).build();
+                    n.setNew(true);
+                    return userRepo.save(n);
+                })).then();
+    }
+
+    private Mono<Void> checkUserAccess(UUID userId) {
+        return userRepo.findById(userId).flatMap(u -> {
+            if (u.getDeletedAt() != null) return Mono.error(AuthException.accountDeleted());
+            if (!u.isActive()) return Mono.error(AuthException.accountLocked());
+            return Mono.empty();
+        });
+    }
+
+    @Override public Mono<Void> changePassword(UUID u, String t, String c, String n) { return authPort.changePassword(u, t, c, n); }
+
     private Mono<Void> ensureRolesExist(List<String> roles) {
-        return Flux.fromIterable(roles)
-                .flatMap(role -> authPort.roleExists(role)
-                        .flatMap(exists -> !Boolean.TRUE.equals(exists) ? authPort.createRole(role) : Mono.empty())
-                ).then();
+        return Flux.fromIterable(roles).flatMap(r -> authPort.roleExists(r).flatMap(ex -> !ex ? authPort.createRole(r) : Mono.empty())).then();
     }
 
     private Mono<Void> createLocalProfile(AuthPort.UserDetail user) {
-        if (user.roles().contains("FLEET_MANAGER")) {
-            return managerPort.createProfile(user.id(), null);
-        } else if (user.roles().contains("FLEET_DRIVER")) {
-            String tempPermit = "PENDING-" + user.id().toString().substring(0, 8);
-            Driver driver = new Driver(user.id(), null, tempPermit, "ACTIVE", null, "");
-            return driverPort.save(driver).then();
-        }
-        return Mono.empty();
+        return ensureRoleProfileExists(user); // Réutilisation pour éviter les doublons
     }
 
-    private Mono<AuthPort.UserDetail> enrichWithLocalData(AuthPort.UserDetail remoteUser) {
-        if (remoteUser.roles().contains("FLEET_MANAGER")) {
-            return managerPort.getCompanyName(remoteUser.id())
-                    .map(company -> new AuthPort.UserDetail(
-                            remoteUser.id(), remoteUser.username(), remoteUser.email(), remoteUser.phone(),
-                            remoteUser.firstName(), remoteUser.lastName(), remoteUser.service(),
-                            remoteUser.roles(), remoteUser.permissions(), remoteUser.photoUrl(),
-                            company, null, null
-                    ))
-                    .defaultIfEmpty(remoteUser);
-        } else if (remoteUser.roles().contains("FLEET_DRIVER")) {
-            return driverPort.findById(remoteUser.id())
-                    .map(driver -> new AuthPort.UserDetail(
-                            remoteUser.id(), remoteUser.username(), remoteUser.email(), remoteUser.phone(),
-                            remoteUser.firstName(), remoteUser.lastName(), remoteUser.service(),
-                            remoteUser.roles(), remoteUser.permissions(), remoteUser.photoUrl(),
-                            null, driver.licenceNumber(), driver.assignedVehicleId() != null ? driver.assignedVehicleId().toString() : null
-                    ))
-                    .defaultIfEmpty(remoteUser);
+    private Mono<AuthPort.UserDetail> enrichWithLocalData(AuthPort.UserDetail remote) {
+        if (remote.roles().contains("FLEET_MANAGER")) {
+            return managerPort.getCompanyName(remote.id())
+                    .map(c -> new AuthPort.UserDetail(remote.id(), remote.username(), remote.email(), remote.phone(), remote.firstName(), remote.lastName(), remote.service(), remote.roles(), remote.permissions(), remote.photoUrl(), c, null, null))
+                    .defaultIfEmpty(remote);
         }
-        return Mono.just(remoteUser);
+        if (remote.roles().contains("FLEET_DRIVER")) {
+            return driverPort.findById(remote.id())
+                    .map(d -> new AuthPort.UserDetail(remote.id(), remote.username(), remote.email(), remote.phone(), remote.firstName(), remote.lastName(), remote.service(), remote.roles(), remote.permissions(), remote.photoUrl(), null, d.licenceNumber(), d.assignedVehicleId() != null ? d.assignedVehicleId().toString() : null))
+                    .defaultIfEmpty(remote);
+        }
+        return Mono.just(remote);
     }
 }

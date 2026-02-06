@@ -28,32 +28,29 @@ public class JwtAuthenticationManager implements ReactiveAuthenticationManager {
 
         return authPort.getUserProfile(token)
                 .flatMap(userDetail -> 
-                    // On vérifie en DB locale si l'utilisateur est banni ou supprimé
+                    // VÉRIFICATION LOCALE SOUVERAINE
                     userRepo.findById(userDetail.id())
                         .flatMap(localUser -> {
                             if (localUser.getDeletedAt() != null) {
-                                return Mono.<AuthPort.UserDetail>error(AuthException.accountDeleted());
+                                return Mono.error(AuthException.accountDeleted());
                             }
                             if (!localUser.isActive()) {
-                                return Mono.<AuthPort.UserDetail>error(AuthException.accountLocked());
+                                return Mono.error(AuthException.accountLocked());
                             }
                             return Mono.just(userDetail);
                         })
-                        // Si l'utilisateur n'est pas encore en DB locale, on accepte (la synchro suivra dans AuthService)
-                        .defaultIfEmpty(userDetail)
+                        .defaultIfEmpty(userDetail) // Si 1er appel après register, local peut être vide
                 )
                 .map(userDetail -> {
                     var authorities = userDetail.roles().stream()
                             .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                             .collect(Collectors.toList());
 
-                    // On crée le token d'authentification
                     return new UsernamePasswordAuthenticationToken(userDetail, token, authorities);
                 })
-                // ✅ LE FIX : On force le cast en Authentication pour rassurer le compilateur
                 .cast(Authentication.class) 
                 .onErrorResume(e -> {
-                    log.warn("🔐 Access Denied for token: {}", e.getMessage());
+                    log.warn("🔐 Accès refusé : {}", e.getMessage());
                     return Mono.error(e);
                 });
     }

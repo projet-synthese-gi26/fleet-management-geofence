@@ -69,6 +69,6 @@ public interface AuthApiClient {
         UUID id, String username, String email, String phone,
         String firstName, String lastName, String service,
         List<String> roles, List<String> permissions,
-        String photoUrl 
+        String photoUri 
     ) {}    
 }

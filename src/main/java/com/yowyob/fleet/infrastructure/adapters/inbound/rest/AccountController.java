@@ -15,6 +15,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.http.codec.multipart.Part;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -68,23 +69,26 @@ public class AccountController {
     @Operation(summary = "Changer ma photo de profil")
     public Mono<Void> updatePicture(
             @Parameter(hidden = true) @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
-            @RequestPart("file") FilePart filePart
+            @RequestPart("file") Part filePart 
     ) {
         return authUseCase.me(token)
-                .flatMap(user -> 
-                    DataBufferUtils.join(filePart.content())
+                .flatMap(user -> {
+                    // FIX: Extraction sécurisée du nom de fichier
+                    String filename = (filePart instanceof FilePart file) ? file.filename() : "avatar.jpg";
+                    
+                    return DataBufferUtils.join(filePart.content())
                         .map(dataBuffer -> {
                             byte[] bytes = new byte[dataBuffer.readableByteCount()];
                             dataBuffer.read(bytes);
                             DataBufferUtils.release(dataBuffer);
                             return new AuthUseCase.FileContent(
-                                    filePart.filename(),
+                                    filename,
                                     filePart.headers().getContentType() != null ? filePart.headers().getContentType().toString() : "image/jpeg",
                                     bytes
                             );
                         })
-                        .flatMap(fileContent -> authUseCase.updateProfilePicture(user.id(), token, fileContent))
-                );
+                        .flatMap(fileContent -> authUseCase.updateProfilePicture(user.id(), token, fileContent));
+                });
     }
 
     @DeleteMapping
