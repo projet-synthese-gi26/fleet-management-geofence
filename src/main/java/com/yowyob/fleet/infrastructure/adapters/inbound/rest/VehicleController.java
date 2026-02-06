@@ -24,7 +24,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
-@Tag(name = "08. Vehicles", description = "Gestion unifiée du parc")
+@Tag(name = "09. Vehicles", description = "Gestion unifiée du parc")
 @SecurityRequirement(name = "bearerAuth")
 public class VehicleController {
 

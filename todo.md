@@ -24,8 +24,23 @@
 
 
 
-- [ ] **Tâche 5 :** Test et finalisation module Super Admin.
-- [ ] **Tâche 6 :** Test et finalisation module Admin.
+- [-] **Tâche 5 :** Test et finalisation module Super Admin.
+    - [ ] **Tâche 5.1 :** Création du Port & Service pour le filtrage spécifique des utilisateurs ayant le rôle `FLEET_ADMIN`.
+    - [ ] **Tâche 5.2 :** Implémentation du "Toggle Status" (Activer/Désactiver) modifiant la colonne `is_active` dans `fleet.users`.
+    - [ ] **Tâche 5.3 :** Implémentation de la suppression logique (`deleted_at`) pour les comptes Admin.
+    - [ ] **Tâche 5.4 :** Sécurisation et mise à jour du `AdminUserController` (Accès restreint au Super Admin).
+
+- [-] **Tâche 6 :** Test et finalisation module Admin.
+    **6.1 Gestion des Managers**
+    - [ ] **Tâche 6.1.1 :** Extension du service Manager pour inclure la désactivation de compte (`is_active = false`).
+    - [ ] **Tâche 6.1.2 :** Ajout de la suppression logique des managers.
+    - [ ] **Tâche 6.1.3 :** Listing global des managers avec état du compte (Actif/Suspendu).
+
+    **6.2 Gestion des Ressources (Nouveau Tag)**
+    - [ ] **Tâche 6.2.1 :** Finalisation du CRUD complet pour `VehicleType` (Create, Read, Update, Delete).
+    - [ ] **Tâche 6.2.2 :** Réorganisation Swagger : Création du tag **"05. Admin | Gestion des Ressources"** et déplacement des endpoints de référence.
+    - [ ] **Tâche 6.2.3 :** Validation des contraintes (Interdire la suppression d'un type utilisé par un véhicule).
+
 - [ ] **Tâche 7 :** Test et finalisation module Fleet Managers.
 - [ ] **Tâche 8 :** Test et finalisation module Drivers.
 - [ ] **Tâche 9 :** Test et finalisation module Vehicles (Debug PUT et ressources initiales).

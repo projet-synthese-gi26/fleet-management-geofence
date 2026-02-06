@@ -31,7 +31,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/geofence")
 @RequiredArgsConstructor
-@Tag(name = "11. Geofencing")
+@Tag(name = "12. Geofencing")
 @SecurityRequirement(name = "bearerAuth")
 public class GeofenceController {
 

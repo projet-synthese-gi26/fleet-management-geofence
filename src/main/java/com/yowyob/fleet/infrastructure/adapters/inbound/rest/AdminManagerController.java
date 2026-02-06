@@ -1,17 +1,15 @@
 package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
 
-import com.yowyob.fleet.domain.ports.in.ManageFleetManagerUseCase;
-import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.FleetManagerResponse;
-import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.UpdateManagerRequest;
+import com.yowyob.fleet.domain.ports.in.ManageAdminUseCase;
+import com.yowyob.fleet.domain.ports.out.AuthPort;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -19,48 +17,35 @@ import reactor.core.publisher.Mono;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/admin/managers")
+@RequestMapping("/api/v1/admin/management")
 @RequiredArgsConstructor
-@Tag(name = "06. Fleet Managers", description = "Administration des entreprises (Réservé ADMIN)")
+@Tag(name = "05. Admin | Gestion des Fleet Managers")
 @SecurityRequirement(name = "bearerAuth")
-@PreAuthorize("hasRole('FLEET_ADMIN') or hasRole('ADMIN')") 
+@PreAuthorize("hasAnyRole('FLEET_ADMIN', 'FLEET_SUPER_ADMIN')")
 public class AdminManagerController {
 
-    private final ManageFleetManagerUseCase manageFleetManagerUseCase;
+    private final ManageAdminUseCase adminUseCase;
 
-    @GetMapping
-    @Operation(summary = "Lister tous les managers", description = "Récupère la liste agrégée (Local + Auth).")
-    public Flux<FleetManagerResponse> getAll(
-        @Parameter(hidden = true) @RequestHeader(HttpHeaders.AUTHORIZATION) String token
-    ) {
-        return manageFleetManagerUseCase.getAllManagers(token);
+    private boolean isSuper(Authentication a) {
+        return a.getAuthorities().stream().anyMatch(ga -> ga.getAuthority().equals("ROLE_FLEET_SUPER_ADMIN"));
     }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Détails d'un manager", description = "Infos complètes.")
-    public Mono<FleetManagerResponse> getOne(
-        @PathVariable UUID id,
-        @Parameter(hidden = true) @RequestHeader(HttpHeaders.AUTHORIZATION) String token
-    ) {
-        return manageFleetManagerUseCase.getManagerDetails(id, token);
+    @GetMapping("/managers")
+    @Operation(summary = "Lister les Fleet Managers")
+    public Flux<AuthPort.UserDetail> list(@Parameter(hidden = true) @RequestHeader(HttpHeaders.AUTHORIZATION) String t) {
+        return adminUseCase.listFleetManagers(t);
     }
 
-    @PutMapping("/{id}")
-    @Operation(summary = "Mettre à jour l'entreprise", description = "Modifie uniquement le nom de la compagnie.")
-    public Mono<Void> updateCompany(
-        @PathVariable UUID id, 
-        @Valid @RequestBody UpdateManagerRequest request
-    ) {
-        return manageFleetManagerUseCase.updateManagerCompany(id, request.companyName());
+    @GetMapping("/managers/{id}")
+    @Operation(summary = "Détails d'un Fleet Manager")
+    public Mono<AuthPort.UserDetail> getOne(@PathVariable UUID id, @Parameter(hidden = true) @RequestHeader(HttpHeaders.AUTHORIZATION) String t, Authentication auth) {
+        return adminUseCase.getManagerDetails(id, t, isSuper(auth));
     }
 
-    // @DeleteMapping("/{id}")
-    // @ResponseStatus(HttpStatus.NO_CONTENT)
-    // @Operation(summary = "Supprimer un manager", description = "Attention: Échoue si le service distant refuse la suppression (Sécurité).")
-    // public Mono<Void> delete(
-    //     @PathVariable UUID id,
-    //     @Parameter(hidden = true) @RequestHeader(HttpHeaders.AUTHORIZATION) String token
-    // ) {
-    //     return manageFleetManagerUseCase.deleteManager(id, token);
-    // }
+    @PatchMapping("/managers/{id}/toggle")
+    @Operation(summary = "Activer/Désactiver un Fleet Manager")
+    public Mono<Void> toggle(@PathVariable UUID id, Authentication auth) {
+        AuthPort.UserDetail currentUser = (AuthPort.UserDetail) auth.getPrincipal();
+        return adminUseCase.toggleManagerStatus(id, currentUser.id(), isSuper(auth));
+    }
 }

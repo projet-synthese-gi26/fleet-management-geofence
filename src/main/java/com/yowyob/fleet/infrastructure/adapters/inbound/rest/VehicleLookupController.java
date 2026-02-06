@@ -16,7 +16,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/vehicles/lookup")
 @RequiredArgsConstructor
-@Tag(name = "08. Vehicles", description = "Gestion complète du parc automobile")
+@Tag(name = "09. Vehicles", description = "Gestion complète du parc automobile")
 @SecurityRequirement(name = "bearerAuth")
 public class VehicleLookupController {
 

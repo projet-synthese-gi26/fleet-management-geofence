@@ -39,20 +39,21 @@ public class OpenApiConfig {
     @Bean
     public OpenApiCustomizer sortTagsAlphabetically() {
         return openApi -> {
-            List<String> order = List.of(
-                "01. Monitoring",
-                "02. Auth",
-                "03. Account",
-                "04. Super Admin",
-                "05. Admin",
-                "06. Fleet Managers",
-                "07. Drivers",
-                "08. Vehicles",
-                "09. Fleets",
-                "10. Trips",
-                "11. Geofencing",
-                "12. Payments"
-            );
+           List<String> order = List.of(
+                    "01. Monitoring",
+                    "02. Auth",
+                    "03. Account",
+                    "04. Super Admin | Gestion des Administrateurs",
+                    "05. Admin | Gestion des Fleet Managers",
+                    "06. Admin | Gestion des Ressources",
+                    "07. Fleet Managers",
+                    "08. Drivers",
+                    "09. Vehicles",
+                    "10. Fleets",
+                    "11. Trips",
+                    "12. Geofencing",
+                    "13. Payments"
+                );
 
             if (openApi.getTags() != null) {
                 openApi.setTags(openApi.getTags().stream()

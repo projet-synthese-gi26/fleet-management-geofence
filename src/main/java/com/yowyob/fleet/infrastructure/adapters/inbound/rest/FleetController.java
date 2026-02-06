@@ -25,7 +25,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/fleets")
 @RequiredArgsConstructor
-@Tag(name = "09. Fleets", description = "Gestion des flottes (Sécurisé par Propriétaire)")
+@Tag(name = "10. Fleets", description = "Gestion des flottes (Sécurisé par Propriétaire)")
 @SecurityRequirement(name = "bearerAuth")
 public class FleetController {
 

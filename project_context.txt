@@ -1,5 +1,5 @@
 # Contexte du Projet : Fleet & Geofence API
-Généré le : Fri Feb  6 03:32:02 PM WAT 2026
+Généré le : Fri Feb  6 10:01:57 PM WAT 2026
 Framework : Spring Boot WebFlux (Reactive)
 
 ## 1. Arborescence du Projet
@@ -13,6 +13,7 @@ Framework : Spring Boot WebFlux (Reactive)
 │   ├── database_setup.md
 │   ├── fleet-management.pdf
 │   ├── prompts
+│   │   ├── buggs.md
 │   │   ├── gabriel.md
 │   │   └── master_pair_programmer.md
 │   ├── refactor
@@ -50,20 +51,24 @@ Framework : Spring Boot WebFlux (Reactive)
 │   │   │           └── fleet
 │   │   │               ├── application
 │   │   │               │   └── service
+│   │   │               │       ├── AdminService.java
 │   │   │               │       ├── AdminStatsService.java
 │   │   │               │       ├── AuthService.java
 │   │   │               │       ├── DriverService.java
 │   │   │               │       ├── FleetManagerService.java
 │   │   │               │       ├── FleetService.java
 │   │   │               │       ├── GeofenceService.java
+│   │   │               │       ├── SuperAdminService.java
 │   │   │               │       ├── TripService.java
 │   │   │               │       ├── VehicleMediaService.java
 │   │   │               │       ├── VehicleService.java
 │   │   │               │       └── VehicleTypeService.java
 │   │   │               ├── domain
 │   │   │               │   ├── exception
+│   │   │               │   │   ├── AdminException.java
 │   │   │               │   │   ├── AuthException.java
-│   │   │               │   │   └── DomainException.java
+│   │   │               │   │   ├── DomainException.java
+│   │   │               │   │   └── SuperAdminException.java
 │   │   │               │   ├── model
 │   │   │               │   │   ├── Driver.java
 │   │   │               │   │   ├── Fleet.java
@@ -79,10 +84,12 @@ Framework : Spring Boot WebFlux (Reactive)
 │   │   │               │       ├── in
 │   │   │               │       │   ├── AdminStatsUseCase.java
 │   │   │               │       │   ├── AuthUseCase.java
+│   │   │               │       │   ├── ManageAdminUseCase.java
 │   │   │               │       │   ├── ManageDriverUseCase.java
 │   │   │               │       │   ├── ManageFleetManagerUseCase.java
 │   │   │               │       │   ├── ManageFleetUseCase.java
 │   │   │               │       │   ├── ManageGeofenceUseCase.java
+│   │   │               │       │   ├── ManageSuperAdminUseCase.java
 │   │   │               │       │   ├── ManageTripUseCase.java
 │   │   │               │       │   ├── ManageVehicleMediaUseCase.java
 │   │   │               │       │   └── ManageVehicleUseCase.java
@@ -108,9 +115,8 @@ Framework : Spring Boot WebFlux (Reactive)
 │   │   │                   │   │   └── rest
 │   │   │                   │   │       ├── AccountController.java
 │   │   │                   │   │       ├── AdminManagerController.java
-│   │   │                   │   │       ├── AdminReferenceController.java
+│   │   │                   │   │       ├── AdminResourceController.java
 │   │   │                   │   │       ├── AdminStatsController.java
-│   │   │                   │   │       ├── AdminUserController.java
 │   │   │                   │   │       ├── AuthController.java
 │   │   │                   │   │       ├── DriverController.java
 │   │   │                   │   │       ├── dto
@@ -143,6 +149,7 @@ Framework : Spring Boot WebFlux (Reactive)
 │   │   │                   │   │       ├── NotificationController.java
 │   │   │                   │   │       ├── PaymentController.java
 │   │   │                   │   │       ├── ReferenceController.java
+│   │   │                   │   │       ├── SuperAdminController.java
 │   │   │                   │   │       ├── TripController.java
 │   │   │                   │   │       ├── VehicleController.java
 │   │   │                   │   │       ├── VehicleLookupController.java
@@ -156,6 +163,7 @@ Framework : Spring Boot WebFlux (Reactive)
 │   │   │                   │       │   │   ├── NotificationApiClient.java
 │   │   │                   │       │   │   └── VehicleApiClient.java
 │   │   │                   │       │   ├── dto
+│   │   │                   │       │   │   ├── GeofenceUpdateDTO.java
 │   │   │                   │       │   │   ├── GeofenceZoneDTORequest.java
 │   │   │                   │       │   │   ├── TransactionExternalRequest.java
 │   │   │                   │       │   │   ├── TransactionExternalResponse.java
@@ -260,7 +268,7 @@ Framework : Spring Boot WebFlux (Reactive)
 ├── sync_auth.sh
 └── todo.md
 
-49 directories, 205 files
+49 directories, 213 files
 ```
 ## 2. Contenu des Fichiers
 
@@ -5247,399 +5255,29 @@ Gabriel attend de toi une rigueur absolue, de la franchise technique et une auto
 - **Isolation :** Les données vitales sont dans le schéma `fleet`. Les appels distants (Pynfi) sont mappés vers des exceptions locales.
 
 ### 🚀 Démarrage de session
-aide moi a debugger ca,avant qu'on aille discuter de la gestion du module account
+je dois terminer mes taches selon la todo,le module suivant est la gestion des admins,selon toi dois-je d'abord gerrer les admin ou dois-je en priorite terminer de resourdre ces buggs ,regarde surtout la complexite dans ton choix,ainsiq eu l'efficacite
+Liste des bugs restants (modules auth et account)
 
-erreur:"register reussi mais sans photo,il faut dianostiquer:"
-YowYob Fleet Management API
+    Crash 500 Persistant sur /picture : Malgré l'enveloppe ByteArrayResource et le MediaType, l'envoi de la photo vers POST /api/users/{id}/picture échoue toujours avec une erreur 500 du serveur Pynfi. Il faut investiguer si une entête spécifique (comme Content-Disposition) est manquante ou si le serveur distant a un problème de buffer.
 
- 1.0.0 
+    Validation du message 403 (Post-Delete) : Vérifier que l'utilisateur reçoit bien le message "Compte désactivé, contactez un admin" lors d'une tentative de ré-inscription sur un compte supprimé (à tester quand le service Auth répondra hors 500).
 
-OAS 3.0
+    Vérification de la libération véhicule : S'assurer que lors du deleteAccount, l'appel driverUseCase.unassignVehicle met bien à jour la table fleet.vehicles en temps réel.
 
-/v3/api-docs
+    Incohérence Photo au Register : Confirmer avec l'équipe du service Auth pourquoi le champ photoUri est ignoré lors de l'appel /register alors qu'il est documenté dans leur Swagger.```
 
-API Réactive pour la gestion de flottes et le géorepérage.
-Contact Gabriel Nomo
-Servers
-01. Monitoring
+---
+### Fichier : `./docs/prompts/buggs.md`
+```md
+Liste des bugs restants (modules auth et account)
 
-Endpoints de diagnostic et statistiques publiques
-GET
-/api/v1/health/public-stats
-Statistiques publiques (Landing Page)
-GET
-/api/v1/health/diagnostic
-Diagnostic Système profond (Multi-Service)
-02. Auth
+    Crash 500 Persistant sur /picture : Malgré l'enveloppe ByteArrayResource et le MediaType, l'envoi de la photo vers POST /api/users/{id}/picture échoue toujours avec une erreur 500 du serveur Pynfi. Il faut investiguer si une entête spécifique (comme Content-Disposition) est manquante ou si le serveur distant a un problème de buffer.
 
-Endpoints publics (Login, Register, Refresh)
-POST
-/api/v1/auth/register
-Inscription Utilisateur
+    Validation du message 403 (Post-Delete) : Vérifier que l'utilisateur reçoit bien le message "Compte désactivé, contactez un admin" lors d'une tentative de ré-inscription sur un compte supprimé (à tester quand le service Auth répondra hors 500).
 
-Création de compte. Remplir le JSON dans 'user' et l'image dans 'file'.
-Parameters
+    Vérification de la libération véhicule : S'assurer que lors du deleteAccount, l'appel driverUseCase.unassignVehicle met bien à jour la table fleet.vehicles en temps réel.
 
-No parameters
-Request body
-user *
-object
-	
-{
-"username": "gabriel_manager5",
-"password": "password123",
-"email": "gabriel.manager5@test.com",
-"phone": "+237600000005",
-"firstName": "Gabriel",
-"lastName": "Lead",
-"roles": ["FLEET_MANAGER"]
-}
-file
-string($binary)
-	
-Send empty value
-Responses
-Curl
-
-curl -X 'POST' \
-  'http://localhost:8080/api/v1/auth/register' \
-  -H 'accept: */*' \
-  -H 'Content-Type: multipart/form-data' \
-  -F 'user={
-"username": "gabriel_manager5",
-"password": "password123",
-"email": "gabriel.manager5@test.com",
-"phone": "+237600000005",
-"firstName": "Gabriel",
-"lastName": "Lead",
-"roles": ["FLEET_MANAGER"]
-};type=application/json' \
-  -F 'file=@Screenshot from 2026-02-06 08-51-02.png;type=image/png'
-
-Request URL
-
-http://localhost:8080/api/v1/auth/register
-
-Server response
-Code	Details
-200	
-Response body
-
-{
-  "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiIwNjg2NTM5Yi1lYWZmLTQyM2YtODY1NC0zMjQ4ZGUzYWMwMTciLCJzdWIiOiI0OWYwYjY5ZC0yMTM2LTQxMGUtODE0ZS04ZWE3MDhiNTRjMzUiLCJpc3MiOiJhdXRoLXNlcnZpY2UiLCJ1c2VybmFtZSI6ImdhYnJpZWxfbWFuYWdlcjUiLCJwZXJtaXNzaW9ucyI6W10sInJvbGVzIjpbIkZMRUVUX01BTkFHRVIiXSwiaWF0IjoxNzcwMzc4OTgyLCJleHAiOjE3NzA2MzgxODJ9.wDOvhs3Iaj1KtQ4asleKMtJiV8oijHKCLvIK5WeQsho",
-  "refreshToken": "eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJmZDVkNzlmZS02NTMwLTRkMzgtODhlZi05ODQ1MGUwNTk3ZTAiLCJzdWIiOiI0OWYwYjY5ZC0yMTM2LTQxMGUtODE0ZS04ZWE3MDhiNTRjMzUiLCJpc3MiOiJhdXRoLXNlcnZpY2UiLCJpYXQiOjE3NzAzNzg5ODIsImV4cCI6MTc3Mjk3MDk4Mn0.jvgLa3GdnvC_e0A-jgSo8pnlmZ73rCLKdOzwQk0mAsE",
-  "user": {
-    "id": "49f0b69d-2136-410e-814e-8ea708b54c35",
-    "username": "gabriel_manager5",
-    "email": "gabriel.manager5@test.com",
-    "phone": "+237600000005",
-    "firstName": "Gabriel",
-    "lastName": "Lead",
-    "service": "FLEET_MANAGEMENT",
-    "roles": [
-      "FLEET_MANAGER"
-    ],
-    "permissions": [],
-    "photoUrl": null,
-    "companyName": null,
-    "licenceNumber": null,
-    "vehicleId": null
-  }
-}
-
-Response headers
-
- cache-control: no-cache,no-store,max-age=0,must-revalidate 
- content-length: 981 
- content-type: application/json 
- expires: 0 
- pragma: no-cache 
- referrer-policy: no-referrer 
- x-content-type-options: nosniff 
- x-frame-options: DENY 
- x-xss-protection: 0 
-
-Responses
-Code	Description	Links
-200	
-
-OK
-Media type
-Controls Accept header.
-
-{
-  "accessToken": "string",
-  "refreshToken": "string",
-  "user": {
-    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "username": "string",
-    "email": "string",
-    "phone": "string",
-    "firstName": "string",
-    "lastName": "string",
-    "service": "string",
-    "roles": [
-      "string"
-    ],
-    "permissions": [
-      "string"
-    ],
-    "photoUrl": "string",
-    "companyName": "string",
-    "licenceNumber": "string",
-    "vehicleId": "string"
-  }
-}
-
-	No links
-POST
-/api/v1/auth/refresh
-Rafraîchir le token
-POST
-/api/v1/auth/login
-Connexion utilisateur
-03. Account
-
-Gestion du profil personnel (Identité)
-GET
-/api/v1/account
-Voir mon profil
-PUT
-/api/v1/account
-Mettre à jour mon identité
-DELETE
-/api/v1/account
-Supprimer mon compte
-PUT
-/api/v1/account/password
-Changer mon mot de passe
-POST
-/api/v1/account/picture
-Changer ma photo de profil
-GET
-/api/v1/notifications
-Get my notifications
-04. Super Admin
-
-Gestion des Administrateurs Fleet
-POST
-/api/v1/admin/users/create-admin
-Nommer un Administrateur
-GET
-/api/v1/admin/users
-Lister tous les utilisateurs de l'écosystème Fleet
-GET
-/api/v1/admin/users/{id}
-05. Admin
-
-Statistiques et Supervision
-PUT
-/api/v1/admin/references/vehicle-types/{id}
-Modifier un type de véhicule
-DELETE
-/api/v1/admin/references/vehicle-types/{id}
-Supprimer un type
-POST
-/api/v1/admin/references/vehicle-types
-Ajouter un type de véhicule
-GET
-/api/v1/admin/stats
-Statistiques Globales (Admin)
-06. Fleet Managers
-
-Administration des entreprises (Réservé ADMIN)
-GET
-/api/v1/admin/managers/{id}
-Détails d'un manager
-PUT
-/api/v1/admin/managers/{id}
-Mettre à jour l'entreprise
-GET
-/api/v1/admin/managers
-Lister tous les managers
-07. Drivers
-
-Gestion des chauffeurs (Création & Recrutement)
-POST
-/api/v1/fleets/{fleetId}/drivers/register
-Créer un nouveau Chauffeur
-POST
-/api/v1/fleets/{fleetId}/drivers/recruit
-POST
-/api/v1/drivers/{userId}/unassign-vehicle
-POST
-/api/v1/drivers/{userId}/assign-vehicle
-Assigner un véhicule (Smart Swap)
-GET
-/api/v1/drivers
-GET
-/api/v1/drivers/{userId}
-DELETE
-/api/v1/fleets/{fleetId}/drivers/{userId}
-08. Vehicles
-
-Gestion unifiée des médias
-PUT
-/api/v1/vehicles/{vehicleId}/media/vin
-Uploader photo VIN
-PUT
-/api/v1/vehicles/{vehicleId}/media/registration
-Uploader photo Carte Grise
-PUT
-/api/v1/vehicles/{vehicleId}/maintenance-parameters
-Mise à jour paramètres maintenance
-PUT
-/api/v1/vehicles/{vehicleId}/financial-parameters
-Mise à jour paramètres financiers
-GET
-/api/v1/vehicles
-Lister les véhicules (Synchronisés)
-POST
-/api/v1/vehicles
-Créer un véhicule
-POST
-/api/v1/vehicles/{vehicleId}/media/gallery
-Ajouter photo galerie
-GET
-/api/v1/vehicles/{vehicleId}
-Détails complets d'un véhicule
-DELETE
-/api/v1/vehicles/{vehicleId}
-Supprimer un véhicule
-PATCH
-/api/v1/vehicles/{vehicleId}
-Mise à jour partielle
-GET
-/api/v1/vehicles/lookup/{resource}
-Récupérer des listes de référence (Proxy)
-DELETE
-/api/v1/vehicles/{vehicleId}/media/gallery/{imageId}
-Supprimer photo galerie
-09. Fleets
-
-Gestion des flottes (Sécurisé par Propriétaire)
-GET
-/api/v1/fleets/{id}
-Détails d'une flotte
-PUT
-/api/v1/fleets/{id}
-Mettre à jour une flotte
-DELETE
-/api/v1/fleets/{id}
-Supprimer une flotte
-GET
-/api/v1/fleets
-Lister les flottes
-POST
-/api/v1/fleets
-Créer une flotte
-GET
-/api/v1/fleets/{id}/stats
-Statistiques de la flotte
-10. Trips
-
-Gestion des courses et télémétrie
-POST
-/api/v1/trips/{id}/telemetry
-Envoyer un point GPS (Driver)
-POST
-/api/v1/trips/{id}/end
-Terminer une course (Driver)
-POST
-/api/v1/trips/start
-Démarrer une course (Driver)
-GET
-/api/v1/trips/{id}
-Détail d'une course (Manager)
-GET
-/api/v1/trips/current
-Récupérer ma course en cours (Driver)
-12. Payments
-
-Intégration Service Paiement
-POST
-/api/v1/payments/wallet
-Initialiser mon wallet
-POST
-/api/v1/payments/simulate-debit
-TEST: Simuler un paiement
-POST
-/api/v1/payments/recharge
-Recharger mon compte
-GET
-/api/v1/payments/balance
-Consulter mon solde
-10. Références
-
-Données statiques (Types de véhicules, etc.)
-GET
-/api/v1/references/vehicle-types
-Lister les types de véhicules disponibles
-11. Geofencing
-GET
-/api/v1/geofence/{type}/{id}
-Récupérer une géofence (par type + id)
-PUT
-/api/v1/geofence/{type}/{id}
-Modifier une géofence
-DELETE
-/api/v1/geofence/{type}/{id}
-Supprimer une géofence
-POST
-/api/v1/geofence/zones
-Créer une nouvelle géofence
-GET
-/api/v1/geofence
-Récupérer toutes mes géofences
-GET
-/api/v1/geofence/polygons
-Récupérer mes zones polygonales
-GET
-/api/v1/geofence/circles
-Récupérer mes zones circulaires
-GET
-/api/v1/geofence/alerts
-Récupérer toutes mes alertes
-Schemas
-Financial
-Location
-Maintenance
-Operational
-Vehicle
-FleetRequest
-FleetResponse
-VehicleTypeRequest
-VehicleTypeEntity
-UpdateManagerRequest
-UpdateProfileRequest
-UserDetail
-ChangePasswordRequest
-VehicleRequest
-TelemetryRequest
-LocalTime
-Trip
-StartTripRequest
-WalletExternalResponse
-CircleData
-GeofenceZoneDTORequest
-PolygonData
-GeofencePoint
-GeofenceZone
-DriverRegistrationRequest
-Driver
-RecruitDriverRequest
-VehicleAssignRequest
-RegisterRequest
-AuthResponse
-TokenRefreshRequest
-LoginRequest
-CreateAdminRequest
-Notification
-PagedResultNotification
-FleetStatsResponse
-GlobalStatsResponse
-FleetManagerResponse
-""```
+    Incohérence Photo au Register : Confirmer avec l'équipe du service Auth pourquoi le champ photoUri est ignoré lors de l'appel /register alors qu'il est documenté dans leur Swagger.```
 
 ---
 ### Fichier : `./docs/prompts/master_pair_programmer.md`
@@ -5780,17 +5418,32 @@ Once the log shows `🚀 LOCAL DATABASE READY!`, open your browser:
     - [x] **3.5 :** Gestion des erreurs : Créer un mapper d'exceptions pour traduire proprement les codes d'erreur du service distant (401, 409, etc.).
     - [x] **3.6 :** Validation Swagger : Scénario d'inscription, login, accès bloqué (en forçant `is_active: false` en DB) et rafraîchissement de token.
 
-- [-] **Tâche 4 :** Test et finalisation module Account.
-    - [ ] **4.1 :** Agrégation du profil (`/me`) : Fusionner les données de l'Auth central avec les données locales (`fleet_managers` ou `drivers`) en un seul objet.
-    - [ ] **4.2 :** Mise à jour de l'identité : Implémenter le flux de modification (Nom, Prénom, Phone) avec synchronisation bidirectionnelle (Distant <-> Local).
-    - [ ] **4.3 :** Gestion de l'image : Endpoint de mise à jour de la photo de profil (traitement Multipart et propagation au service distant).
-    - [ ] **4.4 :** **Soft Delete Métier** : Implémenter l'endpoint de suppression de compte qui active `deleted_at` et `is_active = false` en local.
-    - [ ] **4.5 :** **Logique de Libération (Clean-up)** : Créer le service qui, lors d'un Soft Delete, désassigne automatiquement le véhicule si l'utilisateur est un chauffeur (Driver).
-    - [ ] **4.6 :** Validation Swagger : Tester la modification de profil, l'upload de photo et vérifier qu'un compte supprimé est immédiatement banni par le `JwtAuthenticationManager`.
+- [x] **Tâche 4 :** Test et finalisation module Account.
+    - [x] **Tâche 4.1 :** **Agrégation & Synchro Profile** : Garantir un `pullSync` systématique sur le `GET /me` et enrichir l'objet avec les données métier complètes (Manager/Driver).
+    - [x] **Tâche 4.2 :** **Mise à jour Identité** : Implémenter le `PUT /account` avec propagation immédiate des modifications vers le cache local `fleet.users`.
+    - [x] **Tâche 4.3 :** **Soft Delete & Nettoyage** : Implémenter la suppression logique (is_active/deleted_at) et créer le service de libération automatique du véhicule pour les Chauffeurs.
+    - [x] **Tâche 4.4 :** **Tests & Debug Médias** : Valider l'upload de photo (`POST /picture`) et le changement de mot de passe avec le service distant.
+    - [x] **Tâche 4.5 :** **Blindage des Erreurs** : Mapper les codes d'erreur spécifiques du service Auth (401, 403, 409) vers nos `DomainException` pour des retours API clairs.
 
 
-- [ ] **Tâche 5 :** Test et finalisation module Super Admin.
-- [ ] **Tâche 6 :** Test et finalisation module Admin.
+
+- [-] **Tâche 5 :** Test et finalisation module Super Admin.
+    - [ ] **Tâche 5.1 :** Création du Port & Service pour le filtrage spécifique des utilisateurs ayant le rôle `FLEET_ADMIN`.
+    - [ ] **Tâche 5.2 :** Implémentation du "Toggle Status" (Activer/Désactiver) modifiant la colonne `is_active` dans `fleet.users`.
+    - [ ] **Tâche 5.3 :** Implémentation de la suppression logique (`deleted_at`) pour les comptes Admin.
+    - [ ] **Tâche 5.4 :** Sécurisation et mise à jour du `AdminUserController` (Accès restreint au Super Admin).
+
+- [-] **Tâche 6 :** Test et finalisation module Admin.
+    **6.1 Gestion des Managers**
+    - [ ] **Tâche 6.1.1 :** Extension du service Manager pour inclure la désactivation de compte (`is_active = false`).
+    - [ ] **Tâche 6.1.2 :** Ajout de la suppression logique des managers.
+    - [ ] **Tâche 6.1.3 :** Listing global des managers avec état du compte (Actif/Suspendu).
+
+    **6.2 Gestion des Ressources (Nouveau Tag)**
+    - [ ] **Tâche 6.2.1 :** Finalisation du CRUD complet pour `VehicleType` (Create, Read, Update, Delete).
+    - [ ] **Tâche 6.2.2 :** Réorganisation Swagger : Création du tag **"05. Admin | Gestion des Ressources"** et déplacement des endpoints de référence.
+    - [ ] **Tâche 6.2.3 :** Validation des contraintes (Interdire la suppression d'un type utilisé par un véhicule).
+
 - [ ] **Tâche 7 :** Test et finalisation module Fleet Managers.
 - [ ] **Tâche 8 :** Test et finalisation module Drivers.
 - [ ] **Tâche 9 :** Test et finalisation module Vehicles (Debug PUT et ressources initiales).
@@ -6853,6 +6506,8 @@ import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.Geofenc
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.GeofenceAuthClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -6976,46 +6631,72 @@ public class GeofenceApiAdapter implements ExternalGeofencePort {
     }
     // Dans GeofenceApiAdapter.java
 
+    // Helper pour construire le JSON complexe attendu par Geofence
     private Map<String, Object> buildGeofenceMap(GeofenceZone zone) {
         Map<String, Object> request = new HashMap<>();
-
-        // --- CORRECTION ICI ---
-        // On n'ajoute l'ID au payload que s'il existe (cas du PUT).
-        // Pour le POST, zone.id() est null, donc on ne met rien.
-        if (zone.id() != null) {
-            request.put("id", zone.id().toString());
-        }
-        // ----------------------
-
+        
+        // Champs obligatoires
         request.put("title", zone.name());
-        request.put("description", zone.description());
+        request.put("description", zone.description() != null ? zone.description() : ""); // Eviter null
+        
+        // Booléens avec valeurs par défaut
         request.put("isTemporalEnabled", Boolean.TRUE.equals(zone.getIsTemporalEnabled()));
         request.put("isConditionalEnabled", Boolean.TRUE.equals(zone.getIsConditionalEnabled()));
-        request.put("startTime", zone.startTime());
-        request.put("endTime", zone.endTime());
+        request.put("isActive", true);
 
+        // Dates : On ne les met que si elles existent, et on les formate en String pour être sûr
+        if (zone.startTime() != null) {
+            request.put("startTime", zone.startTime().toString()); // ex: "08:00:00"
+        }
+        if (zone.endTime() != null) {
+            request.put("endTime", zone.endTime().toString());
+        }
+
+        // Gestion Typage (Circle vs Polygon)
+        // L'API de Kamga semble attendre "type": "circle" ou "polygon" (minuscule souvent préféré en JSON)
         if ("CIRCLE".equalsIgnoreCase(zone.zoneType())) {
             request.put("type", "circle");
-            request.put("center", Map.of("coordinates", Arrays.asList(zone.centerLongitude(), zone.centerLatitude())));
-            request.put("radius", zone.radius());
+            
+            // Format GeoJSON standard pour le point
+            request.put("center", Map.of(
+                "type", "Point",
+                "coordinates", Arrays.asList(zone.centerLongitude(), zone.centerLatitude())
+            ));
+            
+            // S'assurer que le radius est un nombre valide
+            request.put("radius", zone.radius() != null ? zone.radius() : 100.0);
+            
         } else {
             request.put("type", "polygon");
-            // Vérification de sécurité sur les vertices pour éviter un autre NPE
-            if (zone.vertices() != null && !zone.vertices().isEmpty()) {
-                List<List<Double>> ring = new ArrayList<>(zone.vertices().stream()
+            
+            // Construction du Polygone GeoJSON
+            // Note: GeoJSON exige que le dernier point soit le même que le premier (fermeture)
+            List<List<Double>> ring = new ArrayList<>();
+            if (zone.vertices() != null) {
+                ring = new ArrayList<>(zone.vertices().stream()
                         .map(v -> Arrays.asList(v.longitude(), v.latitude())).toList());
-
-                // Fermeture du polygone si nécessaire (le premier point doit être égal au
-                // dernier)
-                if (!ring.get(0).equals(ring.get(ring.size() - 1))) {
+                
+                // Fermeture du polygone si nécessaire
+                if (!ring.isEmpty() && !ring.get(0).equals(ring.get(ring.size()-1))) {
                     ring.add(ring.get(0));
                 }
-                request.put("polygon", Map.of("type", "Polygon", "coordinates", List.of(ring)));
             }
+            
+            request.put("polygon", Map.of(
+                "type", "Polygon", 
+                "coordinates", List.of(ring)
+            ));
         }
+        
+        // Log pour debug (à retirer en prod si trop verbeux)
+        try {
+            log.info("📤 Payload envoyé à Geofence: {}", objectMapper.writeValueAsString(request));
+        } catch (JsonProcessingException e) {
+            log.error("Erreur log payload", e);
+        }
+
         return request;
     }
-
     @Override
     public Flux<Map<String, Object>> getZonesByManager(UUID managerId, String category) {
         // On délègue à la méthode de listing interne qui gère déjà l'appel API et le
@@ -7347,6 +7028,76 @@ public record GeofenceZoneDTORequest (
 }```
 
 ---
+### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/external/dto/GeofenceUpdateDTO.java`
+```java
+package com.yowyob.fleet.infrastructure.adapters.outbound.external.dto;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.time.LocalTime;
+import java.util.List;
+
+/**
+ * DTO spécifique pour la mise à jour partielle d'une zone.
+ * Tous les champs sont optionnels.
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL) // Important pour ne pas écraser avec des nulls
+public record GeofenceUpdateDTO(
+    
+    @Schema(example = "Zone Bastos VIP")
+    String title,
+
+    @Schema(example = "Zone mise à jour")
+    String description,
+
+    @Schema(description = "Activer/Désactiver la zone", example = "true")
+    Boolean isActive,
+
+    // --- TEMPORAL ---
+    
+    @Schema(description = "Activer les restrictions horaires")
+    Boolean isTemporalEnabled,
+
+    @JsonFormat(pattern = "HH:mm:ss")
+    @Schema(type = "string", pattern = "HH:mm:ss", example = "09:00:00")
+    LocalTime startTime,
+
+    @JsonFormat(pattern = "HH:mm:ss")
+    @Schema(type = "string", pattern = "HH:mm:ss", example = "17:00:00")
+    LocalTime endTime,
+
+    @Schema(example = "[\"MONDAY\", \"FRIDAY\"]")
+    List<String> activeDays,
+
+    // --- CONDITIONAL ---
+
+    @Schema(description = "Activer les conditions de vitesse/temps")
+    Boolean isConditionalEnabled,
+
+    @Schema(description = "Vitesse max autorisée (km/h)", example = "80.0")
+    Double maxSpeed,
+
+    @Schema(description = "Temps max de stationnement (minutes)", example = "30")
+    Integer maxDwellTime,
+
+    @Schema(description = "Temps min de présence pour déclencher (minutes)", example = "5")
+    Integer minDwellTime,
+
+    // --- GEOMETRY (Redéfinition) ---
+
+    @Schema(description = "Nouveau rayon (si cercle)", example = "600.0")
+    Double radius,
+
+    @Schema(description = "Nouveau centre (si cercle)")
+    GeofenceZoneDTORequest.CircleData center,
+
+    @Schema(description = "Nouveau polygone (si polygone)")
+    GeofenceZoneDTORequest.PolygonData polygon
+) {}```
+
+---
 ### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/outbound/external/dto/WalletCreationRequest.java`
 ```java
 package com.yowyob.fleet.infrastructure.adapters.outbound.external.dto;
@@ -7493,33 +7244,7 @@ public class RemoteAuthAdapter implements AuthPort {
                 .onErrorResume(this::mapExternalError);
     }
 
-    @Override
-    public Mono<AuthResponse> registerInRemote(AuthUseCase.RegisterCommand command) {
-        MultipartBodyBuilder builder = new MultipartBodyBuilder();
-        AuthApiClient.RegisterRequest registerRequest = new AuthApiClient.RegisterRequest(
-            command.username(), command.password(), command.email(), 
-            command.phone(), command.firstName(), command.lastName(), 
-            SERVICE_NAME, command.roles()
-        );
-        builder.part("data", registerRequest);
-
-        if (command.photo() != null && command.photo().data() != null) {
-            builder.part("file", command.photo().data())
-                   .filename(command.photo().filename())
-                   .header("Content-Type", command.photo().contentType());
-        }
-
-        return webClientBuilder.build()
-                .post()
-                .uri(authServiceUrl + "/api/auth/register")
-                .contentType(MediaType.MULTIPART_FORM_DATA)
-                .bodyValue(builder.build())
-                .retrieve()
-                .bodyToMono(AuthApiClient.TraMaSysResponse.class)
-                .map(this::mapToAuthResponse)
-                .onErrorResume(this::mapExternalError);
-    }
-
+   
     @Override
     public Mono<UserDetail> getUserProfile(String token) {
         return authApiClient.getCurrentUser(ensureBearer(token))
@@ -7603,24 +7328,7 @@ public class RemoteAuthAdapter implements AuthPort {
                 .onErrorResume(this::mapExternalError);
     }
 
-    @Override
-    public Mono<Void> updateProfilePicture(UUID userId, String token, AuthUseCase.FileContent file) {
-        MultipartBodyBuilder builder = new MultipartBodyBuilder();
-        builder.part("file", file.data())
-               .filename(file.filename())
-               .header("Content-Type", file.contentType());
-
-        return webClientBuilder.build()
-                .post()
-                .uri(authServiceUrl + "/api/users/" + userId + "/picture")
-                .header("Authorization", ensureBearer(token))
-                .contentType(MediaType.MULTIPART_FORM_DATA)
-                .bodyValue(builder.build())
-                .retrieve()
-                .bodyToMono(Void.class)
-                .onErrorResume(this::mapExternalError);
-    }
-
+    
     @Override
     public Mono<Boolean> roleExists(String roleName) {
         return Mono.just(true); 
@@ -7647,7 +7355,7 @@ public class RemoteAuthAdapter implements AuthPort {
         return new UserDetail(
             res.id(), res.username(), res.email(), res.phone(),
             res.firstName(), res.lastName(), res.service(),
-            res.roles(), res.permissions(), res.photoUrl(),
+            res.roles(), res.permissions(), res.photoUri(),
             null, null, null
         );
     }
@@ -7657,16 +7365,20 @@ public class RemoteAuthAdapter implements AuthPort {
      */
     private <T> Mono<T> mapExternalError(Throwable e) {
         if (e instanceof WebClientResponseException ex) {
+            log.error("❌ Erreur Auth Distante [{}]: {}", ex.getStatusCode(), ex.getResponseBodyAsString());
+            
             return switch (ex.getStatusCode().value()) {
-                case 401 -> Mono.error(AuthException.invalidCredentials());
+                case 401 -> Mono.error(AuthException.tokenExpired());
                 case 409 -> Mono.error(AuthException.userAlreadyExists());
                 case 403 -> Mono.error(AuthException.accountLocked());
-                case 503, 502, 504 -> Mono.error(AuthException.remoteServiceUnavailable());
-                default -> Mono.error(AuthException.generic("Service Auth : " + ex.getStatusText(), (HttpStatus) ex.getStatusCode()));
+                case 404 -> Mono.error(new AuthException("Ressource introuvable sur le service d'identité.", HttpStatus.NOT_FOUND, "AUTH_404"));
+                default -> Mono.error(AuthException.generic("Erreur Service Identité : " + ex.getStatusText(), (HttpStatus) ex.getStatusCode()));
             };
         }
         return Mono.error(e);
     }
+
+
 
    /**
      * Transforme les erreurs techniques WebClient en AuthException métier (Flux).
@@ -7674,6 +7386,56 @@ public class RemoteAuthAdapter implements AuthPort {
     private <T> Flux<T> mapExternalErrorFlux(Throwable e) {
         // .thenMany permet de convertir le signal (ici l'erreur) en Flux<T>
         return this.<T>mapExternalError(e).thenMany(Flux.empty());
+    }
+
+
+
+    @Override
+    public Mono<AuthResponse> registerInRemote(AuthUseCase.RegisterCommand command) {
+        // 1. On prépare le DTO
+        AuthApiClient.RegisterRequest registerRequest = new AuthApiClient.RegisterRequest(
+            command.username(), command.password(), command.email(), 
+            command.phone(), command.firstName(), command.lastName(), 
+            SERVICE_NAME, command.roles()
+        );
+
+        // 2. On DOIT utiliser un MultipartBodyBuilder car Pynfi attend une partie "data"
+        MultipartBodyBuilder builder = new MultipartBodyBuilder();
+        builder.part("data", registerRequest, MediaType.APPLICATION_JSON);
+
+        // On utilise webClientBuilder directement ici pour avoir le contrôle total sur le Multipart
+        return webClientBuilder.build()
+                .post()
+                .uri(authServiceUrl + "/api/auth/register")
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .bodyValue(builder.build())
+                .retrieve()
+                .bodyToMono(AuthApiClient.TraMaSysResponse.class)
+                .map(this::mapToAuthResponse)
+                .onErrorResume(this::mapExternalError);
+    }
+    @Override
+    public Mono<Void> updateProfilePicture(UUID userId, String token, AuthUseCase.FileContent file) {
+        // Construction ultra-robuste du Multipart pour Pynfi
+        org.springframework.core.io.ByteArrayResource resource = new org.springframework.core.io.ByteArrayResource(file.data()) {
+            @Override public String getFilename() { return file.filename(); }
+        };
+
+        MultipartBodyBuilder builder = new MultipartBodyBuilder();
+        builder.part("file", resource, MediaType.parseMediaType(file.contentType()));
+
+        return webClientBuilder.build()
+                .post()
+                .uri(authServiceUrl + "/api/users/" + userId + "/picture")
+                .header("Authorization", ensureBearer(token))
+                .bodyValue(builder.build())
+                .retrieve()
+                .toBodilessEntity()
+                .then()
+                .onErrorResume(e -> {
+                    log.error("⚠️ Échec upload photo chez Pynfi pour {}: {}", userId, e.getMessage());
+                    return Mono.error(e); // L'erreur sera gérée dans le service
+                });
     }
 }```
 
@@ -7772,7 +7534,7 @@ public interface AuthApiClient {
         UUID id, String username, String email, String phone,
         String firstName, String lastName, String service,
         List<String> roles, List<String> permissions,
-        String photoUrl 
+        String photoUri 
     ) {}    
 }```
 
@@ -9459,11 +9221,18 @@ package com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.UserLocalEntity;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Mono; // <--- L'IMPORT MANQUANT
 
 import java.util.UUID;
 
 @Repository
 public interface UserLocalR2dbcRepository extends ReactiveCrudRepository<UserLocalEntity, UUID> {
+    
+    /**
+     * Recherche un utilisateur par son login technique.
+     * Utilisé pour la vérification du statut local (is_active) lors du login/register.
+     */
+    Mono<UserLocalEntity> findByUsername(String username);
 }```
 
 ---
@@ -10004,7 +9773,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/vehicles/lookup")
 @RequiredArgsConstructor
-@Tag(name = "08. Vehicles", description = "Gestion complète du parc automobile")
+@Tag(name = "09. Vehicles", description = "Gestion complète du parc automobile")
 @SecurityRequirement(name = "bearerAuth")
 public class VehicleLookupController {
 
@@ -10022,81 +9791,6 @@ public class VehicleLookupController {
     ) {
         return vehicleUseCase.getVehicleReferenceData(resource, authHeader);
     }
-}```
-
----
-### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/AdminUserController.java`
-```java
-package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
-
-import com.yowyob.fleet.domain.ports.in.AuthUseCase;
-import com.yowyob.fleet.domain.ports.out.AuthPort;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-
-import java.util.List;
-import java.util.UUID;
-
-@RestController
-@RequestMapping("/api/v1/admin/users")
-@RequiredArgsConstructor
-@Tag(name = "04. Super Admin", description = "Gestion des Administrateurs Fleet")
-@SecurityRequirement(name = "bearerAuth")
-@PreAuthorize("hasRole('FLEET_SUPER_ADMIN')")
-public class AdminUserController {
-
-    private final AuthPort authPort;
-
-    @PostMapping("/create-admin")
-    @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Nommer un Administrateur", description = "Crée un compte avec le rôle FLEET_ADMIN.")
-    public Mono<AuthPort.AuthResponse> createAdmin(@Valid @RequestBody CreateAdminRequest request) {
-        AuthUseCase.RegisterCommand command = new AuthUseCase.RegisterCommand(
-            request.username, request.password, request.email, request.phone,
-            request.firstName, request.lastName, 
-            List.of("FLEET_ADMIN"), // Rôle forcé
-            null
-        );
-        return authPort.registerInRemote(command);
-    }
-
-    @GetMapping
-    @Operation(summary = "Lister tous les utilisateurs de l'écosystème Fleet")
-    public Flux<AuthPort.UserDetail> getAllUsers(
-        @Parameter(hidden = true) @RequestHeader(HttpHeaders.AUTHORIZATION) String token
-    ) {
-        return authPort.getAllUsers(token);
-    }
-
-    @GetMapping("/{id}")
-    public Mono<AuthPort.UserDetail> getUser(
-        @PathVariable UUID id, 
-        @Parameter(hidden = true) @RequestHeader(HttpHeaders.AUTHORIZATION) String token
-    ) {
-        return authPort.getUserById(id, token);
-    }
-
-    // DTO Interne
-    public record CreateAdminRequest(
-        @NotBlank String username,
-        @NotBlank String password,
-        @Email @NotBlank String email,
-        @NotBlank String phone,
-        @NotBlank String firstName,
-        @NotBlank String lastName
-    ) {}
 }```
 
 ---
@@ -10119,6 +9813,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.http.codec.multipart.Part;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -10172,23 +9867,26 @@ public class AccountController {
     @Operation(summary = "Changer ma photo de profil")
     public Mono<Void> updatePicture(
             @Parameter(hidden = true) @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
-            @RequestPart("file") FilePart filePart
+            @RequestPart("file") Part filePart 
     ) {
         return authUseCase.me(token)
-                .flatMap(user -> 
-                    DataBufferUtils.join(filePart.content())
+                .flatMap(user -> {
+                    // FIX: Extraction sécurisée du nom de fichier
+                    String filename = (filePart instanceof FilePart file) ? file.filename() : "avatar.jpg";
+                    
+                    return DataBufferUtils.join(filePart.content())
                         .map(dataBuffer -> {
                             byte[] bytes = new byte[dataBuffer.readableByteCount()];
                             dataBuffer.read(bytes);
                             DataBufferUtils.release(dataBuffer);
                             return new AuthUseCase.FileContent(
-                                    filePart.filename(),
+                                    filename,
                                     filePart.headers().getContentType() != null ? filePart.headers().getContentType().toString() : "image/jpeg",
                                     bytes
                             );
                         })
-                        .flatMap(fileContent -> authUseCase.updateProfilePicture(user.id(), token, fileContent))
-                );
+                        .flatMap(fileContent -> authUseCase.updateProfilePicture(user.id(), token, fileContent));
+                });
     }
 
     @DeleteMapping
@@ -10203,15 +9901,75 @@ public class AccountController {
 }```
 
 ---
+### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/AdminResourceController.java`
+```java
+package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
+
+import com.yowyob.fleet.application.service.VehicleTypeService;
+import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.VehicleTypeRequest;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.VehicleTypeEntity;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/v1/admin/resources/vehicle-types")
+@RequiredArgsConstructor
+@Tag(name = "06. Admin | Gestion des Ressources")
+@SecurityRequirement(name = "bearerAuth")
+@PreAuthorize("hasAnyRole('FLEET_ADMIN', 'FLEET_SUPER_ADMIN')")
+public class AdminResourceController {
+
+    private final VehicleTypeService service;
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Créer un nouveau type de véhicule")
+    public Mono<VehicleTypeEntity> create(@Valid @RequestBody VehicleTypeRequest req) {
+        return service.createType(req);
+    }
+
+    @GetMapping
+    @Operation(summary = "Lister les types de véhicules")
+    public Flux<VehicleTypeEntity> list() {
+        return service.getAllTypes();
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Modifier un type de véhicule")
+    public Mono<VehicleTypeEntity> update(@PathVariable UUID id, @Valid @RequestBody VehicleTypeRequest req) {
+        return service.updateType(id, req);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Supprimer un type de véhicule")
+    public Mono<Void> delete(@PathVariable UUID id) {
+        return service.deleteType(id);
+    }
+}```
+
+---
 ### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/GeofenceController.java`
 ```java
 package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yowyob.fleet.application.service.GeofenceService;
 import com.yowyob.fleet.domain.model.GeofencePoint;
 import com.yowyob.fleet.domain.model.GeofenceZone;
 import com.yowyob.fleet.domain.ports.in.ManageGeofenceUseCase;
 import com.yowyob.fleet.domain.ports.out.AuthPort;
+import com.yowyob.fleet.infrastructure.adapters.outbound.external.dto.GeofenceUpdateDTO;
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.dto.GeofenceZoneDTORequest;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.GeofenceEventEntity;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10236,12 +9994,13 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/geofence")
 @RequiredArgsConstructor
-@Tag(name = "11. Geofencing")
+@Tag(name = "12. Geofencing")
 @SecurityRequirement(name = "bearerAuth")
 public class GeofenceController {
 
     private final ManageGeofenceUseCase geofenceService;
-
+    private final ObjectMapper objectMapper;
+    
     private UUID getUserId(Authentication auth) {
         return ((AuthPort.UserDetail) auth.getPrincipal()).id();
     }
@@ -10274,8 +10033,10 @@ public class GeofenceController {
         // managers)
         GeofenceZone domainZone = new GeofenceZone(
                 null,
-                null, // On gère l'association zone-fleet dans le service, pas besoin de l'ID de flotte ici
-                fleetManagerId, // Use fleetManagerId as managerId since zones are managed at fleet manager level
+                null, // On gère l'association zone-fleet dans le service, pas besoin de l'ID de
+                      // flotte ici
+                fleetManagerId, // Use fleetManagerId as managerId since zones are managed at fleet manager
+                                // level
                 request.title(),
                 request.description(),
                 request.type(),
@@ -10297,66 +10058,78 @@ public class GeofenceController {
     }
 
     @GetMapping("/circles")
+    @Operation(summary = "Lister mes zones circulaires")
+    @PreAuthorize("hasRole('FLEET_MANAGER')")
     public Flux<Map<String, Object>> listCircles(Authentication auth) {
-        return geofenceService.getZonesByManager(getUserId(auth), "circles");
+        return geofenceService.getMyExternalZones("CIRCLE");
     }
 
     @GetMapping("/polygons")
+    @Operation(summary = "Lister mes zones polygonales")
+    @PreAuthorize("hasRole('FLEET_MANAGER')")
     public Flux<Map<String, Object>> listPolygons(Authentication auth) {
-        return geofenceService.getZonesByManager(getUserId(auth), "polygons");
+        return geofenceService.getMyExternalZones("POLYGON");
     }
 
     @GetMapping("/fleet/{fleetId}")
     @Operation(summary = "Lister les zones d'une flotte spécifique")
     public Flux<Map<String, Object>> listByFleet(@PathVariable UUID fleetId, Authentication auth) {
-        return geofenceService.getZonesByFleet(getUserId(auth), fleetId);
+        return geofenceService.getZonesByFleet1(fleetId)
+                .map(z -> Map.of("id", z.id(), "name", z.name(), "type", z.zoneType())); // Mapping simplifié pour l'exemple
     }
-// Dans GeofenceController.java
+    
 
-@GetMapping("/{type}/{id}")
-@Operation(summary = "Récupérer le détail d'une géofence (par type + id)")
-@PreAuthorize("hasAnyRole('FLEET_MANAGER', 'FLEET_ADMIN')")
-public Mono<Map<String, Object>> getById(
-        @PathVariable String type, 
-        @PathVariable UUID id) {
-    // type peut être 'circle' ou 'polygon'
-    return geofenceService.getExternalZoneDetails(type, id);
-}
+    @GetMapping("/{type}/{id}")
+    @Operation(summary = "Récupérer le détail d'une géofence (par type + id)")
+    @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'FLEET_ADMIN')")
+    public Mono<Map<String, Object>> getById(
+            @PathVariable String type,
+            @PathVariable UUID id) {
+        // type peut être 'circle' ou 'polygon'
+        return geofenceService.getExternalZoneDetails(type, id);
+    }
 
+   
     @PutMapping("/{type}/{id}")
-    @Operation(summary = "Modifier une géofence")
-    public Mono<Void> update(@PathVariable String type, @PathVariable UUID id,
-            @RequestBody Map<String, Object> updates) {
-        return geofenceService.updateRemoteZone(type, id, updates);
+    @Operation(summary = "Modifier une géofence", description = "Mise à jour partielle des champs.")
+    @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'FLEET_ADMIN')")
+    public Mono<Void> update(
+            @PathVariable String type, 
+            @PathVariable UUID id, 
+            @RequestBody GeofenceUpdateDTO updates) { // Utilisation du DTO ici
+        
+        // Conversion DTO -> Map pour le service
+        @SuppressWarnings("unchecked")
+        Map<String, Object> updateMap = objectMapper.convertValue(updates, Map.class);
+        
+        return geofenceService.updateRemoteZone(type, id, updateMap);
     }
+
 
     // Nouveau endpoint simplifié
     @GetMapping("/zones/{id}")
     @Operation(summary = "Détails d'une zone par ID unique")
     public Mono<Map<String, Object>> getDetails(@PathVariable UUID id) {
-        // Le premier paramètre 'type' est désormais ignoré par le service qui cherche en DB
+        // Le premier paramètre 'type' est désormais ignoré par le service qui cherche
+        // en DB
         return geofenceService.getExternalZoneDetails(null, id);
     }
 
-@GetMapping
-@Operation(summary = "Ressortir TOUTES zones de géofence")
-public Flux<Map<String, Object>> listAll(Authentication auth) {
-    AuthPort.UserDetail user = (AuthPort.UserDetail) auth.getPrincipal();
-    boolean isAdmin = auth.getAuthorities().stream()
-            .anyMatch(a -> a.getAuthority().equals("ROLE_FLEET_ADMIN"));
-            
-    return geofenceService.getAllExternalZones("all");
-}
-// Dans GeofenceController.java
+    @GetMapping("/my-zones")
+    @Operation(summary = "Ressortir mes zones de géofence")
+    public Flux<Map<String, Object>> listMyZones(Authentication auth) {
+        AuthPort.UserDetail user = (AuthPort.UserDetail) auth.getPrincipal();
+        return geofenceService.getMyExternalZones("all");
+    }
+    // Dans GeofenceController.java
 
-@GetMapping("/my-zones")
-@Operation(summary = "Lister uniquement mes zones de géofence")
-@PreAuthorize("hasRole('FLEET_MANAGER')")
-public Flux<Map<String, Object>> getMyZones(org.springframework.security.core.Authentication auth) {
-    // On récupère l'ID du manager depuis le principal (UserDetail)
-    UUID managerId = ((com.yowyob.fleet.domain.ports.out.AuthPort.UserDetail) auth.getPrincipal()).id();
-    return geofenceService.getZonesByFleetManager(managerId);
-}
+     @GetMapping
+    @Operation(summary = "Lister toutes les zones du service")
+    @PreAuthorize("hasRole('FLEET_MANAGER')")
+    public  Flux<Map<String, Object>> listAll(Authentication auth) {
+        return geofenceService.getAllExternalZones("all");
+    }
+
     @GetMapping("/alerts")
     @Operation(summary = "Récupérer toutes mes alertes")
     public Mono<Map<String, Object>> getAlerts(
@@ -10369,6 +10142,13 @@ public Flux<Map<String, Object>> getMyZones(org.springframework.security.core.Au
     @Operation(summary = "Assigner une zone à une flotte")
     public Mono<Void> assignToFleet(@PathVariable UUID id, @PathVariable UUID fleetId, Authentication auth) {
         return ((GeofenceService) geofenceService).assignZoneToFleet(id, fleetId, getUserId(auth));
+    }
+
+    @DeleteMapping("/{type}/{id}")
+    @Operation(summary = "Supprimer une zone de géofence")
+    @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'FLEET_ADMIN')")
+    public Mono<Void> delete(@PathVariable String type, @PathVariable UUID id, Authentication auth) {
+        return geofenceService.deleteZone(id, type, getUserId(auth));
     }
 
 }```
@@ -10434,7 +10214,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/fleets")
 @RequiredArgsConstructor
-@Tag(name = "09. Fleets", description = "Gestion des flottes (Sécurisé par Propriétaire)")
+@Tag(name = "10. Fleets", description = "Gestion des flottes (Sécurisé par Propriétaire)")
 @SecurityRequirement(name = "bearerAuth")
 public class FleetController {
 
@@ -10543,7 +10323,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
-@Tag(name = "08. Vehicles", description = "Gestion unifiée du parc")
+@Tag(name = "09. Vehicles", description = "Gestion unifiée du parc")
 @SecurityRequirement(name = "bearerAuth")
 public class VehicleController {
 
@@ -10705,35 +10485,39 @@ public class GlobalExceptionHandler {
 ---
 ### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/AdminStatsController.java`
 ```java
+// package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
+
+// import com.yowyob.fleet.domain.ports.in.AdminStatsUseCase;
+// import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.GlobalStatsResponse;
+// import io.swagger.v3.oas.annotations.Operation;
+// import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+// import io.swagger.v3.oas.annotations.tags.Tag;
+// import lombok.RequiredArgsConstructor;
+// import org.springframework.security.access.prepost.PreAuthorize;
+// import org.springframework.web.bind.annotation.GetMapping;
+// import org.springframework.web.bind.annotation.RequestMapping;
+// import org.springframework.web.bind.annotation.RestController;
+// import reactor.core.publisher.Mono;
+
+// @RestController
+// @RequestMapping("/api/v1/admin/stats")
+// @RequiredArgsConstructor
+// // @Tag(name = "05. Admin", description = "Statistiques et Supervision") // On le regroupe avec Monitoring
+// // @SecurityRequirement(name = "bearerAuth")
+// // public class AdminStatsController {
+
+// //     private final AdminStatsUseCase adminStatsUseCase;
+
+// //     @GetMapping
+// //     @PreAuthorize("hasRole('FLEET_ADMIN')")
+// //     @Operation(summary = "Statistiques Globales (Admin)", description = "Retourne le nombre total d'entités dans le système.")
+// //     public Mono<GlobalStatsResponse> getGlobalStats() {
+// //         return adminStatsUseCase.getGlobalStats();
+//     }
+// }
 package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
-
-import com.yowyob.fleet.domain.ports.in.AdminStatsUseCase;
-import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.GlobalStatsResponse;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Mono;
-
-@RestController
-@RequestMapping("/api/v1/admin/stats")
-@RequiredArgsConstructor
-@Tag(name = "05. Admin", description = "Statistiques et Supervision") // On le regroupe avec Monitoring
-@SecurityRequirement(name = "bearerAuth")
 public class AdminStatsController {
-
-    private final AdminStatsUseCase adminStatsUseCase;
-
-    @GetMapping
-    @PreAuthorize("hasRole('FLEET_ADMIN')")
-    @Operation(summary = "Statistiques Globales (Admin)", description = "Retourne le nombre total d'entités dans le système.")
-    public Mono<GlobalStatsResponse> getGlobalStats() {
-        return adminStatsUseCase.getGlobalStats();
-    }
+    
 }```
 
 ---
@@ -10746,11 +10530,8 @@ import com.yowyob.fleet.domain.ports.out.AuthPort;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.LoginRequest;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.RegisterRequest;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Encoding;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.media.SchemaProperty;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.buffer.DataBufferUtils;
@@ -10793,20 +10574,25 @@ public class AuthController {
     )
     public Mono<AuthPort.AuthResponse> register(
             @RequestPart("user") RegisterRequest dto,
-            @RequestPart(value = "file", required = false) FilePart filePart 
+            @RequestPart(value = "file", required = false) Part filePart 
     ) {
         Mono<AuthUseCase.FileContent> photoMono = Mono.justOrEmpty(filePart)
-                .flatMap(fp -> DataBufferUtils.join(fp.content())
+                .flatMap(fp -> {
+                    // FIX: On extrait le nom de fichier de manière sécurisée
+                    String filename = (fp instanceof FilePart file) ? file.filename() : "profile_picture";
+                    
+                    return DataBufferUtils.join(fp.content())
                         .map(dataBuffer -> {
                             byte[] bytes = new byte[dataBuffer.readableByteCount()];
                             dataBuffer.read(bytes);
                             DataBufferUtils.release(dataBuffer);
                             return new AuthUseCase.FileContent(
-                                    fp.filename(),
+                                    filename,
                                     fp.headers().getContentType() != null ? fp.headers().getContentType().toString() : "image/jpeg",
                                     bytes
                             );
-                        }));
+                        });
+                });
 
         return photoMono
                 .map(photo -> new AuthUseCase.RegisterCommand(
@@ -10852,7 +10638,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
-@Tag(name = "07. Drivers", description = "Gestion des chauffeurs (Création & Recrutement)")
+@Tag(name = "08. Drivers", description = "Gestion des chauffeurs (Création & Recrutement)")
 @SecurityRequirement(name = "bearerAuth")
 public class DriverController {
 
@@ -10934,57 +10720,6 @@ public class DriverController {
 }```
 
 ---
-### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/AdminReferenceController.java`
-```java
-package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
-
-import com.yowyob.fleet.application.service.VehicleTypeService;
-import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.VehicleTypeRequest;
-import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.VehicleTypeEntity;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Mono;
-
-import java.util.UUID;
-
-@RestController
-@RequestMapping("/api/v1/admin/references")
-@RequiredArgsConstructor
-@Tag(name = "05. Admin", description = "Configuration du système")
-@SecurityRequirement(name = "bearerAuth")
-@PreAuthorize("hasRole('FLEET_ADMIN')")
-public class AdminReferenceController {
-
-    private final VehicleTypeService vehicleTypeService;
-
-    @PostMapping("/vehicle-types")
-    @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Ajouter un type de véhicule")
-    public Mono<VehicleTypeEntity> createType(@Valid @RequestBody VehicleTypeRequest request) {
-        return vehicleTypeService.createType(request);
-    }
-
-    @PutMapping("/vehicle-types/{id}")
-    @Operation(summary = "Modifier un type de véhicule")
-    public Mono<VehicleTypeEntity> updateType(@PathVariable UUID id, @Valid @RequestBody VehicleTypeRequest request) {
-        return vehicleTypeService.updateType(id, request);
-    }
-
-    @DeleteMapping("/vehicle-types/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Supprimer un type", description = "Impossible si des véhicules utilisent ce type.")
-    public Mono<Void> deleteType(@PathVariable UUID id) {
-        return vehicleTypeService.deleteType(id);
-    }
-}```
-
----
 ### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/TripController.java`
 ```java
 package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
@@ -11009,7 +10744,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/trips")
 @RequiredArgsConstructor
-@Tag(name = "10. Trips", description = "Gestion des courses et télémétrie")
+@Tag(name = "11. Trips", description = "Gestion des courses et télémétrie")
 @SecurityRequirement(name = "bearerAuth")
 public class TripController {
 
@@ -11542,18 +11277,16 @@ public enum NotificationType {
 ```java
 package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
 
-import com.yowyob.fleet.domain.ports.in.ManageFleetManagerUseCase;
-import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.FleetManagerResponse;
-import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.UpdateManagerRequest;
+import com.yowyob.fleet.domain.ports.in.ManageAdminUseCase;
+import com.yowyob.fleet.domain.ports.out.AuthPort;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -11561,50 +11294,37 @@ import reactor.core.publisher.Mono;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/admin/managers")
+@RequestMapping("/api/v1/admin/management")
 @RequiredArgsConstructor
-@Tag(name = "06. Fleet Managers", description = "Administration des entreprises (Réservé ADMIN)")
+@Tag(name = "05. Admin | Gestion des Fleet Managers")
 @SecurityRequirement(name = "bearerAuth")
-@PreAuthorize("hasRole('FLEET_ADMIN') or hasRole('ADMIN')") 
+@PreAuthorize("hasAnyRole('FLEET_ADMIN', 'FLEET_SUPER_ADMIN')")
 public class AdminManagerController {
 
-    private final ManageFleetManagerUseCase manageFleetManagerUseCase;
+    private final ManageAdminUseCase adminUseCase;
 
-    @GetMapping
-    @Operation(summary = "Lister tous les managers", description = "Récupère la liste agrégée (Local + Auth).")
-    public Flux<FleetManagerResponse> getAll(
-        @Parameter(hidden = true) @RequestHeader(HttpHeaders.AUTHORIZATION) String token
-    ) {
-        return manageFleetManagerUseCase.getAllManagers(token);
+    private boolean isSuper(Authentication a) {
+        return a.getAuthorities().stream().anyMatch(ga -> ga.getAuthority().equals("ROLE_FLEET_SUPER_ADMIN"));
     }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Détails d'un manager", description = "Infos complètes.")
-    public Mono<FleetManagerResponse> getOne(
-        @PathVariable UUID id,
-        @Parameter(hidden = true) @RequestHeader(HttpHeaders.AUTHORIZATION) String token
-    ) {
-        return manageFleetManagerUseCase.getManagerDetails(id, token);
+    @GetMapping("/managers")
+    @Operation(summary = "Lister les Fleet Managers")
+    public Flux<AuthPort.UserDetail> list(@Parameter(hidden = true) @RequestHeader(HttpHeaders.AUTHORIZATION) String t) {
+        return adminUseCase.listFleetManagers(t);
     }
 
-    @PutMapping("/{id}")
-    @Operation(summary = "Mettre à jour l'entreprise", description = "Modifie uniquement le nom de la compagnie.")
-    public Mono<Void> updateCompany(
-        @PathVariable UUID id, 
-        @Valid @RequestBody UpdateManagerRequest request
-    ) {
-        return manageFleetManagerUseCase.updateManagerCompany(id, request.companyName());
+    @GetMapping("/managers/{id}")
+    @Operation(summary = "Détails d'un Fleet Manager")
+    public Mono<AuthPort.UserDetail> getOne(@PathVariable UUID id, @Parameter(hidden = true) @RequestHeader(HttpHeaders.AUTHORIZATION) String t, Authentication auth) {
+        return adminUseCase.getManagerDetails(id, t, isSuper(auth));
     }
 
-    // @DeleteMapping("/{id}")
-    // @ResponseStatus(HttpStatus.NO_CONTENT)
-    // @Operation(summary = "Supprimer un manager", description = "Attention: Échoue si le service distant refuse la suppression (Sécurité).")
-    // public Mono<Void> delete(
-    //     @PathVariable UUID id,
-    //     @Parameter(hidden = true) @RequestHeader(HttpHeaders.AUTHORIZATION) String token
-    // ) {
-    //     return manageFleetManagerUseCase.deleteManager(id, token);
-    // }
+    @PatchMapping("/managers/{id}/toggle")
+    @Operation(summary = "Activer/Désactiver un Fleet Manager")
+    public Mono<Void> toggle(@PathVariable UUID id, Authentication auth) {
+        AuthPort.UserDetail currentUser = (AuthPort.UserDetail) auth.getPrincipal();
+        return adminUseCase.toggleManagerStatus(id, currentUser.id(), isSuper(auth));
+    }
 }```
 
 ---
@@ -11712,7 +11432,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/vehicles/{vehicleId}/media")
 @RequiredArgsConstructor
-@Tag(name = "08. Vehicles", description = "Gestion unifiée des médias")
+@Tag(name = "09. Vehicles", description = "Gestion unifiée des médias")
 @SecurityRequirement(name = "bearerAuth")
 public class VehicleMediaController {
 
@@ -11937,6 +11657,77 @@ public class HealthCheckController {
                     log.warn("Health check failed for {}: {}", name, e.getMessage());
                     return Mono.just("DOWN");
                 });
+    }
+}```
+
+---
+### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/SuperAdminController.java`
+```java
+package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
+
+import com.yowyob.fleet.domain.ports.in.AuthUseCase;
+import com.yowyob.fleet.domain.ports.in.ManageSuperAdminUseCase;
+import com.yowyob.fleet.domain.ports.out.AuthPort;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/v1/admin/super")
+@RequiredArgsConstructor
+@Tag(name = "04. Super Admin | Gestion des Administrateurs")
+@SecurityRequirement(name = "bearerAuth")
+@PreAuthorize("hasRole('FLEET_SUPER_ADMIN')")
+public class SuperAdminController {
+
+    private final ManageSuperAdminUseCase superAdminUseCase;
+
+    public record CreateAdminRequest(
+        @NotBlank String username, @NotBlank String password,
+        @Email @NotBlank String email, @NotBlank String phone,
+        @NotBlank String firstName, @NotBlank String lastName
+    ) {}
+
+    @PostMapping("/admins")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Créer un nouvel Administrateur")
+    public Mono<AuthPort.AuthResponse> create(@Valid @RequestBody CreateAdminRequest req) {
+        return superAdminUseCase.createAdmin(new AuthUseCase.RegisterCommand(
+            req.username(), req.password(), req.email(), req.phone(), req.firstName(), req.lastName(), null, null
+        ));
+    }
+
+    @GetMapping("/admins")
+    @Operation(summary = "Lister les Administrateurs")
+    public Flux<AuthPort.UserDetail> list(@Parameter(hidden = true) @RequestHeader(HttpHeaders.AUTHORIZATION) String t) {
+        return superAdminUseCase.listAdmins(t);
+    }
+
+    @GetMapping("/admins/{id}")
+    @Operation(summary = "Détails d'un Administrateur")
+    public Mono<AuthPort.UserDetail> getOne(@PathVariable UUID id, @Parameter(hidden = true) @RequestHeader(HttpHeaders.AUTHORIZATION) String t) {
+        return superAdminUseCase.getAdminDetails(id, t);
+    }
+
+    @PatchMapping("/admins/{id}/toggle")
+    @Operation(summary = "Activer/Désactiver un Administrateur")
+    public Mono<Void> toggle(@PathVariable UUID id, Authentication auth) {
+        AuthPort.UserDetail currentUser = (AuthPort.UserDetail) auth.getPrincipal();
+        return superAdminUseCase.toggleAdminStatus(id, currentUser.id());
     }
 }```
 
@@ -12397,32 +12188,29 @@ public class JwtAuthenticationManager implements ReactiveAuthenticationManager {
 
         return authPort.getUserProfile(token)
                 .flatMap(userDetail -> 
-                    // On vérifie en DB locale si l'utilisateur est banni ou supprimé
+                    // VÉRIFICATION LOCALE SOUVERAINE
                     userRepo.findById(userDetail.id())
                         .flatMap(localUser -> {
                             if (localUser.getDeletedAt() != null) {
-                                return Mono.<AuthPort.UserDetail>error(AuthException.accountDeleted());
+                                return Mono.error(AuthException.accountDeleted());
                             }
                             if (!localUser.isActive()) {
-                                return Mono.<AuthPort.UserDetail>error(AuthException.accountLocked());
+                                return Mono.error(AuthException.accountLocked());
                             }
                             return Mono.just(userDetail);
                         })
-                        // Si l'utilisateur n'est pas encore en DB locale, on accepte (la synchro suivra dans AuthService)
-                        .defaultIfEmpty(userDetail)
+                        .defaultIfEmpty(userDetail) // Si 1er appel après register, local peut être vide
                 )
                 .map(userDetail -> {
                     var authorities = userDetail.roles().stream()
                             .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                             .collect(Collectors.toList());
 
-                    // On crée le token d'authentification
                     return new UsernamePasswordAuthenticationToken(userDetail, token, authorities);
                 })
-                // ✅ LE FIX : On force le cast en Authentication pour rassurer le compilateur
                 .cast(Authentication.class) 
                 .onErrorResume(e -> {
-                    log.warn("🔐 Access Denied for token: {}", e.getMessage());
+                    log.warn("🔐 Accès refusé : {}", e.getMessage());
                     return Mono.error(e);
                 });
     }
@@ -12499,20 +12287,21 @@ public class OpenApiConfig {
     @Bean
     public OpenApiCustomizer sortTagsAlphabetically() {
         return openApi -> {
-            List<String> order = List.of(
-                "01. Monitoring",
-                "02. Auth",
-                "03. Account",
-                "04. Super Admin",
-                "05. Admin",
-                "06. Fleet Managers",
-                "07. Drivers",
-                "08. Vehicles",
-                "09. Fleets",
-                "10. Trips",
-                "11. Geofencing",
-                "12. Payments"
-            );
+           List<String> order = List.of(
+                    "01. Monitoring",
+                    "02. Auth",
+                    "03. Account",
+                    "04. Super Admin | Gestion des Administrateurs",
+                    "05. Admin | Gestion des Fleet Managers",
+                    "06. Admin | Gestion des Ressources",
+                    "07. Fleet Managers",
+                    "08. Drivers",
+                    "09. Vehicles",
+                    "10. Fleets",
+                    "11. Trips",
+                    "12. Geofencing",
+                    "13. Payments"
+                );
 
             if (openApi.getTags() != null) {
                 openApi.setTags(openApi.getTags().stream()
@@ -12759,6 +12548,31 @@ public class LiquibaseConfig {
 }```
 
 ---
+### Fichier : `./src/main/java/com/yowyob/fleet/domain/exception/SuperAdminException.java`
+```java
+package com.yowyob.fleet.domain.exception;
+
+import org.springframework.http.HttpStatus;
+
+public class SuperAdminException extends DomainException {
+    public SuperAdminException(String message, HttpStatus status, String code) {
+        super(message, status, code);
+    }
+
+    public static SuperAdminException adminNotFound() {
+        return new SuperAdminException("Administrateur introuvable.", HttpStatus.NOT_FOUND, "SADM_001");
+    }
+
+    public static SuperAdminException selfActionForbidden() {
+        return new SuperAdminException("Auto-modification interdite pour le Super Administrateur.", HttpStatus.FORBIDDEN, "SADM_002");
+    }
+
+    public static SuperAdminException roleMismatch() {
+        return new SuperAdminException("L'utilisateur ciblé n'est pas un Administrateur.", HttpStatus.BAD_REQUEST, "SADM_003");
+    }
+}```
+
+---
 ### Fichier : `./src/main/java/com/yowyob/fleet/domain/exception/DomainException.java`
 ```java
 package com.yowyob.fleet.domain.exception;
@@ -12779,6 +12593,39 @@ public abstract class DomainException extends RuntimeException {
         this.status = status;
         this.businessCode = businessCode;
         this.timestamp = Instant.now();
+    }
+}```
+
+---
+### Fichier : `./src/main/java/com/yowyob/fleet/domain/exception/AdminException.java`
+```java
+package com.yowyob.fleet.domain.exception;
+
+import org.springframework.http.HttpStatus;
+
+public class AdminException extends DomainException {
+    public AdminException(String message, HttpStatus status, String code) {
+        super(message, status, code);
+    }
+
+    public static AdminException managerNotFound() {
+        return new AdminException("Fleet Manager introuvable.", HttpStatus.NOT_FOUND, "ADMN_001");
+    }
+
+    public static AdminException masterAccessForbidden() {
+        return new AdminException("Accès interdit : Vous ne pouvez pas manipuler un compte Super Administrateur.", HttpStatus.FORBIDDEN, "ADMN_002");
+    }
+
+    public static AdminException invalidResourceType() {
+        return new AdminException("Type de ressource invalide ou inexistant.", HttpStatus.BAD_REQUEST, "ADMN_003");
+    }
+
+    public static AdminException resourceLocked() {
+        return new AdminException("Cette ressource est utilisée par des véhicules et ne peut être supprimée.", HttpStatus.CONFLICT, "ADMN_004");
+    }
+
+    public static AdminException actionForbiddenOnUserType() {
+        return new AdminException("Action interdite sur ce type d'utilisateur (réservé aux managers).", HttpStatus.FORBIDDEN, "ADMN_005");
     }
 }```
 
@@ -13202,8 +13049,9 @@ public interface ManageGeofenceUseCase {
      * Récupère les zones depuis le moteur externe.
      * @param category : "all", "circles" ou "polygons"
      */
-
-    /**
+    
+    Flux<Map<String, Object>> getMyExternalZones(String category);
+     /**
      * Récupère le détail d'une zone spécifique par son type et son ID.
      */
     Mono<Map<String, Object>> getExternalZoneDetails(String type, UUID id);
@@ -13241,9 +13089,6 @@ public interface ManageGeofenceUseCase {
 
     Flux<GeofenceZone> getMyZones(UUID managerId);
 
-    Flux<Map<String, Object>> getMyZones(UUID managerId, String category);
-    
-
     Mono<Void> deleteZone(UUID zoneId, String type, UUID managerId);
 
     Flux<Map<String, Object>> getZonesByManager(UUID managerId, String category);
@@ -13253,8 +13098,27 @@ public interface ManageGeofenceUseCase {
     Mono<Map<String, Object>> getZoneDetails(UUID zoneId, UUID managerId);
 
     Mono<GeofenceZone> createZone(GeofenceZone zone);
-
+    Mono<Void> assignZoneToFleet(UUID zoneId, UUID fleetId, UUID managerId);
+    Flux<GeofenceZone> getZonesByFleet1(UUID fleetId);
+    
     Flux<Map<String, Object>> getAllExternalZones(String category);
+
+}```
+
+---
+### Fichier : `./src/main/java/com/yowyob/fleet/domain/ports/in/ManageAdminUseCase.java`
+```java
+package com.yowyob.fleet.domain.ports.in;
+
+import com.yowyob.fleet.domain.ports.out.AuthPort;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import java.util.UUID;
+
+public interface ManageAdminUseCase {
+    Flux<AuthPort.UserDetail> listFleetManagers(String token);
+    Mono<AuthPort.UserDetail> getManagerDetails(UUID managerId, String token, boolean isSuperAdmin);
+    Mono<Void> toggleManagerStatus(UUID managerId, UUID requesterId, boolean isSuperAdmin);
 }```
 
 ---
@@ -13375,6 +13239,23 @@ public interface ManageVehicleMediaUseCase {
     // Galerie d'images (1-N)
     Mono<Vehicle> addIllustrationImage(UUID vehicleId, FilePart file, String token);
     Mono<Vehicle> deleteIllustrationImage(UUID vehicleId, UUID imageId, String token);
+}```
+
+---
+### Fichier : `./src/main/java/com/yowyob/fleet/domain/ports/in/ManageSuperAdminUseCase.java`
+```java
+package com.yowyob.fleet.domain.ports.in;
+
+import com.yowyob.fleet.domain.ports.out.AuthPort;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import java.util.UUID;
+
+public interface ManageSuperAdminUseCase {
+    Mono<AuthPort.AuthResponse> createAdmin(AuthUseCase.RegisterCommand command);
+    Flux<AuthPort.UserDetail> listAdmins(String token);
+    Mono<AuthPort.UserDetail> getAdminDetails(UUID adminId, String token);
+    Mono<Void> toggleAdminStatus(UUID adminId, UUID requesterId);
 }```
 
 ---
@@ -13817,6 +13698,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -13859,17 +13741,20 @@ public class GeofenceService implements ManageGeofenceUseCase {
                 .doOnError(e -> log.error("❌ Échec de la synchronisation Geofence: {}", e.getMessage()));
     }
 
-    public Mono<Void> assignZoneToFleet(UUID zoneId, UUID fleetId, UUID managerId) {
-        return zoneRepo.findById(zoneId)
-                .filter(z -> z.getManagerId().equals(managerId)) // Sécurité
-                .switchIfEmpty(Mono.error(new RuntimeException("Zone introuvable ou non autorisée")))
-                .flatMap(z -> {
-                    z.setFleetId(fleetId);
-                    z.setNew(false);
-                    return zoneRepo.save(z);
-                }).then();
+
+
+    // Helpers
+    private boolean isType(Map<String, Object> zoneData, String type) {
+        Object t = zoneData.get("type");
+        return t != null && t.toString().equalsIgnoreCase(type);
     }
 
+    private String normalizeType(String type) {
+        if (type == null) return "";
+        if (type.toLowerCase().startsWith("c")) return "circle";
+        if (type.toLowerCase().startsWith("p")) return "polygon";
+        return type;
+    }
     @Override
     public Flux<GeofenceZone> getZonesByFleet(UUID fleetId) {
         // 1. Récupérer les IDs locaux liés à la flotte
@@ -13917,27 +13802,15 @@ public Mono<GeofenceZone> updateZone(UUID zoneId, GeofenceZone zone) {
             .thenReturn(updatedZone);
 }
 
-// Si tu as un autre endroit (comme la ligne 152 mentionnée dans l'erreur) 
-// où tu crées un objet "shell", assure-toi de respecter le même ordre.
-
-
-    @Override
-    public Flux<Map<String, Object>> getMyZones(UUID managerId, String category) {
-        // 1. On récupère les IDs des zones de ce manager uniquement
-        return zoneRepo.findByManagerId(managerId)
-                .map(GeofenceZoneEntity::getId)
-                .collectList()
-                .flatMapMany(myIds -> {
-                    if (myIds.isEmpty())
-                        return Flux.empty();
-                    // 2. Bulk fetch distant et filtre
-                    return externalApi.listRemoteZones(category)
-                            .flatMapMany(Flux::fromIterable)
-                            .filter(remoteMap -> myIds.contains(UUID.fromString(remoteMap.get("id").toString())));
-                });
-    }
 
 // Dans GeofenceService.java
+
+@Override
+public Flux<Map<String, Object>> getMyExternalZones(String category) {
+    log.info("🔍 Récupération des zones externes pour la catégorie : {}", category);
+    return externalApi.listRemoteZones(category)
+            .flatMapMany(Flux::fromIterable);
+}
 
 @Override
 public Flux<Map<String, Object>> getAllExternalZones(String category) {
@@ -13945,7 +13818,6 @@ public Flux<Map<String, Object>> getAllExternalZones(String category) {
     return externalApi.listRemoteZones(category)
             .flatMapMany(Flux::fromIterable);
 }
-
 @Override
 public Mono<Map<String, Object>> getExternalZoneDetails(String type, UUID id) {
     log.info("ℹ️ Récupération des détails de la zone : {} (Type: {})", id, type);
@@ -14015,6 +13887,13 @@ public Mono<Map<String, Object>> getExternalZoneDetails(String type, UUID id) {
     public Flux<Map<String, Object>> getZonesByFleet(UUID managerId, UUID fleetId) {
         return getFilteredRemoteZones(managerId, "all", fleetId);
     }
+       @Override
+    public Flux<GeofenceZone> getZonesByFleet1(UUID fleetId) {
+        return localPersistence.findByFleetId(fleetId)
+                .flatMap(localLink -> externalApi.getRemoteZoneDetails("all", localLink.id())
+                        .map(details -> mapRemoteToDomain(localLink.id(), fleetId, localLink.managerId(), details))
+                        .onErrorResume(e -> Mono.empty()));
+    }
 
     @Override // GET by ID (Sécurisé par managerId)
     public Mono<Map<String, Object>> getZoneDetails(UUID zoneId, UUID managerId) {
@@ -14038,34 +13917,18 @@ public Mono<Map<String, Object>> getExternalZoneDetails(String type, UUID id) {
     @Override public Mono<Void> updateRemoteZone(String t, UUID id, Map<String, Object> u) { return externalApi.updateRemoteZone(t, id, u); }
     @Override public Flux<GeofenceEventEntity> getEvents(UUID v, UUID z, String t, LocalDate d) { return localPersistence.findEventsWithFilters(v, z, t, d); }
 
-// Dans GeofenceService.java
-@Override
-public Flux<Map<String, Object>> getZonesByFleetManager(UUID fleetManagerId) {
-   // 1. Récupérer les zones rattachées au manager en base locale
-    return localPersistence.findByManagerId(fleetManagerId)
-            .map(zone -> zone.id().toString()) // On travaille en String pour la comparaison
-            .collectList()
-            .flatMapMany(myLocalIds -> {
-                if (myLocalIds.isEmpty()) {
-                    log.warn("⚠️ Aucune zone trouvée en local pour le manager {}", fleetManagerId);
-                    return Flux.empty();
-                }
 
-                // 2. Récupérer et filtrer la liste aplatie
-                return getAllExternalZones("all")
-                        .filter(extZone -> {
-                            Object idObj = extZone.get("id");
-                            if (idObj == null) return false;
-                            
-                            // Nettoyage rigoureux de l'ID externe
-                            String extId = idObj.toString().replace("\"", "").trim();
-                            boolean match = myLocalIds.contains(extId);
-                            
-                            if (match) log.debug("🎯 Match trouvé pour la zone {}", extId);
-                            return match;
-                        });
-            });
-}
+  @Override
+    public Mono<Void> assignZoneToFleet(UUID zoneId, UUID fleetId, UUID managerId) {
+        return zoneRepo.findById(zoneId)
+                .filter(z -> z.getManagerId().equals(managerId))
+                .switchIfEmpty(Mono.error(new RuntimeException("Zone introuvable ou non autorisée")))
+                .flatMap(z -> {
+                    z.setFleetId(fleetId);
+                    z.setNew(false);
+                    return zoneRepo.save(z);
+                }).then();
+    }
 
  @Override
     public Flux<Map<String, Object>> getZonesByManager(UUID managerId, String category) {
@@ -14073,6 +13936,14 @@ public Flux<Map<String, Object>> getZonesByFleetManager(UUID fleetManagerId) {
         return externalApi.getZonesByOwner(managerId, category)
                 .flatMapMany(Flux::fromIterable);
     }
+
+
+
+ @Override
+ public Flux<Map<String, Object>> getZonesByFleetManager(UUID fleetManagerId) {
+    // TODO Auto-generated method stub
+    throw new UnsupportedOperationException("Unimplemented method 'getZonesByFleetManager'");
+ }
 
 }```
 
@@ -14082,21 +13953,23 @@ public Flux<Map<String, Object>> getZonesByFleetManager(UUID fleetManagerId) {
 package com.yowyob.fleet.application.service;
 
 import com.yowyob.fleet.domain.ports.in.AuthUseCase;
-import com.yowyob.fleet.domain.ports.out.AuthPort;
-import com.yowyob.fleet.domain.ports.out.DriverPersistencePort;
-import com.yowyob.fleet.domain.ports.out.FleetManagerPersistencePort;
+import com.yowyob.fleet.domain.ports.in.ManageDriverUseCase;
+import com.yowyob.fleet.domain.ports.out.*;
 import com.yowyob.fleet.domain.exception.AuthException;
 import com.yowyob.fleet.domain.model.Driver;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.UserLocalEntity;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.UserLocalR2dbcRepository;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.FleetR2dbcRepository;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.FleetManagerR2dbcRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 import java.util.List;
@@ -14110,11 +13983,15 @@ public class AuthService implements AuthUseCase {
     private final UserLocalR2dbcRepository userRepo;
     private final DriverPersistencePort driverPort;
     private final FleetManagerPersistencePort managerPort;
+    private final FleetManagerR2dbcRepository managerRepo;
+    private final FleetR2dbcRepository fleetRepo;
+    private final ManageDriverUseCase driverUseCase;
 
     @Override
     public Mono<AuthPort.AuthResponse> login(String identifier, String password) {
         return authPort.login(identifier, password)
                 .flatMap(response -> pullSyncLocalUser(response.user())
+                        .then(ensureRoleProfileExists(response.user())) // SELF-HEALING
                         .then(checkUserAccess(response.user().id()))
                         .thenReturn(response));
     }
@@ -14123,76 +14000,81 @@ public class AuthService implements AuthUseCase {
     public Mono<AuthPort.AuthResponse> register(RegisterCommand command) {
         return ensureRolesExist(command.roles())
                 .then(authPort.registerInRemote(command))
-                .flatMap(response -> createLocalProfile(response.user())
-                        .then(pullSyncLocalUser(response.user()))
-                        .thenReturn(response));
-    }
+                 // --- AJOUT ICI ---
+                .onErrorResume(e -> {
+                    if (e instanceof AuthException ae && ae.getBusinessCode().equals("AUTH_004")) { // 409 Conflict
+                        return userRepo.findByUsername(command.username()) // On cherche en local
+                                .flatMap(u -> {
+                                    if (!u.isActive()) {
+                                        return Mono.<AuthPort.AuthResponse>error(new AuthException(
+                                            "Ce compte est désactivé. Veuillez contacter un administrateur pour le réactiver.", 
+                                            HttpStatus.FORBIDDEN, "AUTH_007"));
+                                    }
+                                    return Mono.<AuthPort.AuthResponse>error(e);
+                                })
+                                .switchIfEmpty(Mono.error(e));
+                    }
+                    return Mono.error(e);
+                })
+                // --- FIN AJOUT ---
+                .flatMap(res -> {
+                    String token = res.accessToken();
+                    UUID userId = res.user().id();
 
-    @Override
-    public Mono<AuthPort.AuthResponse> refreshToken(String refreshToken) {
-        return authPort.refresh(refreshToken)
-                .flatMap(response -> pullSyncLocalUser(response.user())
-                        .then(checkUserAccess(response.user().id()))
-                        .thenReturn(response));
+                    // 1. TENTATIVE PHOTO (NON-BLOQUANTE)
+                    Mono<Void> photoFlow = (command.photo() != null) ?
+                            this.updateProfilePicture(userId, token, command.photo())
+                                    .onErrorResume(e -> {
+                                        log.warn("📸 Photo ignorée au register suite à erreur distante.");
+                                        return Mono.empty();
+                                    }) : Mono.empty();
+
+                    // 2. CHAINAGE : Photo -> Fetch Final -> Sync Local
+                    return photoFlow
+                            .then(authPort.getUserById(userId, token))
+                            .flatMap(freshUser -> pullSyncLocalUser(freshUser)
+                                    .then(ensureRoleProfileExists(freshUser))
+                                    .thenReturn(new AuthPort.AuthResponse(token, res.refreshToken(), freshUser)));
+                });
     }
 
     @Override
     public Mono<AuthPort.UserDetail> me(String token) {
         return authPort.getUserProfile(token)
-                .flatMap(remote -> pullSyncLocalUser(remote).thenReturn(remote))
+                .flatMap(summary -> authPort.getUserById(summary.id(), token))
+                .flatMap(remote -> pullSyncLocalUser(remote)
+                        .then(ensureRoleProfileExists(remote)) // SELF-HEALING
+                        .thenReturn(remote))
                 .flatMap(this::enrichWithLocalData);
     }
 
     /**
-     * PULL SYNC : Met à jour le cache local fleet.users depuis les données distantes.
+     * FONCTION CENTRALE : Garantit que Hassana voit ses managers/drivers en DB locale.
      */
-    private Mono<Void> pullSyncLocalUser(AuthPort.UserDetail remote) {
-        return userRepo.findById(remote.id())
-                .flatMap(local -> {
-                    local.setUsername(remote.username());
-                    local.setEmail(remote.email());
-                    local.setFirstName(remote.firstName());
-                    local.setLastName(remote.lastName());
-                    local.setPhotoUrl(remote.photoUrl());
-                    local.setLastLoginAt(Instant.now());
-                    local.setNew(false);
-                    return userRepo.save(local);
-                })
-                .switchIfEmpty(Mono.defer(() -> {
-                    UserLocalEntity newLocal = UserLocalEntity.builder()
-                            .id(remote.id())
-                            .username(remote.username())
-                            .email(remote.email())
-                            .firstName(remote.firstName())
-                            .lastName(remote.lastName())
-                            .photoUrl(remote.photoUrl())
-                            .isActive(true) // Par défaut actif à la première sync
-                            .lastLoginAt(Instant.now())
-                            .build();
-                    newLocal.setNew(true);
-                    return userRepo.save(newLocal);
-                }))
-                .then();
+    private Mono<Void> ensureRoleProfileExists(AuthPort.UserDetail user) {
+        if (user.roles().contains("FLEET_MANAGER")) {
+            return managerRepo.existsById(user.id())
+                    .flatMap(exists -> exists ? Mono.empty() : managerPort.createProfile(user.id(), "Société de " + user.lastName()));
+        }
+        if (user.roles().contains("FLEET_DRIVER")) {
+            return driverPort.findById(user.id())
+                    .flatMap(exists -> Mono.<Void>empty()) // Existe déjà
+                    .switchIfEmpty(Mono.defer(() -> {
+                        Driver d = new Driver(user.id(), null, "PENDING-" + user.id().toString().substring(0, 8), "ACTIVE", null, "");
+                        return driverPort.save(d).then();
+                    }));
+        }
+        return Mono.empty();
     }
 
-    /**
-     * VERROU LOCAL : Vérifie si l'utilisateur n'est pas banni ou supprimé en local.
-     */
-/**
-     * VERROU LOCAL : Vérifie si l'utilisateur n'est pas banni ou supprimé en local.
-     */
-    private Mono<Void> checkUserAccess(UUID userId) {
-        return userRepo.findById(userId)
-                .flatMap(user -> {
-                    // Utilisation de nos exceptions modulaires au lieu de ResponseStatusException
-                    if (user.getDeletedAt() != null) {
-                        return Mono.error(AuthException.accountDeleted()); // Lance AUTH_003
-                    }
-                    if (!user.isActive()) {
-                        return Mono.error(AuthException.accountLocked());  // Lance AUTH_002
-                    }
-                    return Mono.empty();
-                });
+    // --- AUTRES MÉTHODES (SYCHRONISÉES) ---
+
+    @Override
+    public Mono<AuthPort.AuthResponse> refreshToken(String refreshToken) {
+        return authPort.refresh(refreshToken)
+                .flatMap(response -> pullSyncLocalUser(response.user())
+                        .then(ensureRoleProfileExists(response.user()))
+                        .thenReturn(response));
     }
 
     @Override
@@ -14203,69 +14085,87 @@ public class AuthService implements AuthUseCase {
     }
 
     @Override
-    public Mono<Void> changePassword(UUID userId, String token, String currentPwd, String newPwd) {
-        return authPort.changePassword(userId, token, currentPwd, newPwd);
-    }
-
-    @Override
     public Mono<Void> updateProfilePicture(UUID userId, String token, FileContent file) {
-        return authPort.updateProfilePicture(userId, token, file);
+        return authPort.updateProfilePicture(userId, token, file)
+                .delayElement(Duration.ofMillis(600)) // Sécurité stockage
+                .then(authPort.getUserById(userId, token))
+                .flatMap(this::pullSyncLocalUser);
     }
 
     @Override
+    @Transactional
     public Mono<Void> deleteAccount(UUID userId, String token) {
-        // SOFT DELETE LOCAL
-        return userRepo.findById(userId)
-                .flatMap(user -> {
-                    user.setDeletedAt(Instant.now());
-                    user.setActive(false);
-                    user.setNew(false);
-                    return userRepo.save(user);
-                })
-                .then(authPort.moveUserToService(userId, "USER_DELETED", token));
+        return authPort.getUserProfile(token)
+            .flatMap(user -> {
+                if (user.roles().contains("FLEET_MANAGER")) {
+                    return fleetRepo.findAllByManagerId(userId).hasElements()
+                        .flatMap(has -> has ? Mono.<Void>error(new AuthException("Supprimez vos flottes d'abord.", HttpStatus.CONFLICT, "ACC_001")) : Mono.empty());
+                }
+                if (user.roles().contains("FLEET_DRIVER")) {
+                    return driverUseCase.unassignVehicle(userId, userId);
+                }
+                return Mono.<Void>empty();
+            })
+            .then(userRepo.findById(userId))
+            .flatMap(local -> {
+                local.setActive(false);
+                local.setDeletedAt(Instant.now());
+                local.setNew(false);
+                return userRepo.save(local);
+            })
+            .then(authPort.moveUserToService(userId, "DELETED_USER", token));
     }
 
-    // --- HELPERS EXISTANTS ---
-    
+    private Mono<Void> pullSyncLocalUser(AuthPort.UserDetail remote) {
+        return userRepo.findById(remote.id())
+                .flatMap(local -> {
+                    local.setUsername(remote.username());
+                    local.setEmail(remote.email());
+                    local.setFirstName(remote.firstName());
+                    local.setLastName(remote.lastName());
+                    local.setPhotoUrl(remote.photoUrl());
+                    local.setNew(false);
+                    return userRepo.save(local);
+                })
+                .switchIfEmpty(Mono.defer(() -> {
+                    UserLocalEntity n = UserLocalEntity.builder().id(remote.id()).username(remote.username()).email(remote.email())
+                            .firstName(remote.firstName()).lastName(remote.lastName()).photoUrl(remote.photoUrl())
+                            .isActive(true).lastLoginAt(Instant.now()).build();
+                    n.setNew(true);
+                    return userRepo.save(n);
+                })).then();
+    }
+
+    private Mono<Void> checkUserAccess(UUID userId) {
+        return userRepo.findById(userId).flatMap(u -> {
+            if (u.getDeletedAt() != null) return Mono.error(AuthException.accountDeleted());
+            if (!u.isActive()) return Mono.error(AuthException.accountLocked());
+            return Mono.empty();
+        });
+    }
+
+    @Override public Mono<Void> changePassword(UUID u, String t, String c, String n) { return authPort.changePassword(u, t, c, n); }
+
     private Mono<Void> ensureRolesExist(List<String> roles) {
-        return Flux.fromIterable(roles)
-                .flatMap(role -> authPort.roleExists(role)
-                        .flatMap(exists -> !Boolean.TRUE.equals(exists) ? authPort.createRole(role) : Mono.empty())
-                ).then();
+        return Flux.fromIterable(roles).flatMap(r -> authPort.roleExists(r).flatMap(ex -> !ex ? authPort.createRole(r) : Mono.empty())).then();
     }
 
     private Mono<Void> createLocalProfile(AuthPort.UserDetail user) {
-        if (user.roles().contains("FLEET_MANAGER")) {
-            return managerPort.createProfile(user.id(), null);
-        } else if (user.roles().contains("FLEET_DRIVER")) {
-            String tempPermit = "PENDING-" + user.id().toString().substring(0, 8);
-            Driver driver = new Driver(user.id(), null, tempPermit, "ACTIVE", null, "");
-            return driverPort.save(driver).then();
-        }
-        return Mono.empty();
+        return ensureRoleProfileExists(user); // Réutilisation pour éviter les doublons
     }
 
-    private Mono<AuthPort.UserDetail> enrichWithLocalData(AuthPort.UserDetail remoteUser) {
-        if (remoteUser.roles().contains("FLEET_MANAGER")) {
-            return managerPort.getCompanyName(remoteUser.id())
-                    .map(company -> new AuthPort.UserDetail(
-                            remoteUser.id(), remoteUser.username(), remoteUser.email(), remoteUser.phone(),
-                            remoteUser.firstName(), remoteUser.lastName(), remoteUser.service(),
-                            remoteUser.roles(), remoteUser.permissions(), remoteUser.photoUrl(),
-                            company, null, null
-                    ))
-                    .defaultIfEmpty(remoteUser);
-        } else if (remoteUser.roles().contains("FLEET_DRIVER")) {
-            return driverPort.findById(remoteUser.id())
-                    .map(driver -> new AuthPort.UserDetail(
-                            remoteUser.id(), remoteUser.username(), remoteUser.email(), remoteUser.phone(),
-                            remoteUser.firstName(), remoteUser.lastName(), remoteUser.service(),
-                            remoteUser.roles(), remoteUser.permissions(), remoteUser.photoUrl(),
-                            null, driver.licenceNumber(), driver.assignedVehicleId() != null ? driver.assignedVehicleId().toString() : null
-                    ))
-                    .defaultIfEmpty(remoteUser);
+    private Mono<AuthPort.UserDetail> enrichWithLocalData(AuthPort.UserDetail remote) {
+        if (remote.roles().contains("FLEET_MANAGER")) {
+            return managerPort.getCompanyName(remote.id())
+                    .map(c -> new AuthPort.UserDetail(remote.id(), remote.username(), remote.email(), remote.phone(), remote.firstName(), remote.lastName(), remote.service(), remote.roles(), remote.permissions(), remote.photoUrl(), c, null, null))
+                    .defaultIfEmpty(remote);
         }
-        return Mono.just(remoteUser);
+        if (remote.roles().contains("FLEET_DRIVER")) {
+            return driverPort.findById(remote.id())
+                    .map(d -> new AuthPort.UserDetail(remote.id(), remote.username(), remote.email(), remote.phone(), remote.firstName(), remote.lastName(), remote.service(), remote.roles(), remote.permissions(), remote.photoUrl(), null, d.licenceNumber(), d.assignedVehicleId() != null ? d.assignedVehicleId().toString() : null))
+                    .defaultIfEmpty(remote);
+        }
+        return Mono.just(remote);
     }
 }```
 
@@ -14477,6 +14377,73 @@ public class VehicleTypeService {
         // Note : PostgreSQL renverra une erreur si ce type est utilisé par des véhicules (FK Constraint).
         // C'est le comportement voulu pour la sécurité des données.
         return repository.deleteById(id);
+    }
+}```
+
+---
+### Fichier : `./src/main/java/com/yowyob/fleet/application/service/AdminService.java`
+```java
+package com.yowyob.fleet.application.service;
+
+import com.yowyob.fleet.domain.exception.AdminException;
+import com.yowyob.fleet.domain.ports.in.ManageAdminUseCase;
+import com.yowyob.fleet.domain.ports.out.AuthPort;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.UserLocalR2dbcRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+public class AdminService implements ManageAdminUseCase {
+
+    private final AuthPort authPort;
+    private final UserLocalR2dbcRepository userRepo;
+
+    @Override
+    public Flux<AuthPort.UserDetail> listFleetManagers(String token) {
+        return authPort.getUsersByService("FLEET_MANAGEMENT", token)
+                .filter(u -> u.roles().contains("FLEET_MANAGER"))
+                .flatMap(this::syncWithLocal);
+    }
+
+    @Override
+    public Mono<AuthPort.UserDetail> getManagerDetails(UUID managerId, String token, boolean isSuperAdmin) {
+        return authPort.getUserById(managerId, token)
+                .flatMap(remote -> {
+                    if (!isSuperAdmin && remote.roles().contains("FLEET_SUPER_ADMIN")) {
+                        return Mono.error(AdminException.masterAccessForbidden());
+                    }
+                    if (!remote.roles().contains("FLEET_MANAGER")) {
+                        return Mono.error(AdminException.actionForbiddenOnUserType());
+                    }
+                    return syncWithLocal(remote);
+                });
+    }
+
+    @Override
+    public Mono<Void> toggleManagerStatus(UUID managerId, UUID requesterId, boolean isSuperAdmin) {
+        return this.getManagerDetails(managerId, "", isSuperAdmin)
+                .then(userRepo.findById(managerId))
+                .switchIfEmpty(Mono.error(AdminException.managerNotFound()))
+                .flatMap(u -> {
+                    u.setActive(!u.isActive());
+                    u.setNew(false);
+                    return userRepo.save(u);
+                }).then();
+    }
+
+    private Mono<AuthPort.UserDetail> syncWithLocal(AuthPort.UserDetail remote) {
+        return userRepo.findById(remote.id())
+                .map(local -> new AuthPort.UserDetail(
+                        remote.id(), remote.username(), remote.email(), remote.phone(),
+                        remote.firstName(), remote.lastName(), remote.service(),
+                        remote.roles(), remote.permissions(), local.getPhotoUrl(), 
+                        null, null, null))
+                .defaultIfEmpty(remote);
     }
 }```
 
@@ -15169,6 +15136,79 @@ private Mono<Void> updateVehicleLink(UUID vehicleId, UUID driverId) {
                         return Mono.error(new AccessDeniedException("Cette flotte ne vous appartient pas."));
                     return Mono.empty();
                 });
+    }
+}```
+
+---
+### Fichier : `./src/main/java/com/yowyob/fleet/application/service/SuperAdminService.java`
+```java
+package com.yowyob.fleet.application.service;
+
+import com.yowyob.fleet.domain.exception.SuperAdminException;
+import com.yowyob.fleet.domain.ports.in.AuthUseCase;
+import com.yowyob.fleet.domain.ports.in.ManageSuperAdminUseCase;
+import com.yowyob.fleet.domain.ports.out.AuthPort;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.UserLocalR2dbcRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.util.List;
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+public class SuperAdminService implements ManageSuperAdminUseCase {
+
+    private final AuthPort authPort;
+    private final UserLocalR2dbcRepository userRepo;
+
+    @Override
+    public Mono<AuthPort.AuthResponse> createAdmin(AuthUseCase.RegisterCommand command) {
+        AuthUseCase.RegisterCommand adminCmd = new AuthUseCase.RegisterCommand(
+            command.username(), command.password(), command.email(), command.phone(),
+            command.firstName(), command.lastName(), List.of("FLEET_ADMIN"), null
+        );
+        return authPort.registerInRemote(adminCmd);
+    }
+
+    @Override
+    public Flux<AuthPort.UserDetail> listAdmins(String token) {
+        return authPort.getUsersByService("FLEET_MANAGEMENT", token)
+                .filter(u -> u.roles().contains("FLEET_ADMIN"))
+                .flatMap(this::syncWithLocal);
+    }
+
+    @Override
+    public Mono<AuthPort.UserDetail> getAdminDetails(UUID adminId, String token) {
+        return authPort.getUserById(adminId, token)
+                .filter(u -> u.roles().contains("FLEET_ADMIN"))
+                .switchIfEmpty(Mono.error(SuperAdminException.roleMismatch()))
+                .flatMap(this::syncWithLocal);
+    }
+
+    @Override
+    public Mono<Void> toggleAdminStatus(UUID adminId, UUID requesterId) {
+        if (adminId.equals(requesterId)) return Mono.error(SuperAdminException.selfActionForbidden());
+        
+        return userRepo.findById(adminId)
+                .switchIfEmpty(Mono.error(SuperAdminException.adminNotFound()))
+                .flatMap(u -> {
+                    u.setActive(!u.isActive());
+                    u.setNew(false);
+                    return userRepo.save(u);
+                }).then();
+    }
+
+    private Mono<AuthPort.UserDetail> syncWithLocal(AuthPort.UserDetail remote) {
+        return userRepo.findById(remote.id())
+                .map(local -> new AuthPort.UserDetail(
+                        remote.id(), remote.username(), remote.email(), remote.phone(),
+                        remote.firstName(), remote.lastName(), remote.service(),
+                        remote.roles(), remote.permissions(), local.getPhotoUrl(), 
+                        null, null, null))
+                .defaultIfEmpty(remote);
     }
 }```
 
