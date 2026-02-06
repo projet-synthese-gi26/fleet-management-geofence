@@ -1,12 +1,15 @@
 package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
 
+import com.yowyob.fleet.domain.ports.out.AuthPort;
+import com.yowyob.fleet.domain.ports.out.ExternalGeofencePort;
+import com.yowyob.fleet.domain.ports.out.StatisticsPort;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
-import org.springframework.kafka.core.reactive.ReactiveKafkaProducerTemplate;
+import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,108 +26,119 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/health")
 @RequiredArgsConstructor
-@Tag(name = "01. Monitoring", description = "Diagnostic complet de l'infrastructure")
+@Tag(name = "01. Monitoring" , description = "Endpoints de diagnostic et statistiques publiques")
 public class HealthCheckController {
 
     private final DatabaseClient databaseClient;
     private final ReactiveRedisConnectionFactory redisConnectionFactory;
-    
-    // On injecte le template pour vérifier si Kafka est configuré
-    // Note: Pour un vrai check de santé Kafka, il faudrait AdminClient, mais c'est complexe en réactif pur sans dépendance lourde.
-    // Ici on vérifie juste que le bean est up et on tente une opération non intrusive si possible.
-    private final ReactiveKafkaProducerTemplate<String, Object> kafkaTemplate;
-
-    @Value("${application.auth.url}")
-    private String authUrl;
-
-    @Value("${application.external.vehicle-service-url}")
-    private String vehicleUrl;
-
+    private final ReactiveRedisTemplate<String, Object> redisTemplate;
+    private final StatisticsPort statisticsPort;
+    private final AuthPort authPort;
+    private final ExternalGeofencePort geofencePort;
     private final WebClient.Builder webClientBuilder;
 
+    @Value("${application.geofence-system-user.username}") private String sysUser;
+    @Value("${application.geofence-system-user.password}") private String sysPass;
+    @Value("${application.auth.url}") private String authUrl;
+    @Value("${application.external.vehicle-service-url}") private String vehicleUrl;
+    @Value("${application.external.payment-service-url}") private String paymentUrl;
+    @Value("${application.external.geofence-service-url}") private String geofenceUrl;
+
+    private static final String STATS_CACHE_KEY = "fleet:stats:public";
+
     @GetMapping("/diagnostic")
-    @Operation(summary = "Diagnostic Système complet", description = "Vérifie DB, Redis, Kafka et les APIs distantes.")
-    public Mono<SystemHealth> getDiagnostic() {
-        // Lancement parallèle des checks
+    @Operation(summary = "Diagnostic Système profond (Multi-Service)", description = "Vérifie la connectivité réelle de tous les services tiers.")
+    public Mono<Map<String, Object>> getDeepDiagnostic() {
+        // Récupération parallèle des deux tokens système
         return Mono.zip(
-            checkDatabase(),
-            checkRedis(),
-            checkKafka(),
-            checkRemoteService("Auth Service", authUrl),
-            checkRemoteService("Vehicle Service", vehicleUrl)
-        ).map(tuple -> {
-            Map<String, ServiceStatus> dependencies = new HashMap<>();
-            dependencies.put("database", tuple.getT1());
-            dependencies.put("redis", tuple.getT2());
-            dependencies.put("kafka", tuple.getT3());
-            dependencies.put("auth_service", tuple.getT4());
-            dependencies.put("vehicle_service", tuple.getT5());
+            authPort.login(sysUser, sysPass).map(r -> "Bearer " + r.accessToken()).onErrorReturn(""),
+            geofencePort.getSystemToken().onErrorReturn("")
+        ).flatMap(tokens -> {
+            String ecoToken = tokens.getT1();
+            String geoToken = tokens.getT2();
 
-            // Si l'un des services critiques (DB, Redis) est DOWN, le global est DOWN
-            boolean isGlobalUp = tuple.getT1().status().equals("UP") 
-                              && tuple.getT2().status().equals("UP");
-
-            return new SystemHealth(
-                isGlobalUp ? "UP" : "DEGRADED",
-                Instant.now(),
-                dependencies
-            );
+            return Mono.zip(
+                checkDB(),
+                checkRedis(),
+                checkRemote("/api/roles", authUrl, ecoToken, "Auth Service"),
+                checkRemote("/vehicles", vehicleUrl, ecoToken, "Vehicle Service"),
+                checkRemote("/api/v1/wallets", paymentUrl, ecoToken, "Payment Service"),
+                checkRemote("/api/geofence/circles", geofenceUrl, geoToken, "Geofence Engine")
+            ).map(t -> {
+                Map<String, Object> report = new HashMap<>();
+                report.put("timestamp", Instant.now());
+                report.put("local_db", t.getT1());
+                report.put("local_redis", t.getT2());
+                report.put("auth_service", t.getT3());
+                report.put("vehicle_service", t.getT4());
+                report.put("payment_service", t.getT5());
+                report.put("geofence_engine", t.getT6());
+                return report;
+            });
         });
     }
 
-    // --- CHECKS INDIVIDUELS ---
-
-    private Mono<ServiceStatus> checkDatabase() {
-        return databaseClient.sql("SELECT 1")
-                .fetch()
-                .first()
-                .map(r -> new ServiceStatus("UP", "PostgreSQL R2DBC Connected"))
-                .timeout(Duration.ofSeconds(2))
-                .onErrorResume(e -> Mono.just(new ServiceStatus("DOWN", e.getMessage())));
+@GetMapping("/public-stats")
+    @Operation(summary = "Statistiques publiques (Landing Page)", description = "Données agrégées avec cache de 6 heures.")
+    @SuppressWarnings("unchecked") // Pour ignorer l'avertissement sur le cast de la Map
+    public Mono<Map<String, Object>> getPublicStats() {
+        return redisTemplate.opsForValue().get(STATS_CACHE_KEY)
+            // On cast chaque élément du flux plutôt que le Mono lui-même
+            .map(value -> (Map<String, Object>) value)
+            // Important : Utiliser defer pour que le calcul ne se lance que si nécessaire
+            .switchIfEmpty(Mono.defer(this::calculateAndCacheStats));
     }
 
-    private Mono<ServiceStatus> checkRedis() {
-        return redisConnectionFactory.getReactiveConnection()
-                .ping()
-                .map(resp -> new ServiceStatus("UP", "Redis PONG received"))
-                .timeout(Duration.ofSeconds(2))
-                .onErrorResume(e -> Mono.just(new ServiceStatus("DOWN", e.getMessage())));
+    private Mono<Map<String, Object>> calculateAndCacheStats() {
+        return Mono.zip(
+            statisticsPort.countFleetManagers(),
+            statisticsPort.countFleets(),
+            statisticsPort.countVehicles(),
+            statisticsPort.countDrivers()
+        ).map(t -> {
+            Map<String, Object> stats = new HashMap<>();
+            stats.put("activeManagers", t.getT1());
+            stats.put("totalFleets", t.getT2());
+            stats.put("managedVehicles", t.getT3());
+            stats.put("totalDrivers", t.getT4());
+            stats.put("serviceStatus", "All systems operational");
+            return stats;
+        }).flatMap(stats -> 
+            redisTemplate.opsForValue().set(STATS_CACHE_KEY, stats, Duration.ofHours(6))
+                .thenReturn(stats)
+        );
     }
 
-    private Mono<ServiceStatus> checkKafka() {
-        // Check simple : est-ce que le contexte Kafka est chargé ?
-        // Pour aller plus loin, il faudrait envoyer un message test, ce qui est intrusif.
-        if (kafkaTemplate != null) {
-            return Mono.just(new ServiceStatus("UP", "Kafka Producer Configured"));
-        }
-        return Mono.just(new ServiceStatus("UNKNOWN", "Kafka template not available"));
+    // --- Helpers de sonde ---
+
+    private Mono<String> checkDB() {
+        return databaseClient.sql("SELECT 1").fetch().first().map(r -> "UP").timeout(Duration.ofSeconds(5)).onErrorReturn("DOWN");
     }
 
-    private Mono<ServiceStatus> checkRemoteService(String name, String url) {
-        if (url == null || url.isBlank()) {
-            return Mono.just(new ServiceStatus("DISABLED", "No URL configured"));
-        }
+    private Mono<String> checkRedis() {
+        return redisConnectionFactory.getReactiveConnection().ping().map(r -> "UP").timeout(Duration.ofSeconds(5)).onErrorReturn("DOWN");
+    }
+
+    private Mono<String> checkRemote(String path, String baseUrl, String token, String name) {
+        if (baseUrl == null || baseUrl.isBlank()) return Mono.just("NOT_CONFIGURED");
         
-        // On suppose que les services ont un endpoint /actuator/health ou répondent sur la racine
-        // Pour être générique, on ping la racine ou une route connue.
-        // Ici on tente simplement d'atteindre l'URL.
-        return webClientBuilder.build()
-                .get()
-                .uri(url) // Attention: si l'URL est juste le domaine, il faut peut-être ajouter un path
-                .retrieve()
-                .toBodilessEntity()
-                .map(response -> new ServiceStatus("UP", "HTTP " + response.getStatusCode()))
-                .timeout(Duration.ofSeconds(3))
-                .onErrorResume(e -> {
-                    String msg = e.getMessage();
-                    if (msg != null && msg.contains("Connection refused")) {
-                        msg = "Unreachable";
+        return webClientBuilder.build().get()
+                .uri(baseUrl + path)
+                .header("Authorization", token)
+                .exchangeToMono(response -> {
+                    // Si le code est 2xx, 401 ou 403, le service est considéré comme "UP"
+                    if (response.statusCode().is2xxSuccessful() || 
+                        response.statusCode().value() == 401 || 
+                        response.statusCode().value() == 403) {
+                        return Mono.just("UP");
                     }
-                    return Mono.just(new ServiceStatus("DOWN", msg));
+                    // Si c'est un 500 ou autre, on le marque DOWN avec le code
+                    return Mono.just("DOWN (" + response.statusCode().value() + ")");
+                })
+                .timeout(Duration.ofSeconds(5))
+                .onErrorResume(e -> {
+                    log.warn("Health check failed for {}: {}", name, e.getMessage());
+                    return Mono.just("DOWN");
                 });
     }
-
-    // --- DTOs ---
-    public record SystemHealth(String status, Instant timestamp, Map<String, ServiceStatus> dependencies) {}
-    public record ServiceStatus(String status, String details) {}
 }

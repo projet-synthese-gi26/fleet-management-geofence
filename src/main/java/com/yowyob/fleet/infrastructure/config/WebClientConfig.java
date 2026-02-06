@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -28,6 +29,14 @@ public class WebClientConfig {
             log.info("📡 [OUTBOUND CALL] {} {}", clientRequest.method(), clientRequest.url());
             return Mono.just(clientRequest);
         });
+    }
+
+    // --- BUILDER DE BASE AVEC LOGGING ---    
+    @Bean
+    @Primary // Pour que ce builder soit celui utilisé par défaut partout
+    public WebClient.Builder webClientBuilder() {
+        return WebClient.builder()
+                .filter(logRequest()); // On lui injecte le filtre de log
     }
 
     // --- CLIENTS STANDARDS ---

@@ -1,5 +1,5 @@
 # Contexte du Projet : Fleet & Geofence API
-Généré le : Thu Feb  5 10:32:20 PM WAT 2026
+Généré le : Fri Feb  6 01:06:28 AM WAT 2026
 Framework : Spring Boot WebFlux (Reactive)
 
 ## 1. Arborescence du Projet
@@ -44,11 +44,6 @@ Framework : Spring Boot WebFlux (Reactive)
 ├── mvnw
 ├── mvnw.cmd
 ├── pom.xml
-├── project_context_1.txt
-├── project_context_2.txt
-├── project_context_3.txt
-├── project_context_4.txt
-├── project_context_5.txt
 ├── project_context.txt
 ├── Readme.md
 ├── reset_db.bat
@@ -267,7 +262,7 @@ Framework : Spring Boot WebFlux (Reactive)
 ├── test_profile.jpg
 └── todo.md
 
-50 directories, 211 files
+50 directories, 206 files
 ```
 ## 2. Contenu des Fichiers
 
@@ -8200,8 +8195,8 @@ Once the log shows `🚀 LOCAL DATABASE READY!`, open your browser:
 # 📋 Roadmap Finalisation - 05 Février 2026
 
 ## 🦁 Cluster Gabriel (Chef de projet Backend)
-- [ ] **Tâche 1 :** Réorganisation finale Swagger (Config faite).
-- [ ] **Tâche 2 :** Test et finalisation module Monitoring.
+- [x] **Tâche 1 :** Réorganisation finale Swagger (Config faite).
+- [x] **Tâche 2 :** Test et finalisation module Monitoring.
 - [ ] **Tâche 3 :** Test et finalisation module Auth.
 - [ ] **Tâche 4 :** Test et finalisation module Account.
 - [ ] **Tâche 5 :** Test et finalisation module Super Admin.
@@ -8326,8 +8321,8 @@ application:
       admin-validation: 7 # ID template: admin a validé le profil du driver
  
   geofence-system-user:
-    username: "fleetmanagementuser"
-    password: "system_password_secure" # À changer en prod
+    username: "yowyob_fleet_internal_admin"
+    password: "system_password_secure_2026" 
     organization-id: "723e4567-e89b-12d3-a456-426614174000" # UUID de notre application dans
  
   bootstrap:
@@ -11955,7 +11950,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/vehicles/lookup")
 @RequiredArgsConstructor
-@Tag(name = "06. Vehicles", description = "Gestion complète du parc automobile")
+@Tag(name = "08. Vehicles", description = "Gestion complète du parc automobile")
 @SecurityRequirement(name = "bearerAuth")
 public class VehicleLookupController {
 
@@ -12003,7 +11998,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/admin/users")
 @RequiredArgsConstructor
-@Tag(name = "00. Super Admin", description = "Gestion des Administrateurs Fleet")
+@Tag(name = "04. Super Admin", description = "Gestion des Administrateurs Fleet")
 @SecurityRequirement(name = "bearerAuth")
 @PreAuthorize("hasRole('FLEET_SUPER_ADMIN')")
 public class AdminUserController {
@@ -12183,7 +12178,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/geofence")
 @RequiredArgsConstructor
-@Tag(name = "08. Geofencing")
+@Tag(name = "11. Geofencing")
 @SecurityRequirement(name = "bearerAuth")
 public class GeofenceController {
 
@@ -12334,7 +12329,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/fleets")
 @RequiredArgsConstructor
-@Tag(name = "07. Fleets", description = "Gestion des flottes (Sécurisé par Propriétaire)")
+@Tag(name = "09. Fleets", description = "Gestion des flottes (Sécurisé par Propriétaire)")
 @SecurityRequirement(name = "bearerAuth")
 public class FleetController {
 
@@ -12433,7 +12428,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
-@Tag(name = "06. Vehicles", description = "Gestion unifiée du parc")
+@Tag(name = "08. Vehicles", description = "Gestion unifiée du parc")
 @SecurityRequirement(name = "bearerAuth")
 public class VehicleController {
 
@@ -12648,7 +12643,7 @@ import reactor.core.publisher.Mono;
 @RestController
 @RequestMapping("/api/v1/admin/stats")
 @RequiredArgsConstructor
-@Tag(name = "01. Monitoring", description = "Statistiques et Supervision") // On le regroupe avec Monitoring
+@Tag(name = "05. Admin", description = "Statistiques et Supervision") // On le regroupe avec Monitoring
 @SecurityRequirement(name = "bearerAuth")
 public class AdminStatsController {
 
@@ -12779,7 +12774,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
-@Tag(name = "05. Drivers", description = "Gestion des chauffeurs (Création & Recrutement)")
+@Tag(name = "07. Drivers", description = "Gestion des chauffeurs (Création & Recrutement)")
 @SecurityRequirement(name = "bearerAuth")
 public class DriverController {
 
@@ -12883,7 +12878,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/admin/references")
 @RequiredArgsConstructor
-@Tag(name = "00. Super Admin", description = "Configuration du système")
+@Tag(name = "05. Admin", description = "Configuration du système")
 @SecurityRequirement(name = "bearerAuth")
 @PreAuthorize("hasRole('FLEET_ADMIN')")
 public class AdminReferenceController {
@@ -12936,7 +12931,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/trips")
 @RequiredArgsConstructor
-@Tag(name = "09. Trips", description = "Gestion des courses et télémétrie")
+@Tag(name = "10. Trips", description = "Gestion des courses et télémétrie")
 @SecurityRequirement(name = "bearerAuth")
 public class TripController {
 
@@ -13490,7 +13485,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/admin/managers")
 @RequiredArgsConstructor
-@Tag(name = "04. Fleet Managers", description = "Administration des entreprises (Réservé ADMIN)")
+@Tag(name = "06. Fleet Managers", description = "Administration des entreprises (Réservé ADMIN)")
 @SecurityRequirement(name = "bearerAuth")
 @PreAuthorize("hasRole('FLEET_ADMIN') or hasRole('ADMIN')") 
 public class AdminManagerController {
@@ -13561,7 +13556,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/payments")
 @RequiredArgsConstructor
-@Tag(name = "10. Payments", description = "Intégration Service Paiement")
+@Tag(name = "12. Payments", description = "Intégration Service Paiement")
 @SecurityRequirement(name = "bearerAuth")
 public class PaymentController {
 
@@ -13639,7 +13634,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/vehicles/{vehicleId}/media")
 @RequiredArgsConstructor
-@Tag(name = "06. Vehicles", description = "Gestion unifiée des médias")
+@Tag(name = "08. Vehicles", description = "Gestion unifiée des médias")
 @SecurityRequirement(name = "bearerAuth")
 public class VehicleMediaController {
 
@@ -13695,7 +13690,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/notifications")
 @RequiredArgsConstructor
-@Tag(name = "Notification-History", description = "In-app notifications history")
+@Tag(name = "03. Account", description = "In-app notifications history")
 public class NotificationController {
 
     private final NotificationHistoryRepositoryPort historyPort;
@@ -13724,13 +13719,16 @@ public class NotificationController {
 ```java
 package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
 
+import com.yowyob.fleet.domain.ports.out.AuthPort;
+import com.yowyob.fleet.domain.ports.out.ExternalGeofencePort;
+import com.yowyob.fleet.domain.ports.out.StatisticsPort;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
-import org.springframework.kafka.core.reactive.ReactiveKafkaProducerTemplate;
+import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13747,110 +13745,121 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/health")
 @RequiredArgsConstructor
-@Tag(name = "01. Monitoring", description = "Diagnostic complet de l'infrastructure")
+@Tag(name = "01. Monitoring" , description = "Endpoints de diagnostic et statistiques publiques")
 public class HealthCheckController {
 
     private final DatabaseClient databaseClient;
     private final ReactiveRedisConnectionFactory redisConnectionFactory;
-    
-    // On injecte le template pour vérifier si Kafka est configuré
-    // Note: Pour un vrai check de santé Kafka, il faudrait AdminClient, mais c'est complexe en réactif pur sans dépendance lourde.
-    // Ici on vérifie juste que le bean est up et on tente une opération non intrusive si possible.
-    private final ReactiveKafkaProducerTemplate<String, Object> kafkaTemplate;
-
-    @Value("${application.auth.url}")
-    private String authUrl;
-
-    @Value("${application.external.vehicle-service-url}")
-    private String vehicleUrl;
-
+    private final ReactiveRedisTemplate<String, Object> redisTemplate;
+    private final StatisticsPort statisticsPort;
+    private final AuthPort authPort;
+    private final ExternalGeofencePort geofencePort;
     private final WebClient.Builder webClientBuilder;
 
+    @Value("${application.geofence-system-user.username}") private String sysUser;
+    @Value("${application.geofence-system-user.password}") private String sysPass;
+    @Value("${application.auth.url}") private String authUrl;
+    @Value("${application.external.vehicle-service-url}") private String vehicleUrl;
+    @Value("${application.external.payment-service-url}") private String paymentUrl;
+    @Value("${application.external.geofence-service-url}") private String geofenceUrl;
+
+    private static final String STATS_CACHE_KEY = "fleet:stats:public";
+
     @GetMapping("/diagnostic")
-    @Operation(summary = "Diagnostic Système complet", description = "Vérifie DB, Redis, Kafka et les APIs distantes.")
-    public Mono<SystemHealth> getDiagnostic() {
-        // Lancement parallèle des checks
+    @Operation(summary = "Diagnostic Système profond (Multi-Service)", description = "Vérifie la connectivité réelle de tous les services tiers.")
+    public Mono<Map<String, Object>> getDeepDiagnostic() {
+        // Récupération parallèle des deux tokens système
         return Mono.zip(
-            checkDatabase(),
-            checkRedis(),
-            checkKafka(),
-            checkRemoteService("Auth Service", authUrl),
-            checkRemoteService("Vehicle Service", vehicleUrl)
-        ).map(tuple -> {
-            Map<String, ServiceStatus> dependencies = new HashMap<>();
-            dependencies.put("database", tuple.getT1());
-            dependencies.put("redis", tuple.getT2());
-            dependencies.put("kafka", tuple.getT3());
-            dependencies.put("auth_service", tuple.getT4());
-            dependencies.put("vehicle_service", tuple.getT5());
+            authPort.login(sysUser, sysPass).map(r -> "Bearer " + r.accessToken()).onErrorReturn(""),
+            geofencePort.getSystemToken().onErrorReturn("")
+        ).flatMap(tokens -> {
+            String ecoToken = tokens.getT1();
+            String geoToken = tokens.getT2();
 
-            // Si l'un des services critiques (DB, Redis) est DOWN, le global est DOWN
-            boolean isGlobalUp = tuple.getT1().status().equals("UP") 
-                              && tuple.getT2().status().equals("UP");
-
-            return new SystemHealth(
-                isGlobalUp ? "UP" : "DEGRADED",
-                Instant.now(),
-                dependencies
-            );
+            return Mono.zip(
+                checkDB(),
+                checkRedis(),
+                checkRemote("/api/roles", authUrl, ecoToken, "Auth Service"),
+                checkRemote("/vehicles", vehicleUrl, ecoToken, "Vehicle Service"),
+                checkRemote("/api/v1/wallets", paymentUrl, ecoToken, "Payment Service"),
+                checkRemote("/api/geofence/circles", geofenceUrl, geoToken, "Geofence Engine")
+            ).map(t -> {
+                Map<String, Object> report = new HashMap<>();
+                report.put("timestamp", Instant.now());
+                report.put("local_db", t.getT1());
+                report.put("local_redis", t.getT2());
+                report.put("auth_service", t.getT3());
+                report.put("vehicle_service", t.getT4());
+                report.put("payment_service", t.getT5());
+                report.put("geofence_engine", t.getT6());
+                return report;
+            });
         });
     }
 
-    // --- CHECKS INDIVIDUELS ---
-
-    private Mono<ServiceStatus> checkDatabase() {
-        return databaseClient.sql("SELECT 1")
-                .fetch()
-                .first()
-                .map(r -> new ServiceStatus("UP", "PostgreSQL R2DBC Connected"))
-                .timeout(Duration.ofSeconds(2))
-                .onErrorResume(e -> Mono.just(new ServiceStatus("DOWN", e.getMessage())));
+@GetMapping("/public-stats")
+    @Operation(summary = "Statistiques publiques (Landing Page)", description = "Données agrégées avec cache de 6 heures.")
+    @SuppressWarnings("unchecked") // Pour ignorer l'avertissement sur le cast de la Map
+    public Mono<Map<String, Object>> getPublicStats() {
+        return redisTemplate.opsForValue().get(STATS_CACHE_KEY)
+            // On cast chaque élément du flux plutôt que le Mono lui-même
+            .map(value -> (Map<String, Object>) value)
+            // Important : Utiliser defer pour que le calcul ne se lance que si nécessaire
+            .switchIfEmpty(Mono.defer(this::calculateAndCacheStats));
     }
 
-    private Mono<ServiceStatus> checkRedis() {
-        return redisConnectionFactory.getReactiveConnection()
-                .ping()
-                .map(resp -> new ServiceStatus("UP", "Redis PONG received"))
-                .timeout(Duration.ofSeconds(2))
-                .onErrorResume(e -> Mono.just(new ServiceStatus("DOWN", e.getMessage())));
+    private Mono<Map<String, Object>> calculateAndCacheStats() {
+        return Mono.zip(
+            statisticsPort.countFleetManagers(),
+            statisticsPort.countFleets(),
+            statisticsPort.countVehicles(),
+            statisticsPort.countDrivers()
+        ).map(t -> {
+            Map<String, Object> stats = new HashMap<>();
+            stats.put("activeManagers", t.getT1());
+            stats.put("totalFleets", t.getT2());
+            stats.put("managedVehicles", t.getT3());
+            stats.put("totalDrivers", t.getT4());
+            stats.put("serviceStatus", "All systems operational");
+            return stats;
+        }).flatMap(stats -> 
+            redisTemplate.opsForValue().set(STATS_CACHE_KEY, stats, Duration.ofHours(6))
+                .thenReturn(stats)
+        );
     }
 
-    private Mono<ServiceStatus> checkKafka() {
-        // Check simple : est-ce que le contexte Kafka est chargé ?
-        // Pour aller plus loin, il faudrait envoyer un message test, ce qui est intrusif.
-        if (kafkaTemplate != null) {
-            return Mono.just(new ServiceStatus("UP", "Kafka Producer Configured"));
-        }
-        return Mono.just(new ServiceStatus("UNKNOWN", "Kafka template not available"));
+    // --- Helpers de sonde ---
+
+    private Mono<String> checkDB() {
+        return databaseClient.sql("SELECT 1").fetch().first().map(r -> "UP").timeout(Duration.ofSeconds(5)).onErrorReturn("DOWN");
     }
 
-    private Mono<ServiceStatus> checkRemoteService(String name, String url) {
-        if (url == null || url.isBlank()) {
-            return Mono.just(new ServiceStatus("DISABLED", "No URL configured"));
-        }
+    private Mono<String> checkRedis() {
+        return redisConnectionFactory.getReactiveConnection().ping().map(r -> "UP").timeout(Duration.ofSeconds(5)).onErrorReturn("DOWN");
+    }
+
+    private Mono<String> checkRemote(String path, String baseUrl, String token, String name) {
+        if (baseUrl == null || baseUrl.isBlank()) return Mono.just("NOT_CONFIGURED");
         
-        // On suppose que les services ont un endpoint /actuator/health ou répondent sur la racine
-        // Pour être générique, on ping la racine ou une route connue.
-        // Ici on tente simplement d'atteindre l'URL.
-        return webClientBuilder.build()
-                .get()
-                .uri(url) // Attention: si l'URL est juste le domaine, il faut peut-être ajouter un path
-                .retrieve()
-                .toBodilessEntity()
-                .map(response -> new ServiceStatus("UP", "HTTP " + response.getStatusCode()))
-                .timeout(Duration.ofSeconds(3))
-                .onErrorResume(e -> {
-                    String msg = e.getMessage();
-                    if (msg != null && msg.contains("Connection refused")) {
-                        msg = "Unreachable";
+        return webClientBuilder.build().get()
+                .uri(baseUrl + path)
+                .header("Authorization", token)
+                .exchangeToMono(response -> {
+                    // Si le code est 2xx, 401 ou 403, le service est considéré comme "UP"
+                    if (response.statusCode().is2xxSuccessful() || 
+                        response.statusCode().value() == 401 || 
+                        response.statusCode().value() == 403) {
+                        return Mono.just("UP");
                     }
-                    return Mono.just(new ServiceStatus("DOWN", msg));
+                    // Si c'est un 500 ou autre, on le marque DOWN avec le code
+                    return Mono.just("DOWN (" + response.statusCode().value() + ")");
+                })
+                .timeout(Duration.ofSeconds(5))
+                .onErrorResume(e -> {
+                    log.warn("Health check failed for {}: {}", name, e.getMessage());
+                    return Mono.just("DOWN");
                 });
     }
-
-    // --- DTOs ---
-    public record SystemHealth(String status, Instant timestamp, Map<String, ServiceStatus> dependencies) {}
-    public record ServiceStatus(String status, String details) {}
 }```
 
 ---
@@ -13894,6 +13903,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -13909,14 +13919,26 @@ import reactor.netty.http.client.HttpClient;
 @Configuration
 public class WebClientConfig {
 
+    /**
+     * Filtre pour logger toutes les requêtes sortantes vers les microservices tiers.
+     */
     private ExchangeFilterFunction logRequest() {
         return ExchangeFilterFunction.ofRequestProcessor(clientRequest -> {
-            log.info("📡 [OUTBOUND] {} {}", clientRequest.method(), clientRequest.url());
+            log.info("📡 [OUTBOUND CALL] {} {}", clientRequest.method(), clientRequest.url());
             return Mono.just(clientRequest);
         });
     }
 
-    // Bean utilisé par PaymentApiAdapter via @Qualifier("paymentWebClient")
+    // --- BUILDER DE BASE AVEC LOGGING ---    
+    @Bean
+    @Primary // Pour que ce builder soit celui utilisé par défaut partout
+    public WebClient.Builder webClientBuilder() {
+        return WebClient.builder()
+                .filter(logRequest()); // On lui injecte le filtre de log
+    }
+
+    // --- CLIENTS STANDARDS ---
+
     @Bean("paymentWebClient")
     public WebClient paymentWebClient(WebClient.Builder builder,
                                       @Value("${application.external.payment-service-url}") String url) {
@@ -13926,14 +13948,25 @@ public class WebClientConfig {
     @Bean
     public VehicleApiClient vehicleApiClient(WebClient.Builder builder,
                                              @Value("${application.external.vehicle-service-url}") String url) {
-        return createProxy(builder.baseUrl(url).build(), VehicleApiClient.class);
+        WebClient webClient = builder.baseUrl(url).filter(logRequest()).build();
+        return createProxy(webClient, VehicleApiClient.class);
     }
 
     @Bean
     public AuthApiClient authApiClient(WebClient.Builder builder,
                                        @Value("${application.auth.url}") String url) {
-        return createProxy(builder.baseUrl(url).build(), AuthApiClient.class);
+        WebClient webClient = builder.baseUrl(url).filter(logRequest()).build();
+        return createProxy(webClient, AuthApiClient.class);
     }
+
+    @Bean
+    public NotificationApiClient notificationApiClient(WebClient.Builder builder, 
+                                                      @Value("${application.notification.url}") String url) {
+        WebClient webClient = builder.baseUrl(url).filter(logRequest()).build();
+        return createProxy(webClient, NotificationApiClient.class);
+    }
+
+    // --- CLIENTS SPECIAUX (GEOFENCE - SSL INSECURE) ---
 
     @Bean
     public GeofenceApiClient geofenceApiClient(@Value("${application.external.geofence-service-url}") String url) {
@@ -13942,16 +13975,12 @@ public class WebClientConfig {
     }
 
     @Bean
-    public NotificationApiClient notificationApiClient(WebClient.Builder builder, 
-                                                      @Value("${application.notification.url}") String url) {
-        return createProxy(builder.baseUrl(url).build(), NotificationApiClient.class);
-    }
-
-    @Bean
     public GeofenceAuthClient geofenceAuthClient(@Value("${application.external.geofence-service-url}") String url) {
         WebClient webClient = createInsecureWebClient(url).build();
         return createProxy(webClient, GeofenceAuthClient.class);
     }
+
+    // --- HELPERS ---
 
     private <S> S createProxy(WebClient webClient, Class<S> serviceClass) {
         WebClientAdapter adapter = WebClientAdapter.create(webClient);
@@ -13959,13 +13988,21 @@ public class WebClientConfig {
         return factory.createClient(serviceClass);
     }
 
+    /**
+     * Crée un WebClient qui accepte les certificats SSL auto-signés (Utile pour le service Geofence).
+     */
     private WebClient.Builder createInsecureWebClient(String baseUrl) {
         try {
             SslContext sslContext = SslContextBuilder.forClient()
                     .trustManager(InsecureTrustManagerFactory.INSTANCE).build();
             HttpClient httpClient = HttpClient.create().secure(t -> t.sslContext(sslContext));
-            return WebClient.builder().baseUrl(baseUrl).clientConnector(new ReactorClientHttpConnector(httpClient));
-        } catch (Exception e) { throw new RuntimeException(e); }
+            return WebClient.builder()
+                    .baseUrl(baseUrl)
+                    .filter(logRequest())
+                    .clientConnector(new ReactorClientHttpConnector(httpClient));
+        } catch (Exception e) { 
+            throw new RuntimeException("Erreur configuration WebClient Insecure", e); 
+        }
     }
 }```
 
@@ -13986,7 +14023,7 @@ import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.authentication.AuthenticationWebFilter;
-import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers; // On peut retirer cet import si non utilisé ailleurs
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
 import reactor.core.publisher.Mono;
 
 @Configuration
@@ -14039,7 +14076,8 @@ public class SecurityConfig {
                                 "/webjars/**",
                                 "/actuator/**",
                                 "/api/v1/health/**",
-                                "/api/v1/auth/**"
+                                "/api/v1/auth/**",
+                                "/api/v1/health/**"
                         ).permitAll()
                         .anyExchange().authenticated()
                 )
@@ -14397,16 +14435,23 @@ public class OpenApiConfig {
 ```java
 package com.yowyob.fleet.infrastructure.config;
 
+import com.yowyob.fleet.domain.ports.in.AuthUseCase;
+import com.yowyob.fleet.domain.ports.out.AuthPort;
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.GeofenceAuthClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
-import java.util.Map;
+
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 @Component
@@ -14414,6 +14459,7 @@ import java.util.HashMap;
 public class SystemUserInitializer {
 
     private final GeofenceAuthClient geofenceAuthClient;
+    private final AuthPort authPort;
 
     @Value("${application.geofence-system-user.username}")
     private String username;
@@ -14422,26 +14468,109 @@ public class SystemUserInitializer {
     private String password;
 
     @EventListener(ApplicationReadyEvent.class)
-    public void initSystemUserInGeofence() {
-        log.info("🚀 Synchronisation de l'utilisateur système dans le moteur Geofence...");
+    public void initSystemUser() {
+        log.info("🚀 [SYSTEM_USER] Initialisation pour : {}", username);
 
-        Map<String, Object> regRequest = new HashMap<>();
-        regRequest.put("firstname", "System");
-        regRequest.put("lastname", "Fleet");
-        regRequest.put("username", username);
-        regRequest.put("phoneNumber", "+237000000000");
-        regRequest.put("email", "system@yowyob.com");
-        regRequest.put("password", password);
-        regRequest.put("password_confirmation", password);
-        regRequest.put("DOB", "1990-01-01"); // Date de naissance requise
-
-        geofenceAuthClient.register(regRequest)
-                .doOnSuccess(res -> log.info("✅ Utilisateur système créé dans la DB Geofence."))
+        // --- 1. INITIALISATION AUTH CENTRAL ---
+        Mono<Void> authCentralFlow = authPort.login(username, password).then()
+                .doOnSuccess(res -> log.info("✅ [AUTH_CENTRAL] Login réussi."))
                 .onErrorResume(e -> {
-                    log.info("ℹ️ L'utilisateur système existe déjà dans le Geofence ou le service est indisponible.");
-                    return Mono.empty();
+                    log.warn("⚠️ [AUTH_CENTRAL] Login impossible. Tentative de création...");
+                    return attemptAuthRegistration(1).then();
+                }).then();
+
+        // --- 2. INITIALISATION GEOFENCE ENGINE ---
+        Map<String, String> loginReq = Map.of(
+            "type", "username", 
+            "username", username, 
+            "password", password
+        );
+
+        Mono<Void> geofenceFlow = geofenceAuthClient.login(loginReq).then()
+                .doOnSuccess(res -> log.info("✅ [GEOFENCE] Login réussi. Utilisateur opérationnel."))
+                .onErrorResume(e -> {
+                    log.warn("⚠️ [GEOFENCE] Login impossible. Tentative de synchronisation (Register)...");
+                    return syncGeofenceWithRetry(1).then();
                 })
+                .then(); // <--- ✅ C'EST ICI : Convertit Mono<Map> en Mono<Void>
+
+        // --- EXÉCUTION SÉQUENTIELLE ---
+        authCentralFlow
+                .then(geofenceFlow)
+                .doOnTerminate(() -> log.info("🏁 [SYSTEM_USER] Fin du processus."))
                 .subscribe();
+    }
+
+    private Mono<AuthPort.AuthResponse> attemptAuthRegistration(int attempt) {
+        if (attempt > 3) {
+            log.error("❌ [AUTH_CENTRAL] Abandon après 3 tentatives.");
+            return Mono.empty();
+        }
+
+        String phone = generateRandomCameroonPhone();
+        String email = username + attempt + "@yowyob.com"; 
+
+        log.info("📩 [AUTH_CENTRAL] Tentative de création #{}...", attempt);
+
+        AuthUseCase.RegisterCommand authReq = new AuthUseCase.RegisterCommand(
+                username, password, email, phone,
+                "System", "Fleet", List.of("FLEET_ADMIN"), null
+        );
+
+        return authPort.registerInRemote(authReq)
+                .doOnSuccess(res -> log.info("✅ [AUTH_CENTRAL] Création réussie."))
+                .onErrorResume(err -> {
+                    if (isConflict(err)) {
+                        log.warn("⚠️ [AUTH_CENTRAL] Conflit détecté, essai suivant...");
+                        return attemptAuthRegistration(attempt + 1);
+                    }
+                    log.error("❌ [AUTH_CENTRAL] Erreur critique : {}", err.getMessage());
+                    return Mono.empty();
+                });
+    }
+
+    private Mono<Void> syncGeofenceWithRetry(int attempt) {
+        if (attempt > 3) {
+            log.warn("⚠️ [GEOFENCE] Abandon de la synchronisation après 3 essais.");
+            return Mono.empty();
+        }
+
+        String phone = generateRandomCameroonPhone();
+        String email = username + attempt + "@yowyob.com";
+
+        Map<String, Object> req = new HashMap<>();
+        req.put("firstname", "System");
+        req.put("lastname", "Fleet");
+        req.put("username", username);
+        req.put("phoneNumber", phone);
+        req.put("email", email);
+        req.put("password", password);
+        req.put("password_confirmation", password);
+        req.put("DOB", "1990-01-01");
+
+        return geofenceAuthClient.register(req)
+                .then() 
+                .doOnSuccess(v -> log.info("✅ [GEOFENCE] Utilisateur synchronisé."))
+                .onErrorResume(err -> {
+                    if (isConflict(err)) {
+                        log.info("ℹ️ [GEOFENCE] Conflit à la tentative #{} (déjà présent ou collision), essai suivant...", attempt);
+                        return syncGeofenceWithRetry(attempt + 1);
+                    }
+                    log.error("❌ [GEOFENCE] Erreur lors de la synchronisation : {}", err.getMessage());
+                    return Mono.empty();
+                });
+    }
+
+    private String generateRandomCameroonPhone() {
+        int suffix = ThreadLocalRandom.current().nextInt(10000000, 99999999);
+        return "+2376" + suffix;
+    }
+
+    private boolean isConflict(Throwable t) {
+        if (t instanceof WebClientResponseException wcre) {
+            return wcre.getStatusCode() == HttpStatus.CONFLICT;
+        }
+        return t.getMessage() != null && t.getMessage().contains("409");
     }
 }```
 

@@ -2,7 +2,7 @@
 
 ## 🦁 Cluster Gabriel (Chef de projet Backend)
 - [x] **Tâche 1 :** Réorganisation finale Swagger (Config faite).
-- [ ] **Tâche 2 :** Test et finalisation module Monitoring.
+- [x] **Tâche 2 :** Test et finalisation module Monitoring.
 - [ ] **Tâche 3 :** Test et finalisation module Auth.
 - [ ] **Tâche 4 :** Test et finalisation module Account.
 - [ ] **Tâche 5 :** Test et finalisation module Super Admin.
