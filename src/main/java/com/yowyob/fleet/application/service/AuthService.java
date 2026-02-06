@@ -4,13 +4,19 @@ import com.yowyob.fleet.domain.ports.in.AuthUseCase;
 import com.yowyob.fleet.domain.ports.out.AuthPort;
 import com.yowyob.fleet.domain.ports.out.DriverPersistencePort;
 import com.yowyob.fleet.domain.ports.out.FleetManagerPersistencePort;
+import com.yowyob.fleet.domain.exception.AuthException;
 import com.yowyob.fleet.domain.model.Driver;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.UserLocalEntity;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.UserLocalR2dbcRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.util.UUID;
 import java.util.List;
 
@@ -20,38 +26,96 @@ import java.util.List;
 public class AuthService implements AuthUseCase {
 
     private final AuthPort authPort;
+    private final UserLocalR2dbcRepository userRepo;
     private final DriverPersistencePort driverPort;
     private final FleetManagerPersistencePort managerPort;
 
     @Override
     public Mono<AuthPort.AuthResponse> login(String identifier, String password) {
         return authPort.login(identifier, password)
-                .flatMap(response -> syncLocalProfile(response.user()).thenReturn(response));
+                .flatMap(response -> pullSyncLocalUser(response.user())
+                        .then(checkUserAccess(response.user().id()))
+                        .thenReturn(response));
     }
 
     @Override
     public Mono<AuthPort.AuthResponse> register(RegisterCommand command) {
         return ensureRolesExist(command.roles())
                 .then(authPort.registerInRemote(command))
-                .flatMap(response -> createLocalProfile(response.user()).thenReturn(response));
+                .flatMap(response -> createLocalProfile(response.user())
+                        .then(pullSyncLocalUser(response.user()))
+                        .thenReturn(response));
     }
 
     @Override
     public Mono<AuthPort.AuthResponse> refreshToken(String refreshToken) {
-        return authPort.refresh(refreshToken);
+        return authPort.refresh(refreshToken)
+                .flatMap(response -> pullSyncLocalUser(response.user())
+                        .then(checkUserAccess(response.user().id()))
+                        .thenReturn(response));
     }
 
     @Override
     public Mono<AuthPort.UserDetail> me(String token) {
         return authPort.getUserProfile(token)
+                .flatMap(remote -> pullSyncLocalUser(remote).thenReturn(remote))
                 .flatMap(this::enrichWithLocalData);
+    }
+
+    /**
+     * PULL SYNC : Met à jour le cache local fleet.users depuis les données distantes.
+     */
+    private Mono<Void> pullSyncLocalUser(AuthPort.UserDetail remote) {
+        return userRepo.findById(remote.id())
+                .flatMap(local -> {
+                    local.setUsername(remote.username());
+                    local.setEmail(remote.email());
+                    local.setFirstName(remote.firstName());
+                    local.setLastName(remote.lastName());
+                    local.setLastLoginAt(Instant.now());
+                    local.setNew(false);
+                    return userRepo.save(local);
+                })
+                .switchIfEmpty(Mono.defer(() -> {
+                    UserLocalEntity newLocal = UserLocalEntity.builder()
+                            .id(remote.id())
+                            .username(remote.username())
+                            .email(remote.email())
+                            .firstName(remote.firstName())
+                            .lastName(remote.lastName())
+                            .isActive(true) // Par défaut actif à la première sync
+                            .lastLoginAt(Instant.now())
+                            .build();
+                    newLocal.setNew(true);
+                    return userRepo.save(newLocal);
+                }))
+                .then();
+    }
+
+    /**
+     * VERROU LOCAL : Vérifie si l'utilisateur n'est pas banni ou supprimé en local.
+     */
+/**
+     * VERROU LOCAL : Vérifie si l'utilisateur n'est pas banni ou supprimé en local.
+     */
+    private Mono<Void> checkUserAccess(UUID userId) {
+        return userRepo.findById(userId)
+                .flatMap(user -> {
+                    // Utilisation de nos exceptions modulaires au lieu de ResponseStatusException
+                    if (user.getDeletedAt() != null) {
+                        return Mono.error(AuthException.accountDeleted()); // Lance AUTH_003
+                    }
+                    if (!user.isActive()) {
+                        return Mono.error(AuthException.accountLocked());  // Lance AUTH_002
+                    }
+                    return Mono.empty();
+                });
     }
 
     @Override
     public Mono<AuthPort.UserDetail> updateProfile(UUID userId, String token, UpdateProfileCommand command) {
-        // Nettoyage : On ne touche plus qu'au service distant ici.
-        // La mise à jour des données métier (Company, Licence) se fait via des endpoints dédiés.
         return authPort.updateUserProfile(userId, token, command)
+                .flatMap(remote -> pullSyncLocalUser(remote).thenReturn(remote))
                 .flatMap(this::enrichWithLocalData);
     }
 
@@ -66,14 +130,19 @@ public class AuthService implements AuthUseCase {
     }
 
     @Override
-      public Mono<Void> deleteAccount(UUID userId, String token) {
-        // SOFT DELETE : On change le service vers USER_DELETED
-        return authPort.moveUserToService(userId, "USER_DELETED", token)
-                // Si le service auth n'est pas encore prêt, on peut logger
-                .doOnSuccess(v -> log.info("Compte {} marqué comme supprimé (Soft Delete)", userId));
+    public Mono<Void> deleteAccount(UUID userId, String token) {
+        // SOFT DELETE LOCAL
+        return userRepo.findById(userId)
+                .flatMap(user -> {
+                    user.setDeletedAt(Instant.now());
+                    user.setActive(false);
+                    user.setNew(false);
+                    return userRepo.save(user);
+                })
+                .then(authPort.moveUserToService(userId, "USER_DELETED", token));
     }
 
-    // --- LOGIQUE INTERNE ---
+    // --- HELPERS EXISTANTS ---
     
     private Mono<Void> ensureRolesExist(List<String> roles) {
         return Flux.fromIterable(roles)
@@ -91,10 +160,6 @@ public class AuthService implements AuthUseCase {
             return driverPort.save(driver).then();
         }
         return Mono.empty();
-    }
-
-    private Mono<Void> syncLocalProfile(AuthPort.UserDetail user) {
-        return createLocalProfile(user).onErrorResume(e -> Mono.empty());
     }
 
     private Mono<AuthPort.UserDetail> enrichWithLocalData(AuthPort.UserDetail remoteUser) {

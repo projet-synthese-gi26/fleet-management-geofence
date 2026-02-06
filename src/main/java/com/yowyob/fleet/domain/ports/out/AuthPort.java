@@ -7,32 +7,25 @@ import java.util.List;
 import java.util.UUID;
 
 public interface AuthPort {
-    // Auth pure
     Mono<AuthResponse> login(String identifier, String password);
-    Mono<AuthResponse> refresh(String refreshToken);
+    Mono<AuthResponse> refresh(String refreshToken); 
 
-    // Gestion Utilisateur Distant
     Mono<AuthResponse> registerInRemote(AuthUseCase.RegisterCommand command);
     Mono<UserDetail> getUserProfile(String token);
     Mono<UserDetail> getUserById(UUID userId, String token);
     
-    // Listes
     Flux<UserDetail> getUsersByService(String serviceName, String token);
-    Flux<UserDetail> getAllUsers(String token); // Pour Super Admin
+    Flux<UserDetail> getAllUsers(String token);
 
     Mono<UserDetail> updateUserProfile(UUID userId, String token, AuthUseCase.UpdateProfileCommand command);
     Mono<Void> changePassword(UUID userId, String token, String currentPwd, String newPwd);
     Mono<Void> deleteRemoteAccount(UUID userId, String token);
-    
-    // NOUVEAU : Soft Delete (Changement de service)
     Mono<Void> moveUserToService(UUID userId, String newServiceName, String token);
-
     Mono<Void> updateProfilePicture(UUID userId, String token, AuthUseCase.FileContent file);
     
     Mono<Boolean> roleExists(String roleName);
     Mono<Void> createRole(String roleName);
 
-    // DTOs
     record AuthResponse(String accessToken, String refreshToken, UserDetail user) {}
 
     record UserDetail(

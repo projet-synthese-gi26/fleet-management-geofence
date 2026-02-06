@@ -1,105 +1,69 @@
 package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
 
+import com.yowyob.fleet.domain.exception.DomainException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.support.WebExchangeBindException;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
 import java.util.stream.Collectors;
 
-/**
- * Gestionnaire global des exceptions pour l'API.
- * Utilise le standard RFC 7807 (Problem Details for HTTP APIs).
- */
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     /**
-     * Gère les erreurs provenant des appels aux services distants (Auth, Vehicle Service, etc.)
+     * LE COEUR : Gère n'importe quelle exception du domaine (Auth, Fleet, Trip, etc.)
      */
-    @ExceptionHandler(WebClientResponseException.class)
-    public ProblemDetail handleWebClientException(WebClientResponseException ex) {
-        String remoteResponseBody = ex.getResponseBodyAsString();
-        log.error("❌ Erreur API Distante ({}): {}", ex.getStatusCode(), remoteResponseBody);
-
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(ex.getStatusCode(), remoteResponseBody);
-        problem.setTitle("Erreur Service Distant");
-        problem.setType(URI.create("about:blank"));
+    @ExceptionHandler(DomainException.class)
+    public ProblemDetail handleDomainException(DomainException ex) {
+        log.warn("⚠️ Business Exception [{}] : {}", ex.getBusinessCode(), ex.getMessage());
         
-        // Ajout de l'URL pour faciliter le debug
-        if (ex.getRequest() != null) {
-            problem.setProperty("remote_url", ex.getRequest().getURI().toString());
-        }
-        
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(ex.getStatus(), ex.getMessage());
+        problem.setTitle("Business Error");
+        problem.setProperty("code", ex.getBusinessCode());
+        problem.setProperty("timestamp", ex.getTimestamp());
         return problem;
     }
 
     /**
-     * Gère les erreurs de validation des DTOs (ex: @NotBlank, @NotNull)
+     * Gère les erreurs de validation des DTOs (@Valid)
      */
     @ExceptionHandler(WebExchangeBindException.class)
     public ProblemDetail handleValidationException(WebExchangeBindException ex) {
-        String errors = ex.getBindingResult().getAllErrors().stream()
-                .map(DefaultMessageSourceResolvable::getDefaultMessage)
+        String details = ex.getBindingResult().getFieldErrors().stream()
+                .map(e -> e.getField() + ": " + e.getDefaultMessage())
                 .collect(Collectors.joining(", "));
         
-        log.warn("⚠️ Erreur de Validation : {}", errors);
-
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, errors);
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, details);
         problem.setTitle("Validation Failed");
-        problem.setProperty("fields", ex.getBindingResult().getFieldErrors().stream()
-                .collect(Collectors.toMap(e -> e.getField(), e -> e.getDefaultMessage(), (a, b) -> a)));
-        
+        problem.setType(URI.create("https://traensys.com/errors/validation"));
         return problem;
     }
 
     /**
-     * Gère les exceptions métier lancées via ResponseStatusException
-     */
-    @ExceptionHandler(ResponseStatusException.class)
-    public ProblemDetail handleResponseStatusException(ResponseStatusException ex) {
-        log.warn("💡 Erreur Métier : {}", ex.getReason());
-        
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(ex.getStatusCode(), ex.getReason());
-        
-        // Fix Spring Boot 3 : HttpStatusCode n'a pas getReasonPhrase(), on cast en HttpStatus
-        HttpStatusCode status = ex.getStatusCode();
-        if (status instanceof HttpStatus httpStatus) {
-            problem.setTitle(httpStatus.getReasonPhrase());
-        } else {
-            problem.setTitle("Business Logic Error");
-        }
-        
-        return problem;
-    }
-
-    /**
-     * Gère toutes les autres exceptions non capturées (Erreurs 500)
+     * FALLBACK : Toutes les autres erreurs imprévues
      */
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGeneralException(Exception ex) {
-        log.error("💥 Erreur Serveur Non Gérée", ex);
-        
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                HttpStatus.INTERNAL_SERVER_ERROR, 
-                "Une erreur technique est survenue. Veuillez contacter l'administrateur."
-        );
+        log.error("💥 Critical error caught : ", ex);
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, 
+            "Une erreur technique imprévue est survenue sur le serveur.");
         problem.setTitle("Internal Server Error");
-        
-        // On peut ajouter la classe de l'exception pour aider au debug en dev
-        problem.setProperty("exception_class", ex.getClass().getSimpleName());
-        if (ex.getMessage() != null) {
-            problem.setProperty("exception_message", ex.getMessage());
-        }
-        
+        return problem;
+    }
+
+    /**
+     * Gère les exceptions de Spring
+     */
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    public ProblemDetail handleResponseStatusException(org.springframework.web.server.ResponseStatusException ex) {
+        // On respecte le statut demandé par Spring mais on reste propre
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(ex.getStatusCode(), ex.getReason());
+        problem.setTitle("Protocol Error");
         return problem;
     }
 }
