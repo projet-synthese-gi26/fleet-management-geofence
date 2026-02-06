@@ -1,5 +1,5 @@
 ﻿# Contexte du Projet : Fleet & Geofence API
-GÃ©nÃ©rÃ© le : 02/06/2026 06:37:46
+GÃ©nÃ©rÃ© le : 02/06/2026 07:01:24
 Framework : Spring Boot WebFlux (Reactive)
 
 ## 1. Arborescence du Projet
@@ -594,8 +594,6 @@ D:.
     ª   ª               ª   ª       ª   FleetController.class
     ª   ª               ª   ª       ª   GeofenceController.class
     ª   ª               ª   ª       ª   GlobalExceptionHandler.class
-    ª   ª               ª   ª       ª   HealthCheckController$ServiceStatus.class
-    ª   ª               ª   ª       ª   HealthCheckController$SystemHealth.class
     ª   ª               ª   ª       ª   HealthCheckController.class
     ª   ª               ª   ª       ª   NotificationController.class
     ª   ª               ª   ª       ª   PaymentController.class
@@ -17115,7 +17113,6 @@ public class WebClientConfig {
     }
 
     @Bean
-<<<<<<< HEAD
     public GeofenceAuthClient geofenceAuthClient(WebClient.Builder builder,
                                                  @Value("${application.external.geofence-service-url}") String url) {
         WebClient webClient = builder.baseUrl(url).build();
@@ -17131,15 +17128,6 @@ public class WebClientConfig {
     // }
 
     // Helper gÃ©nÃ©rique
-=======
-    public GeofenceAuthClient geofenceAuthClient(@Value("${application.external.geofence-service-url}") String url) {
-        WebClient webClient = createInsecureWebClient(url).build();
-        return createProxy(webClient, GeofenceAuthClient.class);
-    }
-
-    // --- HELPERS ---
-
->>>>>>> 2128c8c50b35149a511973b5435f100961c9449c
     private <S> S createProxy(WebClient webClient, Class<S> serviceClass) {
         WebClientAdapter adapter = WebClientAdapter.create(webClient);
         HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(adapter).build();
