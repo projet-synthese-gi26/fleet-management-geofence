@@ -164,22 +164,18 @@ CREATE TABLE IF NOT EXISTS fleet.routes (
   end_point_id UUID REFERENCES fleet.geofence_points(id)
 );
 
--- CREATE TABLE IF NOT EXISTS fleet.geofence_point_zone_linkages (
---   point_id UUID REFERENCES fleet.geofence_points(id) ON DELETE CASCADE,
---   zone_id UUID REFERENCES fleet.geofence_zones(id) ON DELETE CASCADE,
---   vertex_order INT,
---   PRIMARY KEY (point_id, zone_id)
--- );
+CREATE TABLE IF NOT EXISTS fleet.geofence_point_zone_linkages (
+  point_id UUID REFERENCES fleet.geofence_points(id) ON DELETE CASCADE,
+  zone_id UUID REFERENCES fleet.geofence_zones(id) ON DELETE CASCADE,
+  vertex_order INT,
+  PRIMARY KEY (point_id, zone_id)
+);
 
 -- 10. ÉVÉNEMENTS
--- CREATE TABLE IF NOT EXISTS fleet.geofence_events (
---   id UUID PRIMARY KEY,
---   vehicle_id UUID REFERENCES fleet.vehicles(id) ON DELETE CASCADE,
---   zone_id UUID REFERENCES fleet.geofence_zones(id) ON DELETE SET NULL,
---   type VARCHAR(50) CHECK (type IN ('ENTRY', 'EXIT')),
---   timestamp TIMESTAMP DEFAULT now()
--- );
-
--- On crée une table légère d'association
--- L'ID est celui généré par l'API Distante (ou généré par nous et envoyé à l'API)
-
+CREATE TABLE IF NOT EXISTS fleet.geofence_events (
+  id UUID PRIMARY KEY,
+  vehicle_id UUID REFERENCES fleet.vehicles(id) ON DELETE CASCADE,
+  zone_id UUID REFERENCES fleet.geofence_zones(id) ON DELETE SET NULL,
+  type VARCHAR(50) CHECK (type IN ('ENTRY', 'EXIT')),
+  timestamp TIMESTAMP DEFAULT now()
+);
