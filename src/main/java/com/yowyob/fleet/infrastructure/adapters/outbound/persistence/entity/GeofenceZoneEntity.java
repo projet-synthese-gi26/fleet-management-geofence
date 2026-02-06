@@ -23,6 +23,9 @@ public class GeofenceZoneEntity implements Persistable<UUID> {
     @Column("fleet_id")
     private UUID fleetId; // L'affectation (nullable)
 
+    @Column("zone_type")
+    private String zoneType; // "p" pour polygone, "c" pour cercle
+
     @Transient @Builder.Default
     private boolean isNew = false;
 

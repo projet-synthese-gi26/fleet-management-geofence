@@ -23,7 +23,7 @@ public interface GeofenceApiClient {
 
 
     @PostExchange("/geofence")
-    Mono<java.util.Map<String,Object>> createZone(
+    Mono<JsonNode> createZone(
         @RequestBody Object request,
         @RequestHeader("Authorization") String token
     );
@@ -37,13 +37,20 @@ public interface GeofenceApiClient {
     );
 
      @GetExchange("/geofence")
-    Mono<JsonNode> getAllZones(@RequestHeader("Authorization") String token);
+     
+    Mono<JsonNode> getAllZones(
+         @RequestParam(name = "userId", required = false) UUID userId,
+        @RequestHeader("Authorization") String token);
 
     @GetExchange("/geofence/circles")
-    Mono<JsonNode> getCircles(@RequestHeader("Authorization") String token);
+    Mono<JsonNode> getCircles(
+         @RequestParam(name = "userId", required = false) UUID userId,
+        @RequestHeader("Authorization") String token);
 
     @GetExchange("/geofence/polygons")
-    Mono<JsonNode> getPolygons(@RequestHeader("Authorization") String token);
+    Mono<JsonNode> getPolygons(
+         @RequestParam(name = "userId", required = false) UUID userId,
+        @RequestHeader("Authorization") String token);
 
     // --- UNITAIRE ---
     @GetExchange("/geofence/{type}/{id}")
@@ -76,5 +83,20 @@ public interface GeofenceApiClient {
         @RequestParam(value = "size", defaultValue = "20") int size,
         @RequestHeader("Authorization") String token
     );
+    
+    @PostExchange("/vehicle")
+    Mono<JsonNode> createVehicle(
+        @RequestBody Map<String, Object> vehicleData,
+        @RequestHeader("Authorization") String token
+    );
+
+    @PostExchange("/vehicle/{vehicleId}/geofence/{type}/{zoneId}")
+    Mono<Void> addVehicleToZone(
+        @PathVariable("vehicleId") String remoteVehicleId, // ID généré par l'API Geofence
+        @PathVariable("type") String type, // "c" ou "p"
+        @PathVariable("zoneId") UUID zoneId,
+        @RequestHeader("Authorization") String token
+    );
+
     
 }

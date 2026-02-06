@@ -12,15 +12,11 @@ import java.util.UUID;
 
 public interface ManageGeofenceUseCase {
 
-    // --- CRÉATION ---
-Mono<GeofenceZone> createZone(GeofenceZone zone, UUID managerId);
-
     // --- LECTURE (Moteur Externe) ---
     /**
      * Récupère les zones depuis le moteur externe.
      * @param category : "all", "circles" ou "polygons"
      */
-    Flux<Map<String, Object>> getAllExternalZones(String category);
 
     /**
      * Récupère le détail d'une zone spécifique par son type et son ID.
@@ -53,7 +49,7 @@ Mono<GeofenceZone> createZone(GeofenceZone zone, UUID managerId);
     /**
      * Récupère les zones associées à un FleetManager via la table de liaison
      */
-    Flux<GeofenceZone> getZonesByFleetManager(UUID fleetManagerId);
+    Flux<Map<String, Object>>  getZonesByFleetManager(UUID fleetManagerId);
     
     Mono<GeofenceZone> getZoneDetails(UUID zoneId);
     Mono<GeofenceZone> updateZone(UUID zoneId, GeofenceZone zone);
@@ -71,5 +67,7 @@ Mono<GeofenceZone> createZone(GeofenceZone zone, UUID managerId);
 
     Mono<Map<String, Object>> getZoneDetails(UUID zoneId, UUID managerId);
 
-    Flux<Map<String, Object>> getAllExternalZones(UUID managerId, String category);
+    Mono<GeofenceZone> createZone(GeofenceZone zone);
+
+    Flux<Map<String, Object>> getAllExternalZones(String category);
 }

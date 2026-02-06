@@ -14,8 +14,10 @@ import java.util.UUID;
 @Repository
 public interface GeofenceR2dbcRepository extends ReactiveCrudRepository<GeofenceZoneEntity, UUID> {
     // On cherche directement dans la table de liaison par manager_id
-    Flux<GeofenceZoneEntity> findAllByManagerId(UUID managerId);
-    
+ @Query("SELECT z.* FROM fleet.geofence_zones z " +
+           "INNER JOIN fleet.fleets f ON z.fleet_id = f.id " +
+           "WHERE f.manager_id = :managerId")
+    Flux<GeofenceZoneEntity> findByManagerId(UUID managerId);
      Flux<GeofenceZoneEntity> findAllByManagerIdAndFleetId(UUID managerId, UUID fleetId);
 
      Flux<GeofenceZoneEntity> findAllByFleetId(UUID fleetId);

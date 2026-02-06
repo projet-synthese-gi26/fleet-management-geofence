@@ -18,6 +18,9 @@ public record VehicleRequest(
     @Schema(example = "LT-123-AA")
     String licensePlate,
 
+     @Schema(description = "ID de la zone Geofence à assigner lors de la création", example = "a1b2c3d4-...")
+    UUID geofenceZoneId, 
+
     @Schema(example = "VIN-987654321")
     String vehicleSerialNumber,
 
@@ -59,4 +62,8 @@ public record VehicleRequest(
     String photoUrl,
     String serialNumberPhotoUrl,
     String registrationPhotoUrl
-) {}
+) {
+
+
+  
+}

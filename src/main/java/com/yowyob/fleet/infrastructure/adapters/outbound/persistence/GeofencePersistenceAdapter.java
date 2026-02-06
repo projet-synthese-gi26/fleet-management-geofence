@@ -28,16 +28,17 @@ public class GeofencePersistenceAdapter implements GeofencePersistencePort {
     private final GeofenceMapper mapper;
     private final DatabaseClient databaseClient;
 
-    @Override
-    public Mono<GeofenceZone> saveZone(GeofenceZone zone) {
-        GeofenceZoneEntity entity = mapper.toEntity(zone);
-        // Si on a un ID mais qu'on veut forcer la création (POST) pour éviter un UPDATE sur un objet inexistant
-        if (entity.getId() != null) {
-            entity.markNew();
-        }
-        return zoneRepo.save(entity)
-                .map(mapper::toDomain);
-    }
+  @Override
+public Mono<GeofenceZone> saveZone(GeofenceZone zone) {
+    GeofenceZoneEntity entity = mapper.toEntity(zone);
+    
+    // Crucial : Comme l'ID est déjà rempli par l'API externe, 
+    // on force R2DBC à faire un INSERT SQL.
+    entity.markNew(); 
+    
+    return zoneRepo.save(entity)
+            .map(mapper::toDomain);
+}
 
     @Override
     public Mono<GeofenceZone> findById(UUID id) {
@@ -132,10 +133,13 @@ public Flux<GeofenceZone> findByFleetId(UUID fleetId) {
                 });
     }
 
+   // Dans GeofencePersistenceAdapter.java
+
 @Override
-public Flux<GeofenceZone> findZonesByFleetManagerId(UUID fleetManagerId) {
-    // On retourne les entités "liens" (ID distant + FleetID local)
-    return zoneRepo.findAllByManagerId(fleetManagerId)
-            .map(mapper::toDomain);
+public Flux<GeofenceZone> findByManagerId(UUID fleetManagerId) {
+    log.debug("🔍 Recherche des zones pour le manager : {}", fleetManagerId);
+    return zoneRepo.findByManagerId(fleetManagerId)
+            .map(entity -> mapper.toDomain(entity));
 }
+
 }

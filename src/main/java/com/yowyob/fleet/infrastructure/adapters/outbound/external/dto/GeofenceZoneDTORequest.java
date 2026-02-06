@@ -7,6 +7,9 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public record GeofenceZoneDTORequest (
     @Schema(example = "123e4567-e89b-12d3-a456-426614174000")
     @NotNull UUID fleetManagerId, // Identifiant du FleetManager qui crée la zone
@@ -20,15 +23,19 @@ public record GeofenceZoneDTORequest (
     @Schema(example = "Surveillance du quartier résidentiel")
     String description,
 
+    @JsonProperty("isTemporalEnabled")
     @Schema(description = "Active la restriction horaire", example = "true")
     Boolean isTemporalEnabled,
 
+    @JsonProperty("isConditionalEnabled")
     @Schema(description = "Active les conditions de vitesse/temps", example = "false")
     Boolean isConditionalEnabled,
 
+    @JsonFormat(pattern = "HH:mm:ss")
     @Schema(type = "string", pattern = "HH:mm:ss", example = "08:00:00")
     LocalTime startTime,
 
+    @JsonFormat(pattern = "HH:mm:ss")
     @Schema(type = "string", pattern = "HH:mm:ss", example = "18:00:00")
     LocalTime endTime,
 

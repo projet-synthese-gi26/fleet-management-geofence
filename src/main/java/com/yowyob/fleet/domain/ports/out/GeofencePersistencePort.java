@@ -22,8 +22,5 @@ public interface GeofencePersistencePort {
      */
     Mono<Void> linkZoneToFleetManager(UUID fleetManagerId, UUID zoneId);
     
-    /**
-     * Récupère toutes les zones associées à un FleetManager via la table de liaison
-     */
-    Flux<GeofenceZone> findZonesByFleetManagerId(UUID fleetManagerId);
+    Flux<GeofenceZone> findByManagerId(UUID fleetManagerId);
 }
