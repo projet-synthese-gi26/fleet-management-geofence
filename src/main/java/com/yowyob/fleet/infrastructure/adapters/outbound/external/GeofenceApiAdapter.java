@@ -9,6 +9,8 @@ import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.Geofenc
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.GeofenceAuthClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -132,46 +134,72 @@ public class GeofenceApiAdapter implements ExternalGeofencePort {
     }
     // Dans GeofenceApiAdapter.java
 
+    // Helper pour construire le JSON complexe attendu par Geofence
     private Map<String, Object> buildGeofenceMap(GeofenceZone zone) {
         Map<String, Object> request = new HashMap<>();
-
-        // --- CORRECTION ICI ---
-        // On n'ajoute l'ID au payload que s'il existe (cas du PUT).
-        // Pour le POST, zone.id() est null, donc on ne met rien.
-        if (zone.id() != null) {
-            request.put("id", zone.id().toString());
-        }
-        // ----------------------
-
+        
+        // Champs obligatoires
         request.put("title", zone.name());
-        request.put("description", zone.description());
+        request.put("description", zone.description() != null ? zone.description() : ""); // Eviter null
+        
+        // Booléens avec valeurs par défaut
         request.put("isTemporalEnabled", Boolean.TRUE.equals(zone.getIsTemporalEnabled()));
         request.put("isConditionalEnabled", Boolean.TRUE.equals(zone.getIsConditionalEnabled()));
-        request.put("startTime", zone.startTime());
-        request.put("endTime", zone.endTime());
+        request.put("isActive", true);
 
+        // Dates : On ne les met que si elles existent, et on les formate en String pour être sûr
+        if (zone.startTime() != null) {
+            request.put("startTime", zone.startTime().toString()); // ex: "08:00:00"
+        }
+        if (zone.endTime() != null) {
+            request.put("endTime", zone.endTime().toString());
+        }
+
+        // Gestion Typage (Circle vs Polygon)
+        // L'API de Kamga semble attendre "type": "circle" ou "polygon" (minuscule souvent préféré en JSON)
         if ("CIRCLE".equalsIgnoreCase(zone.zoneType())) {
             request.put("type", "circle");
-            request.put("center", Map.of("coordinates", Arrays.asList(zone.centerLongitude(), zone.centerLatitude())));
-            request.put("radius", zone.radius());
+            
+            // Format GeoJSON standard pour le point
+            request.put("center", Map.of(
+                "type", "Point",
+                "coordinates", Arrays.asList(zone.centerLongitude(), zone.centerLatitude())
+            ));
+            
+            // S'assurer que le radius est un nombre valide
+            request.put("radius", zone.radius() != null ? zone.radius() : 100.0);
+            
         } else {
             request.put("type", "polygon");
-            // Vérification de sécurité sur les vertices pour éviter un autre NPE
-            if (zone.vertices() != null && !zone.vertices().isEmpty()) {
-                List<List<Double>> ring = new ArrayList<>(zone.vertices().stream()
+            
+            // Construction du Polygone GeoJSON
+            // Note: GeoJSON exige que le dernier point soit le même que le premier (fermeture)
+            List<List<Double>> ring = new ArrayList<>();
+            if (zone.vertices() != null) {
+                ring = new ArrayList<>(zone.vertices().stream()
                         .map(v -> Arrays.asList(v.longitude(), v.latitude())).toList());
-
-                // Fermeture du polygone si nécessaire (le premier point doit être égal au
-                // dernier)
-                if (!ring.get(0).equals(ring.get(ring.size() - 1))) {
+                
+                // Fermeture du polygone si nécessaire
+                if (!ring.isEmpty() && !ring.get(0).equals(ring.get(ring.size()-1))) {
                     ring.add(ring.get(0));
                 }
-                request.put("polygon", Map.of("type", "Polygon", "coordinates", List.of(ring)));
             }
+            
+            request.put("polygon", Map.of(
+                "type", "Polygon", 
+                "coordinates", List.of(ring)
+            ));
         }
+        
+        // Log pour debug (à retirer en prod si trop verbeux)
+        try {
+            log.info("📤 Payload envoyé à Geofence: {}", objectMapper.writeValueAsString(request));
+        } catch (JsonProcessingException e) {
+            log.error("Erreur log payload", e);
+        }
+
         return request;
     }
-
     @Override
     public Flux<Map<String, Object>> getZonesByManager(UUID managerId, String category) {
         // On délègue à la méthode de listing interne qui gère déjà l'appel API et le

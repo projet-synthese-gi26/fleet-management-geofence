@@ -1,10 +1,12 @@
 package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yowyob.fleet.application.service.GeofenceService;
 import com.yowyob.fleet.domain.model.GeofencePoint;
 import com.yowyob.fleet.domain.model.GeofenceZone;
 import com.yowyob.fleet.domain.ports.in.ManageGeofenceUseCase;
 import com.yowyob.fleet.domain.ports.out.AuthPort;
+import com.yowyob.fleet.infrastructure.adapters.outbound.external.dto.GeofenceUpdateDTO;
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.dto.GeofenceZoneDTORequest;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.GeofenceEventEntity;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,7 +36,8 @@ import java.util.UUID;
 public class GeofenceController {
 
     private final ManageGeofenceUseCase geofenceService;
-
+    private final ObjectMapper objectMapper;
+    
     private UUID getUserId(Authentication auth) {
         return ((AuthPort.UserDetail) auth.getPrincipal()).id();
     }
@@ -67,8 +70,10 @@ public class GeofenceController {
         // managers)
         GeofenceZone domainZone = new GeofenceZone(
                 null,
-                null, // On gère l'association zone-fleet dans le service, pas besoin de l'ID de flotte ici
-                fleetManagerId, // Use fleetManagerId as managerId since zones are managed at fleet manager level
+                null, // On gère l'association zone-fleet dans le service, pas besoin de l'ID de
+                      // flotte ici
+                fleetManagerId, // Use fleetManagerId as managerId since zones are managed at fleet manager
+                                // level
                 request.title(),
                 request.description(),
                 request.type(),
@@ -90,66 +95,78 @@ public class GeofenceController {
     }
 
     @GetMapping("/circles")
+    @Operation(summary = "Lister mes zones circulaires")
+    @PreAuthorize("hasRole('FLEET_MANAGER')")
     public Flux<Map<String, Object>> listCircles(Authentication auth) {
-        return geofenceService.getZonesByManager(getUserId(auth), "circles");
+        return geofenceService.getMyExternalZones("CIRCLE");
     }
 
     @GetMapping("/polygons")
+    @Operation(summary = "Lister mes zones polygonales")
+    @PreAuthorize("hasRole('FLEET_MANAGER')")
     public Flux<Map<String, Object>> listPolygons(Authentication auth) {
-        return geofenceService.getZonesByManager(getUserId(auth), "polygons");
+        return geofenceService.getMyExternalZones("POLYGON");
     }
 
     @GetMapping("/fleet/{fleetId}")
     @Operation(summary = "Lister les zones d'une flotte spécifique")
     public Flux<Map<String, Object>> listByFleet(@PathVariable UUID fleetId, Authentication auth) {
-        return geofenceService.getZonesByFleet(getUserId(auth), fleetId);
+        return geofenceService.getZonesByFleet1(fleetId)
+                .map(z -> Map.of("id", z.id(), "name", z.name(), "type", z.zoneType())); // Mapping simplifié pour l'exemple
     }
-// Dans GeofenceController.java
+    
 
-@GetMapping("/{type}/{id}")
-@Operation(summary = "Récupérer le détail d'une géofence (par type + id)")
-@PreAuthorize("hasAnyRole('FLEET_MANAGER', 'FLEET_ADMIN')")
-public Mono<Map<String, Object>> getById(
-        @PathVariable String type, 
-        @PathVariable UUID id) {
-    // type peut être 'circle' ou 'polygon'
-    return geofenceService.getExternalZoneDetails(type, id);
-}
+    @GetMapping("/{type}/{id}")
+    @Operation(summary = "Récupérer le détail d'une géofence (par type + id)")
+    @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'FLEET_ADMIN')")
+    public Mono<Map<String, Object>> getById(
+            @PathVariable String type,
+            @PathVariable UUID id) {
+        // type peut être 'circle' ou 'polygon'
+        return geofenceService.getExternalZoneDetails(type, id);
+    }
 
+   
     @PutMapping("/{type}/{id}")
-    @Operation(summary = "Modifier une géofence")
-    public Mono<Void> update(@PathVariable String type, @PathVariable UUID id,
-            @RequestBody Map<String, Object> updates) {
-        return geofenceService.updateRemoteZone(type, id, updates);
+    @Operation(summary = "Modifier une géofence", description = "Mise à jour partielle des champs.")
+    @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'FLEET_ADMIN')")
+    public Mono<Void> update(
+            @PathVariable String type, 
+            @PathVariable UUID id, 
+            @RequestBody GeofenceUpdateDTO updates) { // Utilisation du DTO ici
+        
+        // Conversion DTO -> Map pour le service
+        @SuppressWarnings("unchecked")
+        Map<String, Object> updateMap = objectMapper.convertValue(updates, Map.class);
+        
+        return geofenceService.updateRemoteZone(type, id, updateMap);
     }
+
 
     // Nouveau endpoint simplifié
     @GetMapping("/zones/{id}")
     @Operation(summary = "Détails d'une zone par ID unique")
     public Mono<Map<String, Object>> getDetails(@PathVariable UUID id) {
-        // Le premier paramètre 'type' est désormais ignoré par le service qui cherche en DB
+        // Le premier paramètre 'type' est désormais ignoré par le service qui cherche
+        // en DB
         return geofenceService.getExternalZoneDetails(null, id);
     }
 
-@GetMapping
-@Operation(summary = "Ressortir TOUTES zones de géofence")
-public Flux<Map<String, Object>> listAll(Authentication auth) {
-    AuthPort.UserDetail user = (AuthPort.UserDetail) auth.getPrincipal();
-    boolean isAdmin = auth.getAuthorities().stream()
-            .anyMatch(a -> a.getAuthority().equals("ROLE_FLEET_ADMIN"));
-            
-    return geofenceService.getAllExternalZones("all");
-}
-// Dans GeofenceController.java
+    @GetMapping("/my-zones")
+    @Operation(summary = "Ressortir mes zones de géofence")
+    public Flux<Map<String, Object>> listMyZones(Authentication auth) {
+        AuthPort.UserDetail user = (AuthPort.UserDetail) auth.getPrincipal();
+        return geofenceService.getMyExternalZones("all");
+    }
+    // Dans GeofenceController.java
 
-@GetMapping("/my-zones")
-@Operation(summary = "Lister uniquement mes zones de géofence")
-@PreAuthorize("hasRole('FLEET_MANAGER')")
-public Flux<Map<String, Object>> getMyZones(org.springframework.security.core.Authentication auth) {
-    // On récupère l'ID du manager depuis le principal (UserDetail)
-    UUID managerId = ((com.yowyob.fleet.domain.ports.out.AuthPort.UserDetail) auth.getPrincipal()).id();
-    return geofenceService.getZonesByFleetManager(managerId);
-}
+     @GetMapping
+    @Operation(summary = "Lister toutes les zones du service")
+    @PreAuthorize("hasRole('FLEET_MANAGER')")
+    public  Flux<Map<String, Object>> listAll(Authentication auth) {
+        return geofenceService.getAllExternalZones("all");
+    }
+
     @GetMapping("/alerts")
     @Operation(summary = "Récupérer toutes mes alertes")
     public Mono<Map<String, Object>> getAlerts(
@@ -162,6 +179,13 @@ public Flux<Map<String, Object>> getMyZones(org.springframework.security.core.Au
     @Operation(summary = "Assigner une zone à une flotte")
     public Mono<Void> assignToFleet(@PathVariable UUID id, @PathVariable UUID fleetId, Authentication auth) {
         return ((GeofenceService) geofenceService).assignZoneToFleet(id, fleetId, getUserId(auth));
+    }
+
+    @DeleteMapping("/{type}/{id}")
+    @Operation(summary = "Supprimer une zone de géofence")
+    @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'FLEET_ADMIN')")
+    public Mono<Void> delete(@PathVariable String type, @PathVariable UUID id, Authentication auth) {
+        return geofenceService.deleteZone(id, type, getUserId(auth));
     }
 
 }
