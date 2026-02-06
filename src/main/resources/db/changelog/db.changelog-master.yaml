@@ -3,3 +3,5 @@ databaseChangeLog:
       file: db/changelog/changes/001-init-schemas.sql
   - include:
       file: db/changelog/changes/002-fleet-tables.sql
+  - include:
+      file: db/changelog/changes/003-update_geofence_tables.sql
