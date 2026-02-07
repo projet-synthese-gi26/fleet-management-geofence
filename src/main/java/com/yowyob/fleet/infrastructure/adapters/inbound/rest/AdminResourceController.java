@@ -38,7 +38,14 @@ public class AdminResourceController {
     public Flux<VehicleTypeEntity> list() {
         return service.getAllTypes();
     }
-
+   
+    @GetMapping("/lookup")
+    @Operation(summary = "Lister les types de véhicules (Référence)", 
+               description = "Public ou Admin : permet de connaître les IDs pour la création de véhicules.")
+    @PreAuthorize("permitAll()") // On autorise tout le monde à voir les types pour l'UI
+    public Flux<VehicleTypeEntity> getLookupTypes() {
+        return service.getAllTypes();
+    }
     @PutMapping("/{id}")
     @Operation(summary = "Modifier un type de véhicule")
     public Mono<VehicleTypeEntity> update(@PathVariable UUID id, @Valid @RequestBody VehicleTypeRequest req) {

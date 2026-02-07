@@ -22,7 +22,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/payments")
 @RequiredArgsConstructor
-@Tag(name = "12. Payments", description = "Intégration Service Paiement")
+@Tag(name = "13. Payments", description = "Intégration Service Paiement")
 @SecurityRequirement(name = "bearerAuth")
 public class PaymentController {
 

@@ -1,3 +1,5 @@
+Liste des bugs monitoring
+- les stats publiques ne marchenet pas en prod
 Liste des bugs restants (modules auth et account)
 
     Crash 500 Persistant sur /picture : Malgré l'enveloppe ByteArrayResource et le MediaType, l'envoi de la photo vers POST /api/users/{id}/picture échoue toujours avec une erreur 500 du serveur Pynfi. Il faut investiguer si une entête spécifique (comme Content-Disposition) est manquante ou si le serveur distant a un problème de buffer.
