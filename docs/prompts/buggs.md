@@ -7,3 +7,7 @@ Liste des bugs restants (modules auth et account)
     Vérification de la libération véhicule : S'assurer que lors du deleteAccount, l'appel driverUseCase.unassignVehicle met bien à jour la table fleet.vehicles en temps réel.
 
     Incohérence Photo au Register : Confirmer avec l'équipe du service Auth pourquoi le champ photoUri est ignoré lors de l'appel /register alors qu'il est documenté dans leur Swagger.
+
+Liste des buggs gestion admins et superadmin
+- reoordonner le swagger
+- 
