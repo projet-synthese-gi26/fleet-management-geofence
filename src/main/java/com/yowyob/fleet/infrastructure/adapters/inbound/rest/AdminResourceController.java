@@ -3,6 +3,8 @@ package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
 import com.yowyob.fleet.application.service.VehicleTypeService;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.VehicleTypeRequest;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.VehicleTypeEntity;
+import com.yowyob.fleet.infrastructure.config.OpenApiConfig;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,7 +21,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/admin/resources/vehicle-types")
 @RequiredArgsConstructor
-@Tag(name = "06. Admin | Gestion des Ressources")
+@Tag(name = OpenApiConfig.TAG_ADMIN_RESOURCES)
 @SecurityRequirement(name = "bearerAuth")
 @PreAuthorize("hasAnyRole('FLEET_ADMIN', 'FLEET_SUPER_ADMIN')")
 public class AdminResourceController {

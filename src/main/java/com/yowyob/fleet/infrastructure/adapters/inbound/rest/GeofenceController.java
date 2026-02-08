@@ -9,6 +9,8 @@ import com.yowyob.fleet.domain.ports.out.AuthPort;
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.dto.GeofenceUpdateDTO;
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.dto.GeofenceZoneDTORequest;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.GeofenceEventEntity;
+import com.yowyob.fleet.infrastructure.config.OpenApiConfig;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -31,7 +33,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/geofence")
 @RequiredArgsConstructor
-@Tag(name = "12. Geofencing")
+@Tag(name =  OpenApiConfig.TAG_GEOFENCING)
 @SecurityRequirement(name = "bearerAuth")
 public class GeofenceController {
 

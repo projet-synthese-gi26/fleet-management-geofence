@@ -3,26 +3,34 @@ package com.yowyob.fleet.application.service;
 import com.yowyob.fleet.domain.exception.AdminException;
 import com.yowyob.fleet.domain.ports.in.ManageAdminUseCase;
 import com.yowyob.fleet.domain.ports.out.AuthPort;
+import com.yowyob.fleet.domain.ports.out.FleetManagerPersistencePort;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.UserLocalEntity;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.FleetManagerR2dbcRepository;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.UserLocalR2dbcRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AdminService implements ManageAdminUseCase {
 
     private final AuthPort authPort;
     private final UserLocalR2dbcRepository userRepo;
+    private final FleetManagerR2dbcRepository managerRepo;
+    private final FleetManagerPersistencePort managerPersistencePort;
 
     @Override
     public Flux<AuthPort.UserDetail> listFleetManagers(String token) {
         return authPort.getUsersByService("FLEET_MANAGEMENT", token)
                 .filter(u -> u.roles().contains("FLEET_MANAGER"))
-                .flatMap(this::syncWithLocal);
+                .flatMap(remote -> syncIdentityAndRepairProfile(remote));
     }
 
     @Override
@@ -35,29 +43,64 @@ public class AdminService implements ManageAdminUseCase {
                     if (!remote.roles().contains("FLEET_MANAGER")) {
                         return Mono.error(AdminException.actionForbiddenOnUserType());
                     }
-                    return syncWithLocal(remote);
+                    return syncIdentityAndRepairProfile(remote);
                 });
     }
 
     @Override
     public Mono<Void> toggleManagerStatus(UUID managerId, UUID requesterId, boolean isSuperAdmin) {
+        // On vérifie d'abord que c'est bien un manager
         return this.getManagerDetails(managerId, "", isSuperAdmin)
                 .then(userRepo.findById(managerId))
                 .switchIfEmpty(Mono.error(AdminException.managerNotFound()))
                 .flatMap(u -> {
                     u.setActive(!u.isActive());
-                    u.setNew(false);
+                    u.setNewRecord(false); // On force l'UPDATE
                     return userRepo.save(u);
-                }).then();
+                })
+                .doOnSuccess(u -> log.info("🔐 Statut Manager {} changé vers : {}", managerId, u.isActive()))
+                .then();
     }
 
-    private Mono<AuthPort.UserDetail> syncWithLocal(AuthPort.UserDetail remote) {
-        return userRepo.findById(remote.id())
-                .map(local -> new AuthPort.UserDetail(
+    /**
+     * COEUR DE LA SYNCHRO :
+     * 1. Met à jour l'identité (fleet.users) depuis le service Auth.
+     * 2. Vérifie/Crée le profil métier (fleet.fleet_managers) - SELF HEALING.
+     * 3. Retourne le UserDetail enrichi.
+     */
+    private Mono<AuthPort.UserDetail> syncIdentityAndRepairProfile(AuthPort.UserDetail remote) {
+        // A. Synchro Identité
+        Mono<UserLocalEntity> identitySync = userRepo.findById(remote.id())
+                .flatMap(local -> {
+                    local.setUsername(remote.username());
+                    local.setEmail(remote.email());
+                    local.setFirstName(remote.firstName());
+                    local.setLastName(remote.lastName());
+                    local.setPhotoUrl(remote.photoUrl());
+                    local.setNewRecord(false);
+                    return userRepo.save(local);
+                })
+                .switchIfEmpty(Mono.defer(() -> {
+                    UserLocalEntity n = UserLocalEntity.builder()
+                            .id(remote.id()).username(remote.username()).email(remote.email())
+                            .firstName(remote.firstName()).lastName(remote.lastName())
+                            .photoUrl(remote.photoUrl()).isActive(true).build();
+                    n.setNewRecord(true);
+                    return userRepo.save(n);
+                }));
+
+        // B. Auto-réparation Profil Métier
+        Mono<Void> profileRepair = managerRepo.existsById(remote.id())
+                .flatMap(exists -> exists ? Mono.empty() : 
+                    managerPersistencePort.createProfile(remote.id(), "Société de " + remote.lastName()));
+
+        return identitySync
+                .then(profileRepair)
+                .then(managerPersistencePort.getCompanyName(remote.id()))
+                .map(company -> new AuthPort.UserDetail(
                         remote.id(), remote.username(), remote.email(), remote.phone(),
                         remote.firstName(), remote.lastName(), remote.service(),
-                        remote.roles(), remote.permissions(), local.getPhotoUrl(), 
-                        null, null, null))
-                .defaultIfEmpty(remote);
+                        remote.roles(), remote.permissions(), remote.photoUrl(), 
+                        company, null, null));
     }
 }

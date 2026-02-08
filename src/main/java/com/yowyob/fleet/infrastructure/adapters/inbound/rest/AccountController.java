@@ -4,6 +4,8 @@ import com.yowyob.fleet.domain.ports.in.AuthUseCase;
 import com.yowyob.fleet.domain.ports.out.AuthPort;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.ChangePasswordRequest;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.UpdateProfileRequest;
+import com.yowyob.fleet.infrastructure.config.OpenApiConfig;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -22,7 +24,7 @@ import reactor.core.publisher.Mono;
 @RestController
 @RequestMapping("/api/v1/account")
 @RequiredArgsConstructor
-@Tag(name = "03. Account", description = "Gestion du profil personnel (Identité)")
+@Tag(name = OpenApiConfig.TAG_ACCOUNT, description = "Gestion du profil personnel (Identité)")
 @SecurityRequirement(name = "bearerAuth")
 public class AccountController {
 

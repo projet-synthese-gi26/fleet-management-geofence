@@ -1,9 +1,6 @@
 package com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.domain.Persistable;
@@ -47,6 +44,9 @@ public class UserLocalEntity implements Persistable<UUID> {
     @Transient
     @Builder.Default
     private boolean isNewRecord = false;
+
+    @Override
+    public UUID getId() { return id; }
 
     @Override
     public boolean isNew() {

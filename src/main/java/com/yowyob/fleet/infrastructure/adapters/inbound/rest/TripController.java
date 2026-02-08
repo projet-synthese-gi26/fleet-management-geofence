@@ -5,6 +5,8 @@ import com.yowyob.fleet.domain.ports.in.ManageTripUseCase;
 import com.yowyob.fleet.domain.ports.out.AuthPort;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.StartTripRequest;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.TelemetryRequest;
+import com.yowyob.fleet.infrastructure.config.OpenApiConfig;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -20,7 +22,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/trips")
 @RequiredArgsConstructor
-@Tag(name = "11. Trips", description = "Gestion des courses et télémétrie")
+@Tag(name = OpenApiConfig.TAG_TRIPS , description = "Gestion des courses et télémétrie")
 @SecurityRequirement(name = "bearerAuth")
 public class TripController {
 

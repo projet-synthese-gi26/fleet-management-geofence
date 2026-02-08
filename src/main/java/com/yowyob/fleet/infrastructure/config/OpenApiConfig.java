@@ -17,6 +17,21 @@ import java.util.stream.Collectors;
 @Configuration
 public class OpenApiConfig {
 
+    // --- 1. DÉFINITION DES CONSTANTES (SPOF: Single Point Of Failure) ---
+    public static final String TAG_MONITORING = "01. Monitoring";
+    public static final String TAG_AUTH = "02. Auth";
+    public static final String TAG_ACCOUNT = "03. Account";
+    public static final String TAG_SUPER_ADMIN = "04. Super Admin | Gestion des Administrateurs";
+    public static final String TAG_ADMIN_MANAGERS = "05. Admin | Gestion des Fleet Managers";
+    public static final String TAG_ADMIN_RESOURCES = "06. Admin | Gestion des Ressources";
+    public static final String TAG_FLEET_MANAGERS = "07. Fleet Managers";
+    public static final String TAG_DRIVERS = "08. Drivers";
+    public static final String TAG_VEHICLES = "09. Vehicles";
+    public static final String TAG_FLEETS = "10. Fleets";
+    public static final String TAG_TRIPS = "11. Trips";
+    public static final String TAG_GEOFENCING = "12. Geofencing";
+    public static final String TAG_PAYMENTS = "13. Payments";
+
     @Bean
     public OpenAPI customOpenAPI() {
         final String securitySchemeName = "bearerAuth";
@@ -39,26 +54,28 @@ public class OpenApiConfig {
     @Bean
     public OpenApiCustomizer sortTagsAlphabetically() {
         return openApi -> {
-           List<String> order = List.of(
-                    "01. Monitoring",
-                    "02. Auth",
-                    "03. Account",
-                    "04. Super Admin | Gestion des Administrateurs",
-                    "05. Admin | Gestion des Fleet Managers",
-                    "06. Admin | Gestion des Ressources",
-                    "07. Fleet Managers",
-                    "08. Drivers",
-                    "09. Vehicles",
-                    "10. Fleets",
-                    "11. Trips",
-                    "12. Geofencing",
-                    "13. Payments"
-                );
+            // --- 2. DÉFINITION DE L'ORDRE STRICT ---
+            List<String> order = List.of(
+                    TAG_MONITORING,
+                    TAG_AUTH,
+                    TAG_ACCOUNT,
+                    TAG_SUPER_ADMIN,
+                    TAG_ADMIN_MANAGERS,
+                    TAG_ADMIN_RESOURCES,
+                    TAG_FLEET_MANAGERS,
+                    TAG_DRIVERS,
+                    TAG_VEHICLES,
+                    TAG_FLEETS,
+                    TAG_TRIPS,
+                    TAG_GEOFENCING,
+                    TAG_PAYMENTS
+            );
 
             if (openApi.getTags() != null) {
                 openApi.setTags(openApi.getTags().stream()
                         .sorted(Comparator.comparingInt(tag -> {
                             int index = order.indexOf(tag.getName());
+                            // Si le tag n'est pas dans la liste, on le met à la fin (999)
                             return index == -1 ? 999 : index;
                         }))
                         .collect(Collectors.toList()));

@@ -5,6 +5,7 @@ import com.yowyob.fleet.domain.ports.in.ManageDriverUseCase;
 import com.yowyob.fleet.domain.ports.out.AuthPort;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.DriverRegistrationRequest;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.RecruitDriverRequest;
+import com.yowyob.fleet.infrastructure.config.OpenApiConfig;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -24,7 +25,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
-@Tag(name = "08. Drivers", description = "Gestion des chauffeurs (Création & Recrutement)")
+@Tag(name =  OpenApiConfig.TAG_DRIVERS, description = "Gestion des chauffeurs (Création & Recrutement)")
 @SecurityRequirement(name = "bearerAuth")
 public class DriverController {
 

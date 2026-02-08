@@ -1,6 +1,8 @@
 package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
 
 import com.yowyob.fleet.domain.ports.in.ManageVehicleUseCase;
+import com.yowyob.fleet.infrastructure.config.OpenApiConfig;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -16,7 +18,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/vehicles/lookup")
 @RequiredArgsConstructor
-@Tag(name = "09. Vehicles", description = "Gestion complète du parc automobile")
+@Tag(name = OpenApiConfig.TAG_ADMIN_RESOURCES, description = "Gestion complète du parc automobile")
 @SecurityRequirement(name = "bearerAuth")
 public class VehicleLookupController {
 

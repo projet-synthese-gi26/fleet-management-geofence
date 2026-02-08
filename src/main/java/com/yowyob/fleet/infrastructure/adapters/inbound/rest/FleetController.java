@@ -6,6 +6,7 @@ import com.yowyob.fleet.domain.ports.out.AuthPort;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.FleetRequest;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.FleetResponse;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.FleetStatsResponse; // Import
+import com.yowyob.fleet.infrastructure.config.OpenApiConfig;
 import com.yowyob.fleet.infrastructure.mappers.FleetMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -25,7 +26,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/fleets")
 @RequiredArgsConstructor
-@Tag(name = "10. Fleets", description = "Gestion des flottes (Sécurisé par Propriétaire)")
+@Tag(name =  OpenApiConfig.TAG_FLEETS, description = "Gestion des flottes (Sécurisé par Propriétaire)")
 @SecurityRequirement(name = "bearerAuth")
 public class FleetController {
 

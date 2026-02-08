@@ -2,6 +2,8 @@ package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
 
 import com.yowyob.fleet.domain.model.Vehicle;
 import com.yowyob.fleet.domain.ports.in.ManageVehicleMediaUseCase;
+import com.yowyob.fleet.infrastructure.config.OpenApiConfig;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,7 +19,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/vehicles/{vehicleId}/media")
 @RequiredArgsConstructor
-@Tag(name = "09. Vehicles", description = "Gestion unifiée des médias")
+@Tag(name = OpenApiConfig.TAG_VEHICLES, description = "Gestion unifiée des médias")
 @SecurityRequirement(name = "bearerAuth")
 public class VehicleMediaController {
 

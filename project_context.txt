@@ -1,5 +1,5 @@
 # Contexte du Projet : Fleet & Geofence API
-Généré le : Sat Feb  7 03:41:29 PM WAT 2026
+Généré le : Sun Feb  8 06:54:09 AM WAT 2026
 Framework : Spring Boot WebFlux (Reactive)
 
 ## 1. Arborescence du Projet
@@ -11,9 +11,10 @@ Framework : Spring Boot WebFlux (Reactive)
 │   ├── contracts_fleet_management.md
 │   ├── data
 │   ├── database_setup.md
+│   ├── errors
+│   │   └── buggs.md
 │   ├── fleet-management.pdf
 │   ├── prompts
-│   │   ├── buggs.md
 │   │   ├── gabriel.md
 │   │   └── master_pair_programmer.md
 │   ├── refactor
@@ -23,7 +24,9 @@ Framework : Spring Boot WebFlux (Reactive)
 │   │   ├── 4_api_general_rules.md
 │   │   ├── 5_dynamic_data_model.md
 │   │   └── bd.png
-│   └── remarks_of_conception.md
+│   ├── remarks_of_conception.md
+│   └── tests
+│       └── admin_super_Admin.md
 ├── .gitattributes
 ├── .github
 │   ├── appmod
@@ -143,12 +146,12 @@ Framework : Spring Boot WebFlux (Reactive)
 │   │   │                   │   │       │   ├── VehicleRequest.java
 │   │   │                   │   │       │   └── VehicleTypeRequest.java
 │   │   │                   │   │       ├── FleetController.java
+│   │   │                   │   │       ├── FleetManagerController.java
 │   │   │                   │   │       ├── GeofenceController.java
 │   │   │                   │   │       ├── GlobalExceptionHandler.java
 │   │   │                   │   │       ├── HealthCheckController.java
 │   │   │                   │   │       ├── NotificationController.java
 │   │   │                   │   │       ├── PaymentController.java
-│   │   │                   │   │       ├── ReferenceController.java
 │   │   │                   │   │       ├── SuperAdminController.java
 │   │   │                   │   │       ├── TripController.java
 │   │   │                   │   │       ├── VehicleController.java
@@ -268,7 +271,7 @@ Framework : Spring Boot WebFlux (Reactive)
 ├── sync_auth.sh
 └── todo.md
 
-49 directories, 213 files
+51 directories, 214 files
 ```
 ## 2. Contenu des Fichiers
 
@@ -4102,6 +4105,106 @@ volumes:
   postgres_data:```
 
 ---
+### Fichier : `./docs/tests/admin_super_Admin.md`
+```md
+### 🛠️ PARTIE 1 : Lancement de l'environnement
+
+Ouvre deux terminaux à la racine du projet.
+
+**Terminal 1 : Lancer l'application**
+```bash
+chmod +x run_local.sh
+./run_local.sh
+```
+*Note : Attends de voir le message `✅ Phase d'initialisation terminée`.*
+
+**Terminal 2 : Accès à la DB (CLI)**
+Si tu veux vérifier les tables rapidement sans DBeaver :
+```bash
+docker exec -it fleet-management-db psql -U fleet_admin -d yowyob_db
+```
+
+---
+
+### 🧪 PARTIE 2 : Scénarios de Tests (Le rapport de bataille)
+
+Ouvre ton **Swagger UI** : [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+
+#### ÉTAPE 1 : Connexion du Super Admin (Bootstrap)
+On utilise l'utilisateur créé automatiquement dans ton `application.yml`.
+
+1.  Endpoint : `POST /api/v1/auth/login`
+2.  Payload :
+```json
+{
+  "identifier": "superadmin123@transens.com",
+  "password": "password123"
+}
+```
+3.  **Action :** Copie l' `accessToken`. Clique sur le bouton **Authorize** en haut de Swagger et colle le token.
+
+---
+
+#### ÉTAPE 2 : Super Admin crée un Admin (Success & Logic)
+On vérifie que le Super Admin peut déléguer des droits.
+
+1.  Endpoint : `POST /api/v1/admin/super/admins`
+2.  Payload :
+```json
+{
+  "username": "admin_douala",
+  "password": "Password123!",
+  "email": "admin.douala@yowyob.test",
+  "phone": "+237611223344",
+  "firstName": "Chef",
+  "lastName": "Douala"
+}
+```
+3.  **Vérification DB (Souveraineté) :** Dans ton terminal 2, tape :
+    `SELECT * FROM fleet.users WHERE username = 'admin_douala';`
+    *Tu dois voir la ligne apparaître en local.*
+
+---
+
+#### ÉTAPE 3 : Test des Erreurs (Sécurité)
+On vérifie que le système rejette les actions interdites.
+
+1.  **Auto-blocage interdit :** Tente de désactiver ton propre compte Super Admin.
+    *   Endpoint : `PATCH /api/v1/admin/super/admins/{ton_id}/toggle`
+    *   **Résultat attendu :** `403 Forbidden` avec le code `SADM_002` (Auto-modification interdite).
+2.  **Accès refusé :** Déconnecte-toi (ou retire le token) et tente de lister les admins.
+    *   **Résultat attendu :** `401 Unauthorized`.
+
+---
+
+#### ÉTAPE 4 : Admin & Auto-réparation (Le "Self-Healing")
+C'est le test le plus important pour ta synchro.
+
+1.  **Préparation du "bug" (Terminal 2) :** On simule un manager qui existe en identité mais pas en métier.
+    ```sql
+    -- On crée un user manager directement en base (ou on en prend un existant)
+    -- On supprime sa ligne métier s'il en a une
+    DELETE FROM fleet.fleet_managers WHERE user_id IN (SELECT id FROM fleet.users LIMIT 1);
+    ```
+2.  **Action Admin :** Connecte-toi avec l'Admin créé à l'étape 2, puis liste les managers.
+    *   Endpoint : `GET /api/v1/admin/management/managers`
+3.  **Vérification :** Retourne dans ton terminal 2.
+    ```sql
+    SELECT * FROM fleet.fleet_managers;
+    ```
+    *La ligne supprimée a dû être recréée automatiquement par le service !*
+
+---
+
+#### ÉTAPE 5 : Synchronisation d'Identité
+1.  Va sur ton service Auth (ou simule une modif via SQL sur `public.users` si tu es en mode fake).
+2.  Change le `firstName` d'un manager.
+3.  Appelle `GET /api/v1/admin/management/managers/{id}`.
+4.  Vérifie que le `firstName` dans ta table locale `fleet.users` a été mis à jour instantanément.
+
+```
+
+---
 ### Fichier : `./docs/contracts_fleet_management.md`
 ```md
 # **API Contracts v1.0 - Fleet Management Service**
@@ -4582,6 +4685,22 @@ Represents the fleet-specific information of a driver.
 -   **Access**: Authenticated (`fleet:geofence:read`).
 -   **Query Parameters**: `?vehicleId={id}&zoneId={id}&type=ENTRY&startDate=YYYY-MM-DD`
 -   **Response (`200 OK`)**: An array of geofence event objects.```
+
+---
+### Fichier : `./docs/errors/buggs.md`
+```md
+Liste des bugs monitoring
+- les stats publiques ne marchenet pas en prod
+
+Liste des bugs restants (modules auth et account)
+    - le register doit permettre uniquement les fleet amangers et les drivers,defautl fleet manager
+
+    - Vérification de la libération véhicule : S'assurer que lors du deleteAccount, l'appel driverUseCase.unassignVehicle met bien à jour la table fleet.vehicles en temps réel.
+
+  
+Liste des buggs gestion admins et superadmin
+- reoordonner le swagger
+- ```
 
 ---
 ### Fichier : `./docs/refactor/2_database_structure.md`
@@ -5231,7 +5350,7 @@ Ton rôle est d'accompagner Gabriel dans le développement de l'API **Fleet Mana
 4. **Le Local est souverain** : Toujours prioriser la base de données locale (`fleet.users`, `is_active`) pour la sécurité, même si les services externes (Pynfi) répondent OK.
 
 ### 🛠️ Règles de Sortie de Code
-- **Modification Mineure (< 5 lignes)** : Donne uniquement le bloc de code à remplacer avec son contexte (méthode environnante).
+- **Modification Mineure (< 10 lignes)** : Donne uniquement le bloc de code à remplacer avec son contexte (méthode environnante).
 - **Modification Majeure ou Nouveau Fichier** : Fournis systématiquement le **FICHIER COMPLET** pour éviter les erreurs de copier-coller.
 - **Annotations** : Utilise Lombok (`@RequiredArgsConstructor`, `@Data`) pour la clarté.
 ### 📂 Contexte
@@ -5255,24 +5374,7 @@ Gabriel attend de toi une rigueur absolue, de la franchise technique et une auto
 - **Isolation :** Les données vitales sont dans le schéma `fleet`. Les appels distants (Pynfi) sont mappés vers des exceptions locales.
 
 ### 🚀 Démarrage de session
-Ma premiere tache est de comprendre et resourdre le probleme de deploiement,que le devops vient de m'envoyer:""```
-
----
-### Fichier : `./docs/prompts/buggs.md`
-```md
-Liste des bugs restants (modules auth et account)
-
-    Crash 500 Persistant sur /picture : Malgré l'enveloppe ByteArrayResource et le MediaType, l'envoi de la photo vers POST /api/users/{id}/picture échoue toujours avec une erreur 500 du serveur Pynfi. Il faut investiguer si une entête spécifique (comme Content-Disposition) est manquante ou si le serveur distant a un problème de buffer.
-
-    Validation du message 403 (Post-Delete) : Vérifier que l'utilisateur reçoit bien le message "Compte désactivé, contactez un admin" lors d'une tentative de ré-inscription sur un compte supprimé (à tester quand le service Auth répondra hors 500).
-
-    Vérification de la libération véhicule : S'assurer que lors du deleteAccount, l'appel driverUseCase.unassignVehicle met bien à jour la table fleet.vehicles en temps réel.
-
-    Incohérence Photo au Register : Confirmer avec l'équipe du service Auth pourquoi le champ photoUri est ignoré lors de l'appel /register alors qu'il est documenté dans leur Swagger.
-
-Liste des buggs gestion admins et superadmin
-- reoordonner le swagger
-- ```
+Ma premiere tache est de comprendre et resourdre les preblemes suivants:""```
 
 ---
 ### Fichier : `./docs/prompts/master_pair_programmer.md`
@@ -5422,22 +5524,22 @@ Once the log shows `🚀 LOCAL DATABASE READY!`, open your browser:
 
 
 
-- [-] **Tâche 5 :** Test et finalisation module Super Admin.
-    - [ ] **Tâche 5.1 :** Création du Port & Service pour le filtrage spécifique des utilisateurs ayant le rôle `FLEET_ADMIN`.
-    - [ ] **Tâche 5.2 :** Implémentation du "Toggle Status" (Activer/Désactiver) modifiant la colonne `is_active` dans `fleet.users`.
-    - [ ] **Tâche 5.3 :** Implémentation de la suppression logique (`deleted_at`) pour les comptes Admin.
-    - [ ] **Tâche 5.4 :** Sécurisation et mise à jour du `AdminUserController` (Accès restreint au Super Admin).
+- [x] **Tâche 5 :** Test et finalisation module Super Admin.
+    - [x] **Tâche 5.1 :** Création du Port & Service pour le filtrage spécifique des utilisateurs ayant le rôle `FLEET_ADMIN`.
+    - [x] **Tâche 5.2 :** Implémentation du "Toggle Status" (Activer/Désactiver) modifiant la colonne `is_active` dans `fleet.users`.
+    - [x] **Tâche 5.3 :** Implémentation de la suppression logique (`deleted_at`) pour les comptes Admin.
+    - [x] **Tâche 5.4 :** Sécurisation et mise à jour du `AdminUserController` (Accès restreint au Super Admin).
 
-- [-] **Tâche 6 :** Test et finalisation module Admin.
+- [x] **Tâche 6 :** Test et finalisation module Admin.
     **6.1 Gestion des Managers**
-    - [ ] **Tâche 6.1.1 :** Extension du service Manager pour inclure la désactivation de compte (`is_active = false`).
-    - [ ] **Tâche 6.1.2 :** Ajout de la suppression logique des managers.
-    - [ ] **Tâche 6.1.3 :** Listing global des managers avec état du compte (Actif/Suspendu).
+    - [x] **Tâche 6.1.1 :** Extension du service Manager pour inclure la désactivation de compte (`is_active = false`).
+    - [x] **Tâche 6.1.2 :** Ajout de la suppression logique des managers.
+    - [x] **Tâche 6.1.3 :** Listing global des managers avec état du compte (Actif/Suspendu).
 
     **6.2 Gestion des Ressources (Nouveau Tag)**
-    - [ ] **Tâche 6.2.1 :** Finalisation du CRUD complet pour `VehicleType` (Create, Read, Update, Delete).
-    - [ ] **Tâche 6.2.2 :** Réorganisation Swagger : Création du tag **"05. Admin | Gestion des Ressources"** et déplacement des endpoints de référence.
-    - [ ] **Tâche 6.2.3 :** Validation des contraintes (Interdire la suppression d'un type utilisé par un véhicule).
+    - [x] **Tâche 6.2.1 :** Finalisation du CRUD complet pour `VehicleType` (Create, Read, Update, Delete).
+    - [x] **Tâche 6.2.2 :** Réorganisation Swagger : Création du tag **"05. Admin | Gestion des Ressources"** et déplacement des endpoints de référence.
+    - [x] **Tâche 6.2.3 :** Validation des contraintes (Interdire la suppression d'un type utilisé par un véhicule).
 
 - [ ] **Tâche 7 :** Test et finalisation module Fleet Managers.
 - [ ] **Tâche 8 :** Test et finalisation module Drivers.
@@ -5628,16 +5730,16 @@ ALTER TABLE fleet.users ADD COLUMN IF NOT EXISTS photo_url VARCHAR(255);```
 ```sql
 --liquibase formatted sql
 
---changeset gabriel:move-users-to-fleet-schema-v4 splitStatements:false
---comment: Migration robuste vers fleet.users avec création forcée du schéma et import conditionnel
+--changeset gabriel:move-users-to-fleet-schema-v5 splitStatements:false
+--comment: Migration vers fleet.users utilisant l'email comme username pour garantir l'unicité et l'accès
 
--- 1. GARANTIR L'EXISTENCE DU SCHÉMA (Correction du crash Prod)
+-- 1. GARANTIR L'EXISTENCE DU SCHÉMA
 CREATE SCHEMA IF NOT EXISTS fleet;
 
 -- 2. CRÉATION DE LA TABLE SOUVERAINE
 CREATE TABLE IF NOT EXISTS fleet.users (
     id UUID PRIMARY KEY,
-    username VARCHAR(100) UNIQUE NOT NULL,
+    username VARCHAR(255) UNIQUE NOT NULL, -- Augmenté à 255 pour les emails
     email VARCHAR(255) UNIQUE NOT NULL,
     first_name VARCHAR(100),
     last_name VARCHAR(100),
@@ -5647,51 +5749,41 @@ CREATE TABLE IF NOT EXISTS fleet.users (
     deleted_at TIMESTAMP
 );
 
--- 3. BLOC PROCÉDURAL POUR LA MIGRATION CONDITIONNELLE
+-- 3. BLOC PROCÉDURAL POUR LA MIGRATION
 DO $$ 
 BEGIN 
-    -- A. Vérifier si la table source public.users existe vraiment
     IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'users') THEN
         
-        RAISE NOTICE 'Table public.users détectée, tentative de migration des données...';
-
-        -- Gestion dynamique du nom de la colonne email (email vs email_address)
+        -- On migre en utilisant l'email_address comme USERNAME pour éviter les doublons de noms
         IF EXISTS (SELECT FROM information_schema.columns 
                    WHERE table_schema = 'public' AND table_name = 'users' AND column_name = 'email_address') THEN
             
-            EXECUTE 'INSERT INTO fleet.users (id, username, email)
-                     SELECT id, COALESCE(name, ''user_'' || id), email_address FROM public.users
+            EXECUTE 'INSERT INTO fleet.users (id, username, email, first_name)
+                     SELECT id, email_address, email_address, name FROM public.users
                      ON CONFLICT (id) DO NOTHING';
                      
         ELSIF EXISTS (SELECT FROM information_schema.columns 
                       WHERE table_schema = 'public' AND table_name = 'users' AND column_name = 'email') THEN
-                      
-            EXECUTE 'INSERT INTO fleet.users (id, username, email)
-                     SELECT id, COALESCE(name, ''user_'' || id), email FROM public.users
+                  
+            EXECUTE 'INSERT INTO fleet.users (id, username, email, first_name)
+                     SELECT id, email, email, name FROM public.users
                      ON CONFLICT (id) DO NOTHING';
         END IF;
-    ELSE
-        RAISE NOTICE 'Table public.users absente, création de fleet.users à vide (Normal pour une fresh install).';
     END IF;
 
-    -- B. Redirection des contraintes pour fleet_managers (si la table existe)
+    -- Redirection des contraintes (Fleet Managers)
     IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'fleet' AND table_name = 'fleet_managers') THEN
-        -- On tente de supprimer l'ancienne contrainte si elle existe pour éviter les doublons
         BEGIN
             ALTER TABLE fleet.fleet_managers DROP CONSTRAINT IF EXISTS fk_manager_user_fleet;
-        EXCEPTION WHEN OTHERS THEN 
-            NULL; 
-        END;
+        EXCEPTION WHEN OTHERS THEN NULL; END;
         ALTER TABLE fleet.fleet_managers ADD CONSTRAINT fk_manager_user_fleet FOREIGN KEY (user_id) REFERENCES fleet.users(id) ON DELETE CASCADE;
     END IF;
 
-    -- C. Redirection des contraintes pour drivers (si la table existe)
+    -- Redirection des contraintes (Drivers)
     IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'fleet' AND table_name = 'drivers') THEN
         BEGIN
             ALTER TABLE fleet.drivers DROP CONSTRAINT IF EXISTS fk_driver_user_fleet;
-        EXCEPTION WHEN OTHERS THEN 
-            NULL; 
-        END;
+        EXCEPTION WHEN OTHERS THEN NULL; END;
         ALTER TABLE fleet.drivers ADD CONSTRAINT fk_driver_user_fleet FOREIGN KEY (user_id) REFERENCES fleet.users(id) ON DELETE CASCADE;
     END IF;
 
@@ -8525,10 +8617,7 @@ public class VehicleTypeEntity implements Persistable<UUID> {
 ```java
 package com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.domain.Persistable;
@@ -8572,6 +8661,9 @@ public class UserLocalEntity implements Persistable<UUID> {
     @Transient
     @Builder.Default
     private boolean isNewRecord = false;
+
+    @Override
+    public UUID getId() { return id; }
 
     @Override
     public boolean isNew() {
@@ -9920,6 +10012,8 @@ package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
 import com.yowyob.fleet.application.service.VehicleTypeService;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.VehicleTypeRequest;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.VehicleTypeEntity;
+import com.yowyob.fleet.infrastructure.config.OpenApiConfig;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -9936,7 +10030,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/admin/resources/vehicle-types")
 @RequiredArgsConstructor
-@Tag(name = "06. Admin | Gestion des Ressources")
+@Tag(name = OpenApiConfig.TAG_ADMIN_RESOURCES)
 @SecurityRequirement(name = "bearerAuth")
 @PreAuthorize("hasAnyRole('FLEET_ADMIN', 'FLEET_SUPER_ADMIN')")
 public class AdminResourceController {
@@ -9955,7 +10049,14 @@ public class AdminResourceController {
     public Flux<VehicleTypeEntity> list() {
         return service.getAllTypes();
     }
-
+   
+    @GetMapping("/lookup")
+    @Operation(summary = "Lister les types de véhicules (Référence)", 
+               description = "Public ou Admin : permet de connaître les IDs pour la création de véhicules.")
+    @PreAuthorize("permitAll()") // On autorise tout le monde à voir les types pour l'UI
+    public Flux<VehicleTypeEntity> getLookupTypes() {
+        return service.getAllTypes();
+    }
     @PutMapping("/{id}")
     @Operation(summary = "Modifier un type de véhicule")
     public Mono<VehicleTypeEntity> update(@PathVariable UUID id, @Valid @RequestBody VehicleTypeRequest req) {
@@ -10163,37 +10264,6 @@ public class GeofenceController {
         return geofenceService.deleteZone(id, type, getUserId(auth));
     }
 
-}```
-
----
-### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/ReferenceController.java`
-```java
-package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
-
-import com.yowyob.fleet.application.service.VehicleTypeService;
-import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.VehicleTypeEntity;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Flux;
-
-@RestController
-@RequestMapping("/api/v1/references")
-@RequiredArgsConstructor
-@Tag(name = "10. Références", description = "Données statiques (Types de véhicules, etc.)")
-public class ReferenceController {
-
-    private final VehicleTypeService vehicleTypeService;
-
-    @GetMapping("/vehicle-types")
-    @Operation(summary = "Lister les types de véhicules disponibles", 
-               description = "Utilisez l'ID retourné ici pour créer un véhicule.")
-    public Flux<VehicleTypeEntity> getVehicleTypes() {
-        return vehicleTypeService.getAllTypes();
-    }
 }```
 
 ---
@@ -10535,15 +10605,19 @@ public class AdminStatsController {
 ---
 ### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/AuthController.java`
 ```java
+// Fichier : src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/AuthController.java
 package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
 
 import com.yowyob.fleet.domain.ports.in.AuthUseCase;
 import com.yowyob.fleet.domain.ports.out.AuthPort;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.LoginRequest;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.RegisterRequest;
+import com.yowyob.fleet.infrastructure.config.OpenApiConfig;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Encoding;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.buffer.DataBufferUtils;
@@ -10556,7 +10630,7 @@ import reactor.core.publisher.Mono;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
-@Tag(name = "02. Auth", description = "Endpoints publics (Login, Register, Refresh)")
+@Tag(name = OpenApiConfig.TAG_AUTH)
 public class AuthController {
 
     private final AuthUseCase authUseCase;
@@ -10576,37 +10650,13 @@ public class AuthController {
     @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
         summary = "Inscription Utilisateur",
-        description = "Création de compte. Collez le JSON dans 'user' et l'image dans 'file'.",
-        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-            content = @Content(
-                mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
-                encoding = @Encoding(name = "user", contentType = "application/json")
-            )
+        description = "Création de compte. Le bouton 'file' permet d'uploader la photo."
         )
-    )
     public Mono<AuthPort.AuthResponse> register(
             @RequestPart("user") RegisterRequest dto,
             @RequestPart(value = "file", required = false) Part filePart 
     ) {
-        Mono<AuthUseCase.FileContent> photoMono = Mono.justOrEmpty(filePart)
-                .flatMap(fp -> {
-                    // FIX: On extrait le nom de fichier de manière sécurisée
-                    String filename = (fp instanceof FilePart file) ? file.filename() : "profile_picture";
-                    
-                    return DataBufferUtils.join(fp.content())
-                        .map(dataBuffer -> {
-                            byte[] bytes = new byte[dataBuffer.readableByteCount()];
-                            dataBuffer.read(bytes);
-                            DataBufferUtils.release(dataBuffer);
-                            return new AuthUseCase.FileContent(
-                                    filename,
-                                    fp.headers().getContentType() != null ? fp.headers().getContentType().toString() : "image/jpeg",
-                                    bytes
-                            );
-                        });
-                });
-
-        return photoMono
+        return processFilePart(filePart)
                 .map(photo -> new AuthUseCase.RegisterCommand(
                         dto.username(), dto.password(), dto.email(), dto.phone(),
                         dto.firstName(), dto.lastName(), dto.roles(), photo
@@ -10616,6 +10666,22 @@ public class AuthController {
                         dto.firstName(), dto.lastName(), dto.roles(), null
                 )))
                 .flatMap(authUseCase::register);
+    }
+
+    private Mono<AuthUseCase.FileContent> processFilePart(Part fp) {
+        if (fp == null) return Mono.empty();
+        String filename = (fp instanceof FilePart file) ? file.filename() : "profile_picture";
+        return DataBufferUtils.join(fp.content())
+                .map(dataBuffer -> {
+                    byte[] bytes = new byte[dataBuffer.readableByteCount()];
+                    dataBuffer.read(bytes);
+                    DataBufferUtils.release(dataBuffer);
+                    return new AuthUseCase.FileContent(
+                            filename,
+                            fp.headers().getContentType() != null ? fp.headers().getContentType().toString() : "image/jpeg",
+                            bytes
+                    );
+                });
     }
 
     public record TokenRefreshRequest(String refreshToken) {}
@@ -11291,6 +11357,8 @@ package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
 
 import com.yowyob.fleet.domain.ports.in.ManageAdminUseCase;
 import com.yowyob.fleet.domain.ports.out.AuthPort;
+import com.yowyob.fleet.infrastructure.config.OpenApiConfig;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -11308,7 +11376,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/admin/management")
 @RequiredArgsConstructor
-@Tag(name = "05. Admin | Gestion des Fleet Managers")
+@Tag(name = OpenApiConfig.TAG_ADMIN_MANAGERS)
 @SecurityRequirement(name = "bearerAuth")
 @PreAuthorize("hasAnyRole('FLEET_ADMIN', 'FLEET_SUPER_ADMIN')")
 public class AdminManagerController {
@@ -11366,7 +11434,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/payments")
 @RequiredArgsConstructor
-@Tag(name = "12. Payments", description = "Intégration Service Paiement")
+@Tag(name = "13. Payments", description = "Intégration Service Paiement")
 @SecurityRequirement(name = "bearerAuth")
 public class PaymentController {
 
@@ -11419,6 +11487,60 @@ public class PaymentController {
             @Parameter(hidden = true) @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader
     ) {
         return paymentPort.debitWallet(getUser(auth).id(), amount, authHeader);
+    }
+}```
+
+---
+### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/FleetManagerController.java`
+```java
+package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
+
+import com.yowyob.fleet.domain.ports.in.ManageFleetManagerUseCase;
+import com.yowyob.fleet.domain.ports.out.AuthPort;
+import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.FleetManagerResponse;
+import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.UpdateManagerRequest;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
+
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/v1/fleet-managers")
+@RequiredArgsConstructor
+@Tag(name = "07. Fleet Managers", description = "Actions spécifiques aux propriétaires de flottes")
+@SecurityRequirement(name = "bearerAuth")
+public class FleetManagerController {
+
+    private final ManageFleetManagerUseCase managerUseCase;
+
+    private UUID getUserId(Authentication auth) {
+        return ((AuthPort.UserDetail) auth.getPrincipal()).id();
+    }
+
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('FLEET_MANAGER')")
+    @Operation(summary = "Détails de mon entreprise", description = "Récupère les infos de manager du compte connecté.")
+    public Mono<FleetManagerResponse> getMyManagerProfile(
+            @Parameter(hidden = true) @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+            Authentication auth
+    ) {
+        return managerUseCase.getManagerDetails(getUserId(auth), token);
+    }
+
+    @PutMapping("/me/company")
+    @PreAuthorize("hasRole('FLEET_MANAGER')")
+    @Operation(summary = "Mettre à jour mon nom d'entreprise")
+    public Mono<Void> updateMyCompany(@Valid @RequestBody UpdateManagerRequest request, Authentication auth) {
+        return managerUseCase.updateManagerCompany(getUserId(auth), request.companyName());
     }
 }```
 
@@ -11675,33 +11797,43 @@ public class HealthCheckController {
 ---
 ### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/SuperAdminController.java`
 ```java
+// Fichier : src/main/java/com/yowyob/fleet/infrastructure/adapters/inbound/rest/SuperAdminController.java
 package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
 
 import com.yowyob.fleet.domain.ports.in.AuthUseCase;
 import com.yowyob.fleet.domain.ports.in.ManageSuperAdminUseCase;
 import com.yowyob.fleet.domain.ports.out.AuthPort;
+import com.yowyob.fleet.infrastructure.config.OpenApiConfig;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Encoding;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.http.codec.multipart.Part;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/admin/super")
 @RequiredArgsConstructor
-@Tag(name = "04. Super Admin | Gestion des Administrateurs")
+@Tag(name = OpenApiConfig.TAG_SUPER_ADMIN)
 @SecurityRequirement(name = "bearerAuth")
 @PreAuthorize("hasRole('FLEET_SUPER_ADMIN')")
 public class SuperAdminController {
@@ -11714,13 +11846,40 @@ public class SuperAdminController {
         @NotBlank String firstName, @NotBlank String lastName
     ) {}
 
-    @PostMapping("/admins")
+    @PostMapping(value = "/admins", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Créer un nouvel Administrateur")
-    public Mono<AuthPort.AuthResponse> create(@Valid @RequestBody CreateAdminRequest req) {
-        return superAdminUseCase.createAdmin(new AuthUseCase.RegisterCommand(
-            req.username(), req.password(), req.email(), req.phone(), req.firstName(), req.lastName(), null, null
-        ));
+    @Operation(
+        summary = "Créer un nouvel Administrateur",
+        description = "Le rôle FLEET_ADMIN est ajouté automatiquement. Bouton 'file' pour la photo."
+    )
+    public Mono<AuthPort.AuthResponse> create(
+            @RequestPart("user") @Valid CreateAdminRequest req,
+            @RequestPart(value = "file", required = false) Part filePart
+    ) {
+        return processFilePart(filePart)
+                .map(photo -> new AuthUseCase.RegisterCommand(
+                        req.username(), req.password(), req.email(), req.phone(),
+                        req.firstName(), req.lastName(), List.of("FLEET_ADMIN"), photo
+                ))
+                .switchIfEmpty(Mono.just(new AuthUseCase.RegisterCommand(
+                        req.username(), req.password(), req.email(), req.phone(),
+                        req.firstName(), req.lastName(), List.of("FLEET_ADMIN"), null
+                )))
+                .flatMap(superAdminUseCase::createAdmin);
+    }
+
+    private Mono<AuthUseCase.FileContent> processFilePart(Part fp) {
+        if (fp == null) return Mono.empty();
+        String filename = (fp instanceof FilePart file) ? file.filename() : "admin_picture";
+        return DataBufferUtils.join(fp.content())
+                .map(dataBuffer -> {
+                    byte[] bytes = new byte[dataBuffer.readableByteCount()];
+                    dataBuffer.read(bytes);
+                    DataBufferUtils.release(dataBuffer);
+                    return new AuthUseCase.FileContent(filename,
+                            fp.headers().getContentType() != null ? fp.headers().getContentType().toString() : "image/jpeg",
+                            bytes);
+                });
     }
 
     @GetMapping("/admins")
@@ -12258,6 +12417,7 @@ public class BearerTokenServerAuthenticationConverter implements ServerAuthentic
 ---
 ### Fichier : `./src/main/java/com/yowyob/fleet/infrastructure/config/OpenApiConfig.java`
 ```java
+// Fichier : src/main/java/com/yowyob/fleet/infrastructure/config/OpenApiConfig.java
 package com.yowyob.fleet.infrastructure.config;
 
 import io.swagger.v3.oas.models.Components;
@@ -12276,6 +12436,14 @@ import java.util.stream.Collectors;
 
 @Configuration
 public class OpenApiConfig {
+
+    // Définition des constantes pour éviter les typos entre les controlleurs et la config
+    public static final String TAG_MONITORING = "01. Monitoring";
+    public static final String TAG_AUTH = "02. Auth";
+    public static final String TAG_ACCOUNT = "03. Account";
+    public static final String TAG_SUPER_ADMIN = "04. Super Admin | Gestion des Administrateurs";
+    public static final String TAG_ADMIN_MANAGERS = "05. Admin | Gestion des Fleet Managers";
+    public static final String TAG_ADMIN_RESOURCES = "06. Admin | Gestion des Ressources";
 
     @Bean
     public OpenAPI customOpenAPI() {
@@ -12300,12 +12468,12 @@ public class OpenApiConfig {
     public OpenApiCustomizer sortTagsAlphabetically() {
         return openApi -> {
            List<String> order = List.of(
-                    "01. Monitoring",
-                    "02. Auth",
-                    "03. Account",
-                    "04. Super Admin | Gestion des Administrateurs",
-                    "05. Admin | Gestion des Fleet Managers",
-                    "06. Admin | Gestion des Ressources",
+                    TAG_MONITORING,
+                    TAG_AUTH,
+                    TAG_ACCOUNT,
+                    TAG_SUPER_ADMIN,
+                    TAG_ADMIN_MANAGERS,
+                    TAG_ADMIN_RESOURCES,
                     "07. Fleet Managers",
                     "08. Drivers",
                     "09. Vehicles",
@@ -14400,26 +14568,34 @@ package com.yowyob.fleet.application.service;
 import com.yowyob.fleet.domain.exception.AdminException;
 import com.yowyob.fleet.domain.ports.in.ManageAdminUseCase;
 import com.yowyob.fleet.domain.ports.out.AuthPort;
+import com.yowyob.fleet.domain.ports.out.FleetManagerPersistencePort;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.UserLocalEntity;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.FleetManagerR2dbcRepository;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.UserLocalR2dbcRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AdminService implements ManageAdminUseCase {
 
     private final AuthPort authPort;
     private final UserLocalR2dbcRepository userRepo;
+    private final FleetManagerR2dbcRepository managerRepo;
+    private final FleetManagerPersistencePort managerPersistencePort;
 
     @Override
     public Flux<AuthPort.UserDetail> listFleetManagers(String token) {
         return authPort.getUsersByService("FLEET_MANAGEMENT", token)
                 .filter(u -> u.roles().contains("FLEET_MANAGER"))
-                .flatMap(this::syncWithLocal);
+                .flatMap(remote -> syncIdentityAndRepairProfile(remote));
     }
 
     @Override
@@ -14432,30 +14608,65 @@ public class AdminService implements ManageAdminUseCase {
                     if (!remote.roles().contains("FLEET_MANAGER")) {
                         return Mono.error(AdminException.actionForbiddenOnUserType());
                     }
-                    return syncWithLocal(remote);
+                    return syncIdentityAndRepairProfile(remote);
                 });
     }
 
     @Override
     public Mono<Void> toggleManagerStatus(UUID managerId, UUID requesterId, boolean isSuperAdmin) {
+        // On vérifie d'abord que c'est bien un manager
         return this.getManagerDetails(managerId, "", isSuperAdmin)
                 .then(userRepo.findById(managerId))
                 .switchIfEmpty(Mono.error(AdminException.managerNotFound()))
                 .flatMap(u -> {
                     u.setActive(!u.isActive());
-                    u.setNew(false);
+                    u.setNewRecord(false); // On force l'UPDATE
                     return userRepo.save(u);
-                }).then();
+                })
+                .doOnSuccess(u -> log.info("🔐 Statut Manager {} changé vers : {}", managerId, u.isActive()))
+                .then();
     }
 
-    private Mono<AuthPort.UserDetail> syncWithLocal(AuthPort.UserDetail remote) {
-        return userRepo.findById(remote.id())
-                .map(local -> new AuthPort.UserDetail(
+    /**
+     * COEUR DE LA SYNCHRO :
+     * 1. Met à jour l'identité (fleet.users) depuis le service Auth.
+     * 2. Vérifie/Crée le profil métier (fleet.fleet_managers) - SELF HEALING.
+     * 3. Retourne le UserDetail enrichi.
+     */
+    private Mono<AuthPort.UserDetail> syncIdentityAndRepairProfile(AuthPort.UserDetail remote) {
+        // A. Synchro Identité
+        Mono<UserLocalEntity> identitySync = userRepo.findById(remote.id())
+                .flatMap(local -> {
+                    local.setUsername(remote.username());
+                    local.setEmail(remote.email());
+                    local.setFirstName(remote.firstName());
+                    local.setLastName(remote.lastName());
+                    local.setPhotoUrl(remote.photoUrl());
+                    local.setNewRecord(false);
+                    return userRepo.save(local);
+                })
+                .switchIfEmpty(Mono.defer(() -> {
+                    UserLocalEntity n = UserLocalEntity.builder()
+                            .id(remote.id()).username(remote.username()).email(remote.email())
+                            .firstName(remote.firstName()).lastName(remote.lastName())
+                            .photoUrl(remote.photoUrl()).isActive(true).build();
+                    n.setNewRecord(true);
+                    return userRepo.save(n);
+                }));
+
+        // B. Auto-réparation Profil Métier
+        Mono<Void> profileRepair = managerRepo.existsById(remote.id())
+                .flatMap(exists -> exists ? Mono.empty() : 
+                    managerPersistencePort.createProfile(remote.id(), "Société de " + remote.lastName()));
+
+        return identitySync
+                .then(profileRepair)
+                .then(managerPersistencePort.getCompanyName(remote.id()))
+                .map(company -> new AuthPort.UserDetail(
                         remote.id(), remote.username(), remote.email(), remote.phone(),
                         remote.firstName(), remote.lastName(), remote.service(),
-                        remote.roles(), remote.permissions(), local.getPhotoUrl(), 
-                        null, null, null))
-                .defaultIfEmpty(remote);
+                        remote.roles(), remote.permissions(), remote.photoUrl(), 
+                        company, null, null));
     }
 }```
 
@@ -15154,21 +15365,26 @@ private Mono<Void> updateVehicleLink(UUID vehicleId, UUID driverId) {
 ---
 ### Fichier : `./src/main/java/com/yowyob/fleet/application/service/SuperAdminService.java`
 ```java
+// Fichier : src/main/java/com/yowyob/fleet/application/service/SuperAdminService.java
 package com.yowyob.fleet.application.service;
 
 import com.yowyob.fleet.domain.exception.SuperAdminException;
 import com.yowyob.fleet.domain.ports.in.AuthUseCase;
 import com.yowyob.fleet.domain.ports.in.ManageSuperAdminUseCase;
 import com.yowyob.fleet.domain.ports.out.AuthPort;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.UserLocalEntity;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.UserLocalR2dbcRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SuperAdminService implements ManageSuperAdminUseCase {
@@ -15178,18 +15394,31 @@ public class SuperAdminService implements ManageSuperAdminUseCase {
 
     @Override
     public Mono<AuthPort.AuthResponse> createAdmin(AuthUseCase.RegisterCommand command) {
-        AuthUseCase.RegisterCommand adminCmd = new AuthUseCase.RegisterCommand(
-            command.username(), command.password(), command.email(), command.phone(),
-            command.firstName(), command.lastName(), List.of("FLEET_ADMIN"), null
-        );
-        return authPort.registerInRemote(adminCmd);
+        return authPort.registerInRemote(command)
+                .flatMap(res -> {
+                    String token = res.accessToken();
+                    UUID userId = res.user().id();
+
+                    // Logic Photo comme dans AuthService
+                    Mono<Void> photoFlow = (command.photo() != null) ?
+                            authPort.updateProfilePicture(userId, token, command.photo())
+                                    .onErrorResume(e -> {
+                                        log.warn("📸 Photo Admin ignorée suite à erreur distante.");
+                                        return Mono.empty();
+                                    }) : Mono.empty();
+
+                    return photoFlow
+                            .then(authPort.getUserById(userId, token))
+                            .flatMap(freshUser -> syncIdentityOnly(freshUser)
+                                    .thenReturn(new AuthPort.AuthResponse(token, res.refreshToken(), freshUser)));
+                });
     }
 
     @Override
     public Flux<AuthPort.UserDetail> listAdmins(String token) {
         return authPort.getUsersByService("FLEET_MANAGEMENT", token)
                 .filter(u -> u.roles().contains("FLEET_ADMIN"))
-                .flatMap(this::syncWithLocal);
+                .flatMap(this::syncIdentityOnly);
     }
 
     @Override
@@ -15197,7 +15426,7 @@ public class SuperAdminService implements ManageSuperAdminUseCase {
         return authPort.getUserById(adminId, token)
                 .filter(u -> u.roles().contains("FLEET_ADMIN"))
                 .switchIfEmpty(Mono.error(SuperAdminException.roleMismatch()))
-                .flatMap(this::syncWithLocal);
+                .flatMap(this::syncIdentityOnly);
     }
 
     @Override
@@ -15208,19 +15437,38 @@ public class SuperAdminService implements ManageSuperAdminUseCase {
                 .switchIfEmpty(Mono.error(SuperAdminException.adminNotFound()))
                 .flatMap(u -> {
                     u.setActive(!u.isActive());
-                    u.setNew(false);
+                    u.setNewRecord(false);
                     return userRepo.save(u);
                 }).then();
     }
 
-    private Mono<AuthPort.UserDetail> syncWithLocal(AuthPort.UserDetail remote) {
+    /**
+     * Synchronise les informations d'identité dans fleet.users
+     */
+    private Mono<AuthPort.UserDetail> syncIdentityOnly(AuthPort.UserDetail remote) {
         return userRepo.findById(remote.id())
+                .flatMap(local -> {
+                    local.setUsername(remote.username());
+                    local.setEmail(remote.email());
+                    local.setFirstName(remote.firstName());
+                    local.setLastName(remote.lastName());
+                    local.setPhotoUrl(remote.photoUrl());
+                    local.setNewRecord(false);
+                    return userRepo.save(local);
+                })
+                .switchIfEmpty(Mono.defer(() -> {
+                    UserLocalEntity n = UserLocalEntity.builder()
+                            .id(remote.id()).username(remote.username()).email(remote.email())
+                            .firstName(remote.firstName()).lastName(remote.lastName())
+                            .photoUrl(remote.photoUrl()).isActive(true).build();
+                    n.setNewRecord(true);
+                    return userRepo.save(n);
+                }))
                 .map(local -> new AuthPort.UserDetail(
                         remote.id(), remote.username(), remote.email(), remote.phone(),
                         remote.firstName(), remote.lastName(), remote.service(),
                         remote.roles(), remote.permissions(), local.getPhotoUrl(), 
-                        null, null, null))
-                .defaultIfEmpty(remote);
+                        null, null, null));
     }
 }```
 

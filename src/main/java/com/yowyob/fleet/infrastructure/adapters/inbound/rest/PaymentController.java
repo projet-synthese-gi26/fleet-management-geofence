@@ -3,6 +3,8 @@ package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
 import com.yowyob.fleet.domain.ports.out.AuthPort;
 import com.yowyob.fleet.domain.ports.out.ExternalPaymentPort;
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.dto.WalletExternalResponse; // Import du DTO
+import com.yowyob.fleet.infrastructure.config.OpenApiConfig;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -22,7 +24,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/payments")
 @RequiredArgsConstructor
-@Tag(name = "13. Payments", description = "Intégration Service Paiement")
+@Tag(name =  OpenApiConfig.TAG_PAYMENTS, description = "Intégration Service Paiement")
 @SecurityRequirement(name = "bearerAuth")
 public class PaymentController {
 

@@ -2,6 +2,8 @@ package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
 
 import com.yowyob.fleet.domain.model.Notification;
 import com.yowyob.fleet.domain.ports.out.NotificationHistoryRepositoryPort;
+import com.yowyob.fleet.infrastructure.config.OpenApiConfig;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +17,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/notifications")
 @RequiredArgsConstructor
-@Tag(name = "03. Account", description = "In-app notifications history")
+@Tag(name = OpenApiConfig.TAG_ACCOUNT, description = "In-app notifications history")
 public class NotificationController {
 
     private final NotificationHistoryRepositoryPort historyPort;

@@ -2,6 +2,8 @@ package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
 
 import com.yowyob.fleet.domain.ports.in.ManageAdminUseCase;
 import com.yowyob.fleet.domain.ports.out.AuthPort;
+import com.yowyob.fleet.infrastructure.config.OpenApiConfig;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -19,7 +21,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/admin/management")
 @RequiredArgsConstructor
-@Tag(name = "05. Admin | Gestion des Fleet Managers")
+@Tag(name = OpenApiConfig.TAG_ADMIN_MANAGERS)
 @SecurityRequirement(name = "bearerAuth")
 @PreAuthorize("hasAnyRole('FLEET_ADMIN', 'FLEET_SUPER_ADMIN')")
 public class AdminManagerController {

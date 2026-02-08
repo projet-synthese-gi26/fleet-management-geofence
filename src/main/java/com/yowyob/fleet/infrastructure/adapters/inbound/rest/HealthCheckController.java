@@ -3,6 +3,8 @@ package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
 import com.yowyob.fleet.domain.ports.out.AuthPort;
 import com.yowyob.fleet.domain.ports.out.ExternalGeofencePort;
 import com.yowyob.fleet.domain.ports.out.StatisticsPort;
+import com.yowyob.fleet.infrastructure.config.OpenApiConfig;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +28,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/health")
 @RequiredArgsConstructor
-@Tag(name = "01. Monitoring" , description = "Endpoints de diagnostic et statistiques publiques")
+@Tag(name = OpenApiConfig.TAG_MONITORING , description = "Endpoints de diagnostic et statistiques publiques")
 public class HealthCheckController {
 
     private final DatabaseClient databaseClient;
