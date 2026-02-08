@@ -25,4 +25,16 @@ public interface ExternalGeofencePort {
     Mono<String> getSystemToken();
     Flux<Map<String, Object>> getZonesByManager(UUID managerId, String category);
     Mono<Void> registerVehicleAndAssignToZone(Vehicle vehicle, UUID zoneId, String zoneType);
+    // --- NOUVELLES MÉTHODES ---
+    
+    /**
+     * Crée le véhicule dans le système Geofence et retourne son ID interne.
+     */
+    Mono<String> registerRemoteVehicle(Vehicle vehicle);
+
+    /**
+     * Assigne un véhicule à une zone en utilisant son ID distant.
+     */
+    Mono<Void> addVehicleToZone(String remoteVehicleId, UUID zoneId, String zoneType);
+    
 }

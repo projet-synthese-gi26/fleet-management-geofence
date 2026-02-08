@@ -3,6 +3,7 @@ package com.yowyob.fleet.application.service;
 import com.yowyob.fleet.domain.model.Vehicle;
 import com.yowyob.fleet.domain.model.VehicleParameters;
 import com.yowyob.fleet.domain.ports.in.ManageVehicleUseCase;
+import com.yowyob.fleet.domain.ports.out.ExternalGeofencePort;
 import com.yowyob.fleet.domain.ports.out.ExternalVehiclePort;
 import com.yowyob.fleet.domain.ports.out.VehiclePersistencePort;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.VehicleRequest;
@@ -30,6 +31,7 @@ public class VehicleService implements ManageVehicleUseCase {
     private final ExternalVehiclePort externalVehiclePort;
     private final VehicleTypeR2dbcRepository vehicleTypeRepository;
     private final FleetManagerR2dbcRepository fleetRepository;
+    private final ExternalGeofencePort geofencePort;
 
     // --- LOGIQUE DE SYNCHRONISATION (COEUR DU SERVICE) ---
 
@@ -46,7 +48,8 @@ public class VehicleService implements ManageVehicleUseCase {
                     remote.photoUrl() != null ? remote.photoUrl() : local.photoUrl(),
                     remote.serialNumberPhotoUrl(), remote.registrationPhotoUrl(),
                     local.illustrationImages(), 
-                    local.financialParameters(), local.maintenanceParameters(), local.operationalParameters()
+                    local.financialParameters(), local.maintenanceParameters(), local.operationalParameters(),
+                    local.geofenceRemoteId()
                 );
                 return localPersistencePort.saveLocalData(updated);
             });
@@ -95,9 +98,23 @@ public class VehicleService implements ManageVehicleUseCase {
                                         req.manufacturingYear(), req.transmissionType(), req.fuelType(), 
                                         req.tankCapacity(), req.totalSeatNumber(), req.averageFuelConsumption(), 
                                         req.color(), "AVAILABLE", remote.photoUrl(), 
-                                        null, null, Collections.emptyList(), null, null, null);
+                                        null, null, Collections.emptyList(), null, null, null,null);
                                 return localPersistencePort.saveLocalData(shell);
-                            });
+                            })
+                            .flatMap(savedVehicle -> 
+                        // 4. Appel au Service Geofence pour enregistrer le véhicule
+                        geofencePort.registerRemoteVehicle(savedVehicle)
+                            .flatMap(geofencRemoteId -> {
+                                // 5. Mise à jour avec l'ID reçu
+                                Vehicle updated = savedVehicle.withGeofenceRemoteId(geofencRemoteId);
+                                return localPersistencePort.saveLocalData(updated);
+                            })
+                            // En cas d'erreur Geofence, on log mais on ne bloque pas la création du véhicule
+                            .onErrorResume(e -> {
+                                log.error("⚠️ Failed to register vehicle {} in Geofence: {}", savedVehicle.licensePlate(), e.getMessage());
+                                return Mono.just(savedVehicle);
+                            })
+                    );
                 })
                 .flatMap(v -> getVehicleDetails(v.id(), token));
     }
@@ -131,7 +148,7 @@ public class VehicleService implements ManageVehicleUseCase {
                         v.licensePlate(), v.vehicleSerialNumber(), v.brand(), v.model(), v.manufacturingYear(),
                         v.transmissionType(), v.fuelType(), v.tankCapacity(), v.totalSeatNumber(), v.averageFuelConsumption(),
                         v.color(), v.status(), v.photoUrl(), v.serialNumberPhotoUrl(), v.registrationPhotoUrl(),
-                        v.illustrationImages(), params, v.maintenanceParameters(), v.operationalParameters());
+                        v.illustrationImages(), params, v.maintenanceParameters(), v.operationalParameters(),v.geofenceRemoteId());
                     return localPersistencePort.saveLocalData(toSave);
                 })
                 .then(getVehicleDetails(vehicleId, token));
@@ -146,7 +163,7 @@ public class VehicleService implements ManageVehicleUseCase {
                         v.licensePlate(), v.vehicleSerialNumber(), v.brand(), v.model(), v.manufacturingYear(),
                         v.transmissionType(), v.fuelType(), v.tankCapacity(), v.totalSeatNumber(), v.averageFuelConsumption(),
                         v.color(), v.status(), v.photoUrl(), v.serialNumberPhotoUrl(), v.registrationPhotoUrl(),
-                        v.illustrationImages(), v.financialParameters(), params, v.operationalParameters());
+                        v.illustrationImages(), v.financialParameters(), params, v.operationalParameters(), v.geofenceRemoteId());
                     return localPersistencePort.saveLocalData(toSave);
                 })
                 .then(getVehicleDetails(vehicleId, token));

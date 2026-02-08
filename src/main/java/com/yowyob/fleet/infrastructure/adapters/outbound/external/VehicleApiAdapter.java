@@ -116,7 +116,22 @@ public class VehicleApiAdapter implements ExternalVehiclePort {
             req.brand(), req.model(), req.transmissionType(), req.manufacturerName(), req.sizeName(), req.typeName(),
             req.fuelType(), req.vehicleSerialNumber(), req.photoUrl(), null,
             req.licensePlate(), null, req.tankCapacity(), null, req.totalSeatNumber(),
-            req.averageFuelConsumption(), null, null, null, req.vehicleTypeId(), req.brand()
+            req.averageFuelConsumption(), null, null, null, req.vehicleTypeId(), req.brand(),
+            false, // stateTax
+            false, // tollCharge
+            false, // driverAllowance
+            false, // carParking
+
+            
+            false, // comfortable
+            false, // petsAllow
+            false, // wifi
+            false, // soft
+            false, // screen
+            false, // alarm
+            false, // pickupAndDrop
+            false, // internet
+            false  // airConditioned
         );
     }
 
@@ -127,7 +142,7 @@ public class VehicleApiAdapter implements ExternalVehiclePort {
             ext.registrationNumber(), ext.vehicleSerialNumber(), ext.brand(), "Model",
             null, "Transmission", "Fuel", ext.tankCapacity(), ext.totalSeatNumber(),
             ext.averageFuelConsumptionPerKm(), null, "AVAILABLE", ext.vehicleSerialPhoto(), 
-            ext.vehicleSerialPhoto(), ext.registrationPhoto(), null, null, null, null
+            ext.vehicleSerialPhoto(), ext.registrationPhoto(), null, null, null, null, null
         );
     }
 }
