@@ -12,6 +12,7 @@ public abstract class VehicleLocalMapper {
 
     @Mapping(target = "new", ignore = true)
     @Mapping(target = "id", source = "id")
+    @Mapping(target = "geofenceRemoteId", source = "geofenceRemoteId")
     public abstract VehicleLocalEntity toVehicleEntity(Vehicle domain);
 
     public Vehicle toDomain(VehicleLocalEntity v, FinancialParameterEntity f, MaintenanceParameterEntity m, List<String> gallery) {
@@ -41,7 +42,8 @@ public abstract class VehicleLocalMapper {
             gallery, 
             mapFinancialToDomain(f),
             mapMaintenanceToDomain(m),
-            null  
+            null,
+            v.getGeofenceRemoteId()  
         );
     }
 

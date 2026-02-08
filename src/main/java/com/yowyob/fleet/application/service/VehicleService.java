@@ -4,6 +4,7 @@ import com.yowyob.fleet.domain.exception.VehicleException;
 import com.yowyob.fleet.domain.model.Vehicle;
 import com.yowyob.fleet.domain.model.VehicleParameters;
 import com.yowyob.fleet.domain.ports.in.ManageVehicleUseCase;
+import com.yowyob.fleet.domain.ports.out.ExternalGeofencePort;
 import com.yowyob.fleet.domain.ports.out.ExternalVehiclePort;
 import com.yowyob.fleet.domain.ports.out.VehiclePersistencePort;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.VehicleRequest;
@@ -28,12 +29,15 @@ public class VehicleService implements ManageVehicleUseCase {
 
     private final VehiclePersistencePort localPersistencePort;
     private final ExternalVehiclePort externalVehiclePort;
+    private final ExternalGeofencePort geofencePort; 
     private final VehicleTypeR2dbcRepository vehicleTypeRepo;
     private final ManufacturerR2dbcRepository mfrRepo;
     private final FuelTypeR2dbcRepository fuelRepo;
     private final OperationalParameterR2dbcRepository operationalRepo;
 
-    // --- 09a. GESTION DU PARC ---
+    // ========================================================================
+    // --- 09a. GESTION DU PARC (CONTRAT MANAGER) ---
+    // ========================================================================
 
     @Override
     public Mono<Vehicle> getVehicleDetails(UUID vehicleId, String token) {
@@ -74,8 +78,18 @@ public class VehicleService implements ManageVehicleUseCase {
                             req.manufacturingYear(), req.transmissionType(), req.fuelType(), 
                             req.tankCapacity(), req.totalSeatNumber(), req.averageFuelConsumption(), 
                             req.color(), "AVAILABLE", remote.photoUrl(), 
-                            null, null, Collections.emptyList(), null, null, null);
+                            null, null, Collections.emptyList(), null, null, null, null); 
+                        
                         return localPersistencePort.saveLocalData(shell);
+                    })
+                    .flatMap(savedLocal -> {
+                        log.info("📡 Enregistrement du véhicule {} dans le moteur Geofence", savedLocal.licensePlate());
+                        return geofencePort.registerVehicleAndAssignToZone(savedLocal, null, "POLYGON")
+                                .thenReturn(savedLocal)
+                                .onErrorResume(e -> {
+                                    log.warn("⚠️ Synchro Geofence échouée pour {}: {}", savedLocal.licensePlate(), e.getMessage());
+                                    return Mono.just(savedLocal);
+                                });
                     });
             }).flatMap(v -> getVehicleDetails(v.id(), token));
     }
@@ -98,7 +112,8 @@ public class VehicleService implements ManageVehicleUseCase {
                         v.manufacturingYear(), v.transmissionType(), v.fuelType(),
                         v.tankCapacity(), v.totalSeatNumber(), v.averageFuelConsumption(),
                         v.color(), v.status(), v.photoUrl(), v.serialNumberPhotoUrl(),
-                        v.registrationPhotoUrl(), v.illustrationImages(), p, v.maintenanceParameters(), null
+                        v.registrationPhotoUrl(), v.illustrationImages(), p, v.maintenanceParameters(), 
+                        v.operationalParameters(), v.geofenceRemoteId()
                     );
                     return localPersistencePort.saveLocalData(updated);
                 }).then(getVehicleDetails(id, t));
@@ -115,7 +130,8 @@ public class VehicleService implements ManageVehicleUseCase {
                         v.manufacturingYear(), v.transmissionType(), v.fuelType(),
                         v.tankCapacity(), v.totalSeatNumber(), v.averageFuelConsumption(),
                         v.color(), v.status(), v.photoUrl(), v.serialNumberPhotoUrl(),
-                        v.registrationPhotoUrl(), v.illustrationImages(), v.financialParameters(), p, null
+                        v.registrationPhotoUrl(), v.illustrationImages(), v.financialParameters(), p, 
+                        v.operationalParameters(), v.geofenceRemoteId()
                     );
                     return localPersistencePort.saveLocalData(updated);
                 }).then(getVehicleDetails(id, t));
@@ -127,7 +143,9 @@ public class VehicleService implements ManageVehicleUseCase {
                 .then(localPersistencePort.deleteLocalData(id));
     }
 
-    // --- 09c. OPÉRATIONNEL (DRIVER) ---
+    // ========================================================================
+    // --- 09c. OPÉRATIONNEL (CONTRAT DRIVER) ---
+    // ========================================================================
 
     @Override
     public Mono<VehicleParameters.Operational> getOperationalData(UUID vehicleId) {
@@ -158,7 +176,9 @@ public class VehicleService implements ManageVehicleUseCase {
                 }).then();
     }
 
-    // --- 09d. RÉFÉRENTIELS (LOOKUP LOCAL) ---
+    // ========================================================================
+    // --- 09d. RÉFÉRENTIELS (CONTRAT LOOKUP LOCAL) ---
+    // ========================================================================
 
     @Override
     public Flux<Map<String, Object>> getLocalLookupData(String resource) {
@@ -170,7 +190,9 @@ public class VehicleService implements ManageVehicleUseCase {
         };
     }
 
-    // --- LOGIQUE DE SYNCHRO CACHE ---
+    // ========================================================================
+    // --- LOGIQUE DE SYNCHRONISATION DU CACHE ---
+    // ========================================================================
 
     private Mono<Vehicle> syncLocalCache(Vehicle remote, UUID vehicleId) {
         return localPersistencePort.getLocalDataById(vehicleId)
@@ -183,7 +205,8 @@ public class VehicleService implements ManageVehicleUseCase {
                         local.color(), local.status(), remote.photoUrl(),
                         remote.serialNumberPhotoUrl(), remote.registrationPhotoUrl(),
                         local.illustrationImages(), local.financialParameters(), 
-                        local.maintenanceParameters(), null
+                        local.maintenanceParameters(), local.operationalParameters(),
+                        local.geofenceRemoteId() 
                     );
                     return localPersistencePort.saveLocalData(updated);
                 });

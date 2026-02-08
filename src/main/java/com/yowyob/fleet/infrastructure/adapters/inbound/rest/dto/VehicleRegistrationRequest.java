@@ -60,5 +60,21 @@ public record VehicleRegistrationRequest(
     UUID vehicleTypeId,
     
     // redondance pour compatibilité si nécessaire
-    String brand 
+    String brand ,
+     // Champs financiers (supposés Double)
+    Boolean stateTax,       // Était Double
+    Boolean tollCharge,     // Était Double
+    Boolean driverAllowance,// Était Double
+    Boolean carParking,     // Était Double
+
+    // Options et services (supposés Boolean)
+    Boolean comfortable,
+    Boolean petsAllow,
+    Boolean wifi,
+    Boolean soft, // Suspension soft ?
+    Boolean screen,
+    Boolean alarm,
+    Boolean pickupAndDrop,
+    Boolean internet,
+    Boolean airConditioned
 ) {}

@@ -7,6 +7,10 @@ import com.yowyob.fleet.domain.model.Vehicle;
 import com.yowyob.fleet.domain.ports.out.ExternalGeofencePort;
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.GeofenceApiClient;
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.GeofenceAuthClient;
+
+import org.springframework.http.MediaType;
+import org.springframework.http.client.MultipartBodyBuilder;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -263,54 +267,90 @@ public class GeofenceApiAdapter implements ExternalGeofencePort {
     }
 // --- DANS GeofenceApiAdapter.java ---
 
-    @Override
+     @Override
     public Mono<Void> registerVehicleAndAssignToZone(Vehicle vehicle, UUID zoneId, String zoneType) {
         return getSystemToken().flatMap(token -> {
             
-            // 1. Préparation du Body pour l'API Geofence
-            Map<String, Object> vehicleRequest = new HashMap<>();
-            vehicleRequest.put("brand", vehicle.brand());
-            vehicleRequest.put("model", vehicle.model());
-            
-            // ✅ CORRECTION ICI : On utilise la vraie plaque d'immatriculation
-            vehicleRequest.put("licensePlate", vehicle.licensePlate()); 
-            
-            vehicleRequest.put("description", "Importé depuis Fleet Management");
+            // 1. PrÃ©paration des donnÃ©es "VehicleDTORequest"
+            Map<String, Object> vehicleData = new HashMap<>();
+            vehicleData.put("brand", vehicle.brand());
+            vehicleData.put("model", vehicle.model());
+            vehicleData.put("licensePlate", vehicle.licensePlate());
+            vehicleData.put("description", "ImportÃ© depuis Fleet Management");
+            // geofenceZoneIds est optionnel ou peut Ãªtre une liste vide si le DTO serveur le demande
+            vehicleData.put("geofenceZoneIds", Collections.emptyList()); 
 
-            log.info("🚀 Sync Véhicule vers Geofence API : Plaque {}", vehicle.licensePlate());
+            // 2. Construction du Multipart
+            MultipartBodyBuilder builder = new MultipartBodyBuilder();
+            builder.part("vehicle", vehicleData); 
+            // Note: Pas d'image pour l'instant, c'est 'required = false' sur le serveur
 
-            // 2. Appel Création
-            return apiClient.createVehicle(vehicleRequest, token)
+            log.info("ðŸš€ Sync VÃ©hicule vers Geofence API (Multipart) : Plaque {}", vehicle.licensePlate());
+
+            // 3. Appel avec le build() qui retourne un MultiValueMap
+            return apiClient.createVehicle(builder.build(), token)
                 .flatMap(responseNode -> {
-                    // 3. Extraction de l'ID technique généré par l'API Geofence
-                    // (On a toujours besoin de l'ID technique pour l'appel suivant, même si on lie par la plaque)
-                    String remoteVehicleId = null;
-                    
-                    if (responseNode.has("id")) {
-                        remoteVehicleId = responseNode.get("id").asText();
-                    } else if (responseNode.has("_id")) {
-                        remoteVehicleId = responseNode.get("_id").asText();
-                    } else if (responseNode.has("data") && responseNode.get("data").has("id")) {
-                        remoteVehicleId = responseNode.get("data").get("id").asText();
-                    }
-
+                    String remoteVehicleId = extractIdFromResponse(responseNode);
                     if (remoteVehicleId == null) {
-                        // Cas robuste : Si le véhicule existe déjà (conflit sur la plaque), 
-                        // il faudrait idéalement récupérer son ID existant.
-                        // Pour l'instant, on lève une erreur explicite.
-                        return Mono.error(new RuntimeException("Impossible de récupérer l'ID distant pour le véhicule : " + vehicle.licensePlate()));
+                        return Mono.error(new RuntimeException("ID distant introuvable pour : " + vehicle.licensePlate()));
                     }
 
-                    log.info("✅ Véhicule créé/récupéré dans Geofence (Remote ID: {}). Assignation à la zone {}...", remoteVehicleId, zoneId);
+                    log.info("âœ… VÃ©hicule crÃ©Ã© dans Geofence (ID: {}). Assignation Ã  la zone {}...", remoteVehicleId, zoneId);
 
-                    // 4. Appel Assignation à la zone (utilise l'ID technique)
                     String shortType = resolveShortType(zoneType);
                     return apiClient.addVehicleToZone(remoteVehicleId, shortType, zoneId, token);
                 })
-                .doOnSuccess(v -> log.info("🎉 Véhicule {} assigné à la zone {} avec succès.", vehicle.licensePlate(), zoneId))
-                .doOnError(e -> log.error("❌ Erreur lors de la synchro Geofence du véhicule {} : {}", vehicle.licensePlate(), e.getMessage()));
+                .doOnSuccess(v -> log.info("ðŸŽ‰ VÃ©hicule assignÃ© Ã  la zone {} avec succÃ¨s.", zoneId))
+                .doOnError(e -> log.error("â Œ Erreur Geofence Sync : {}", e.getMessage()));
         });
     }
 
+    // --- CORRECTION MAJEURE ICI AUSSI ---
+    @Override
+    public Mono<String> registerRemoteVehicle(Vehicle vehicle) {
+        return getSystemToken().flatMap(token -> {
+            // 1. PrÃ©paration Map
+            Map<String, Object> vehicleData = new HashMap<>();
+            vehicleData.put("brand", vehicle.brand() != null ? vehicle.brand() : "Unknown");
+            vehicleData.put("model", vehicle.model() != null ? vehicle.model() : "Unknown");
+            vehicleData.put("licensePlate", vehicle.licensePlate());
+            vehicleData.put("description", "VÃ©hicule importÃ© de Fleet Management");
+            vehicleData.put("geofenceZoneIds", Collections.emptyList());
 
+            // 2. Construction Multipart
+            MultipartBodyBuilder builder = new MultipartBodyBuilder();
+            builder.part("vehicle", vehicleData);
+
+            log.info("ðŸš€ Enregistrement vÃ©hicule (Multipart) : {}", vehicle.licensePlate());
+
+            return apiClient.createVehicle(builder.build(), token)
+                .map(node -> {
+                    String remoteId = extractIdFromResponse(node);
+                    if (remoteId == null) {
+                        throw new RuntimeException("API Geofence n'a pas retournÃ© d'ID");
+                    }
+                    return remoteId;
+                })
+                .doOnSuccess(id -> log.info("âœ… VÃ©hicule enregistrÃ© avec ID : {}", id))
+                .doOnError(e -> log.error("â Œ Ã‰chec enregistrement : {}", e.getMessage()));
+        });
+    }
+     // Helper pour extraire l'ID (car le format JSON peut varier)
+    private String extractIdFromResponse(JsonNode node) {
+        if (node.has("id")) return node.get("id").asText();
+        if (node.has("_id")) return node.get("_id").asText();
+        if (node.has("data") && node.get("data").has("id")) {
+            return node.get("data").get("id").asText();
+        }
+        return null;
+    }
+
+    @Override
+    public Mono<Void> addVehicleToZone(String remoteVehicleId, UUID zoneId, String zoneType) {
+        String shortType = resolveShortType(zoneType);
+        return getSystemToken().flatMap(token -> 
+            apiClient.addVehicleToZone(remoteVehicleId, shortType, zoneId, token)
+                .doOnSuccess(v -> log.info("ðŸ”— Linked remote vehicle {} to zone {}", remoteVehicleId, zoneId))
+        );
+    }
 }

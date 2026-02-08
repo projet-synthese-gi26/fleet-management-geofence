@@ -7,6 +7,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.support.WebExchangeBindException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.net.URI;
 import java.util.stream.Collectors;
@@ -66,4 +67,17 @@ public class GlobalExceptionHandler {
         problem.setTitle("Protocol Error");
         return problem;
     }
+    
+    @ExceptionHandler(WebClientResponseException.class)
+    public ProblemDetail handleWebClientException(WebClientResponseException ex) {
+        String responseBody = ex.getResponseBodyAsString();
+        
+        log.error("❌ EXTERNAL API ERROR [{} {}] : {}", ex.getStatusCode(), ex.getStatusText(), responseBody);
+        
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_GATEWAY, 
+            "Erreur du service externe (" + ex.getStatusCode() + "): " + responseBody);
+        problem.setTitle("External Service Error");
+        return problem;
+    }
+    
 }

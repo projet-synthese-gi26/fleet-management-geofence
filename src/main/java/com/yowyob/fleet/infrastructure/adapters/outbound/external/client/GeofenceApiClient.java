@@ -1,7 +1,12 @@
 package com.yowyob.fleet.infrastructure.adapters.outbound.external.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.yowyob.fleet.infrastructure.adapters.outbound.external.dto.GeofenceZoneDTORequest;
+
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders; 
+import org.springframework.util.MultiValueMap; // Import Important
+import org.springframework.http.HttpEntity;   // Import Important
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -84,16 +89,18 @@ public interface GeofenceApiClient {
         @RequestHeader("Authorization") String token
     );
     
-    @PostExchange("/vehicle")
+
+    // --- VEHICULES (NOUVEAU) ---
+ @PostExchange(url = "/vehicle", contentType = MediaType.MULTIPART_FORM_DATA_VALUE)
     Mono<JsonNode> createVehicle(
-        @RequestBody Map<String, Object> vehicleData,
+        @RequestBody MultiValueMap<String, HttpEntity<?>> parts, 
         @RequestHeader("Authorization") String token
     );
 
     @PostExchange("/vehicle/{vehicleId}/geofence/{type}/{zoneId}")
     Mono<Void> addVehicleToZone(
-        @PathVariable("vehicleId") String remoteVehicleId, // ID généré par l'API Geofence
-        @PathVariable("type") String type, // "c" ou "p"
+        @PathVariable("vehicleId") String remoteVehicleId, 
+        @PathVariable("type") String type,
         @PathVariable("zoneId") UUID zoneId,
         @RequestHeader("Authorization") String token
     );
