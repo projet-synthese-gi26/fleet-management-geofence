@@ -38,8 +38,16 @@ public class AuthService implements AuthUseCase {
     @Override
     public Mono<AuthPort.AuthResponse> login(String identifier, String password) {
         return authPort.login(identifier, password)
+                .onErrorResume(e -> {
+                  // On ne transforme que si c'est une erreur d'authentification pure (401)
+                    if (e instanceof AuthException ae && ae.getStatus() == HttpStatus.UNAUTHORIZED) {
+                        return Mono.error(AuthException.invalidCredentials()); // AUTH_001
+                    }
+                    // Pour toute autre erreur (500, 403 distant, etc.), on laisse passer tel quel
+                    return Mono.error(e);
+                })
                 .flatMap(response -> pullSyncLocalUser(response.user())
-                        .then(ensureRoleProfileExists(response.user())) // SELF-HEALING
+                        .then(ensureRoleProfileExists(response.user()))
                         .then(checkUserAccess(response.user().id()))
                         .thenReturn(response));
     }

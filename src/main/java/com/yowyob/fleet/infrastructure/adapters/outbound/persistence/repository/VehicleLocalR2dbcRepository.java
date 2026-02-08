@@ -17,10 +17,12 @@ public interface VehicleLocalR2dbcRepository extends ReactiveCrudRepository<Vehi
     Flux<VehicleLocalEntity> findByStatus(String status);
 
     Flux<VehicleLocalEntity> findByCurrentDriverId(UUID currentDriverId);
-
-    // ✅ CORRECTION : Ajout de @Query explicite pour countByFleetIdAndStatus
     @Query("SELECT COUNT(*) FROM fleet.vehicles WHERE fleet_id = :fleetId AND status = :status")
     Mono<Long> countByFleetIdAndStatus(UUID fleetId, String status);
-
     Mono<Long> countByFleetId(UUID fleetId);
+    Mono<Long> countByManagerId(UUID managerId);
+    // --- AJOUT POUR LES KPIS ---
+    // Compte les véhicules d'un manager ayant un statut spécifique (ex: 'ON_TRIP')
+    @Query("SELECT COUNT(*) FROM fleet.vehicles WHERE manager_id = :managerId AND status = :status")
+    Mono<Long> countByManagerIdAndStatus(UUID managerId, String status);
 }

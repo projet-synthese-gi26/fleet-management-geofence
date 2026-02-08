@@ -41,8 +41,16 @@
     - [x] **Tâche 6.2.2 :** Réorganisation Swagger : Création du tag **"05. Admin | Gestion des Ressources"** et déplacement des endpoints de référence.
     - [x] **Tâche 6.2.3 :** Validation des contraintes (Interdire la suppression d'un type utilisé par un véhicule).
 
-- [ ] **Tâche 7 :** Test et finalisation module Fleet Managers.
-- [ ] **Tâche 8 :** Test et finalisation module Drivers.
+- [x] **Tâche 7 :** Test et finalisation module Fleet Managers.
+    - [x] **Tâche 7.1 :** **Dynamisation du Profil** : Afficher le nombre réel de flottes gérées dans le endpoint `/me` (Remplacement de la valeur hardcodée).
+    - [x] **Tâche 7.2 :** **Vue KPIs (Tableau de bord)** : Créer l'endpoint `/kpis` regroupant les métriques clés (Total Flottes, Total Véhicules, Total Chauffeurs).
+    - [x] **Tâche 7.3 :** **Validation Entreprise** : Sécuriser la modification du nom d'entreprise (interdire les valeurs vides/nulles).
+- [-] **Tâche 8 :** Test et finalisation module Drivers.
+    - [ ] **Tâche 8 :** Test et finalisation module Drivers.
+    - [ ] **Tâche 8.1 :** **Recrutement Intelligent** : Vérifier que l'utilisateur recruté possède bien le rôle `FLEET_DRIVER` avant de le lier.
+    - [ ] **Tâche 8.2 :** **Smart Assignment** : Implémenter la logique de permutation automatique (libérer l'ancien chauffeur si le véhicule est réassigné).
+    - [ ] **Tâche 8.3 :** **Verrouillage de Course** : Interdire le détachement d'un chauffeur ou d'un véhicule si un trajet (`Trip`) est marqué `ONGOING`.
+    - [ ] **Tâche 8.4 :** **Listing Filtré** : Permettre au manager de voir séparément ses chauffeurs "Libres" et "En course".
 - [ ] **Tâche 9 :** Test et finalisation module Vehicles (Debug PUT et ressources initiales).
 - [ ] **Tâche 10 :** Test et finalisation module Fleets.
 - [ ] **Tâche 11 :** Test et finalisation module Trips (Courses).

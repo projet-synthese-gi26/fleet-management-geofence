@@ -11,8 +11,12 @@ import com.yowyob.fleet.domain.ports.out.VehiclePersistencePort;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.DriverRegistrationRequest;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.NotificationType;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.FleetR2dbcRepository;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.UserLocalR2dbcRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +39,7 @@ public class DriverService implements ManageDriverUseCase {
     private final AuthPort authPort;
     private final FleetR2dbcRepository fleetRepository;
     private final ExternalVehiclePort externalVehiclePort;
+    private final UserLocalR2dbcRepository userRepo; // Repository pour accéder aux données utilisateur locales
 
     private static final String SERVICE_NAME = "FLEET_MANAGEMENT";
 
@@ -157,8 +162,44 @@ public class DriverService implements ManageDriverUseCase {
                 });
     }
 
+    // ... (ajouter les nouvelles méthodes à l'existant)
+
+    public Mono<Driver> registerDriverWithPhoto(UUID fleetId, DriverRegistrationRequest request, UUID managerId, AuthUseCase.FileContent photo) {
+        return checkFleetOwnership(fleetId, managerId)
+                .then(Mono.defer(() -> {
+                    // 1. Création Auth avec Photo
+                    AuthUseCase.RegisterCommand cmd = new AuthUseCase.RegisterCommand(
+                        request.username(), request.password(), request.email(), request.phone(),
+                        request.firstName(), request.lastName(), List.of("FLEET_DRIVER"), photo
+                    );
+                    return authPort.registerInRemote(cmd);
+                }))
+                .flatMap(authRes -> {
+                    // 2. Profil local
+                    Driver d = new Driver(authRes.user().id(), fleetId, request.licenceNumber(), "ACTIVE", null, authRes.user().photoUrl());
+                    return driverPersistencePort.save(d);
+                });
+    }
+
+    public Flux<Driver> getDriversWithFilters(UUID fleetId, Boolean isAssigned, UUID requesterId) {
+        // Listing de base (par flotte ou tous si admin)
+        Flux<Driver> drivers = (fleetId != null) ? driverPersistencePort.findAllByFleetId(fleetId) : driverPersistencePort.findAll();
+        
+        // Filtre applicatif sur l'assignation
+        if (isAssigned != null) {
+            drivers = drivers.filter(d -> (isAssigned ? d.assignedVehicleId() != null : d.assignedVehicleId() == null));
+        }
+        return drivers;
+    }
+
+    public Mono<Driver> searchDriver(String identifier) {
+        // On utilise le repository UserLocal pour trouver l'ID via email/username
+        return userRepo.findByUsername(identifier)
+                .switchIfEmpty(userRepo.findAll().filter(u -> identifier.equalsIgnoreCase(u.getEmail())).next())
+                .flatMap(user -> driverPersistencePort.findById(user.getId()));
+    }
+
     // Helper mis à jour avec le nouveau constructeur Vehicle (23 champs)
-    // ... dans DriverService.java, méthode updateVehicleLink
 
 private Mono<Void> updateVehicleLink(UUID vehicleId, UUID driverId) {
     return vehiclePersistencePort.getLocalDataById(vehicleId)

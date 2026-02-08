@@ -6,21 +6,20 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import java.util.UUID;
 
+// Remplace le contenu de ManageDriverUseCase par ceci
 public interface ManageDriverUseCase {
-    // Création complète (Manager) : fleetId passé explicitement
     Mono<Driver> registerDriver(UUID fleetId, DriverRegistrationRequest request, UUID managerId);
     
-    // Recrutement existant (Manager)
+    // --- AJOUTS TACHE 8 ---
+    Mono<Driver> registerDriverWithPhoto(UUID fleetId, DriverRegistrationRequest request, UUID managerId, AuthUseCase.FileContent photo);
+    Flux<Driver> getDriversWithFilters(UUID fleetId, Boolean isAssigned, UUID requesterId);
+    Mono<Driver> searchDriver(String identifier);
+    // ----------------------
+
     Mono<Void> recruitDriver(UUID fleetId, String identifier, UUID managerId, String token);
-    
-    // Lecture
     Mono<Driver> getDriverById(UUID userId);
     Flux<Driver> getDrivers(UUID fleetId, UUID requesterId, boolean isAdmin);
-    
-    // Gestion Véhicule
     Mono<Void> assignVehicle(UUID userId, UUID vehicleId, UUID requesterId, String token);
     Mono<Void> unassignVehicle(UUID userId, UUID requesterId);
-    
-    // Retrait de la flotte (Manager)
     Mono<Void> removeDriverFromFleet(UUID fleetId, UUID driverId, UUID requesterId);
 }

@@ -3,9 +3,9 @@ package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
 import com.yowyob.fleet.domain.ports.in.ManageFleetManagerUseCase;
 import com.yowyob.fleet.domain.ports.out.AuthPort;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.FleetManagerResponse;
+import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.ManagerKpiResponse;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.UpdateManagerRequest;
 import com.yowyob.fleet.infrastructure.config.OpenApiConfig;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -23,7 +23,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/fleet-managers")
 @RequiredArgsConstructor
-@Tag(name = OpenApiConfig.TAG_FLEET_MANAGERS, description = "Actions spécifiques aux propriétaires de flottes")
+@Tag(name = OpenApiConfig.TAG_FLEET_MANAGERS)
 @SecurityRequirement(name = "bearerAuth")
 public class FleetManagerController {
 
@@ -35,12 +35,19 @@ public class FleetManagerController {
 
     @GetMapping("/me")
     @PreAuthorize("hasRole('FLEET_MANAGER')")
-    @Operation(summary = "Détails de mon entreprise", description = "Récupère les infos de manager du compte connecté.")
+    @Operation(summary = "Détails de mon entreprise", description = "Profil complet incluant le nombre réel de flottes.")
     public Mono<FleetManagerResponse> getMyManagerProfile(
             @Parameter(hidden = true) @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             Authentication auth
     ) {
         return managerUseCase.getManagerDetails(getUserId(auth), token);
+    }
+
+    @GetMapping("/kpis")
+    @PreAuthorize("hasRole('FLEET_MANAGER')")
+    @Operation(summary = "Tableau de bord (KPIs)", description = "Statistiques clés pour l'écran d'accueil du manager.")
+    public Mono<ManagerKpiResponse> getMyKpis(Authentication auth) {
+        return managerUseCase.getManagerKpis(getUserId(auth));
     }
 
     @PutMapping("/me/company")

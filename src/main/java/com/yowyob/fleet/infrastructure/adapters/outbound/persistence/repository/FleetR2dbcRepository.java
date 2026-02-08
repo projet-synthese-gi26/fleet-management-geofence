@@ -10,7 +10,6 @@ import java.util.UUID;
 public interface FleetR2dbcRepository extends ReactiveCrudRepository<FleetEntity, UUID> {
     
     Flux<FleetEntity> findAllByManagerId(UUID managerId);
-
-    // Vérification d'existence sécurisée (SELECT 1 ...)
     Mono<Boolean> existsByIdAndManagerId(UUID id, UUID managerId);
+    Mono<Long> countByManagerId(UUID managerId);
 }

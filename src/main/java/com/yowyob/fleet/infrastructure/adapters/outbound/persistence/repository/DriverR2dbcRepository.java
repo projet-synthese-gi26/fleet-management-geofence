@@ -1,6 +1,8 @@
 package com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository;
 
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.DriverEntity;
+
+import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
@@ -28,4 +30,10 @@ public interface DriverR2dbcRepository extends ReactiveCrudRepository<DriverEnti
     Mono<DriverEntity> findByAssignedVehicleId(UUID assignedVehicleId);
     // --- AJOUT TÂCHE 6.2 ---
     Mono<Long> countByFleetId(UUID fleetId);
+
+    // --- CORRECTIF TÂCHE 7.2 : Compter les chauffeurs par Manager ---
+    @Query("SELECT COUNT(d.*) FROM fleet.drivers d " +
+           "JOIN fleet.fleets f ON d.fleet_id = f.id " +
+           "WHERE f.manager_id = :managerId")
+    Mono<Long> countByManagerId(UUID managerId);
 }
