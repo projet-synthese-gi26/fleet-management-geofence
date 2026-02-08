@@ -26,7 +26,11 @@ public class OpenApiConfig {
     public static final String TAG_ADMIN_RESOURCES = "06. Admin | Gestion des Ressources";
     public static final String TAG_FLEET_MANAGERS = "07. Fleet Managers";
     public static final String TAG_DRIVERS = "08. Drivers";
-    public static final String TAG_VEHICLES = "09. Vehicles";
+    // --- SOUS-TAGS VEHICLES ---
+    public static final String TAG_VHC_PARC = "09a. Vehicles | Gestion du Parc [Fleet MANAGER]";
+    public static final String TAG_VHC_MEDIA = "09b. Vehicles | Médias & Documents [Fleet MANAGER]";
+    public static final String TAG_VHC_OP = "09c. Vehicles | Opérationnel [DRIVER]";
+    public static final String TAG_VHC_LOOKUP = "09d. Vehicles | Référentiels [PUBLIC/Fleet MANAGER]";
     public static final String TAG_FLEETS = "10. Fleets";
     public static final String TAG_TRIPS = "11. Trips";
     public static final String TAG_GEOFENCING = "12. Geofencing";
@@ -64,7 +68,10 @@ public class OpenApiConfig {
                     TAG_ADMIN_RESOURCES,
                     TAG_FLEET_MANAGERS,
                     TAG_DRIVERS,
-                    TAG_VEHICLES,
+                    TAG_VHC_PARC, 
+                    TAG_VHC_MEDIA,
+                    TAG_VHC_OP,
+                    TAG_VHC_LOOKUP,
                     TAG_FLEETS,
                     TAG_TRIPS,
                     TAG_GEOFENCING,

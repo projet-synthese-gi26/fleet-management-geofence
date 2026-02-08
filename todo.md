@@ -45,13 +45,17 @@
     - [x] **Tâche 7.1 :** **Dynamisation du Profil** : Afficher le nombre réel de flottes gérées dans le endpoint `/me` (Remplacement de la valeur hardcodée).
     - [x] **Tâche 7.2 :** **Vue KPIs (Tableau de bord)** : Créer l'endpoint `/kpis` regroupant les métriques clés (Total Flottes, Total Véhicules, Total Chauffeurs).
     - [x] **Tâche 7.3 :** **Validation Entreprise** : Sécuriser la modification du nom d'entreprise (interdire les valeurs vides/nulles).
-- [-] **Tâche 8 :** Test et finalisation module Drivers.
-    - [ ] **Tâche 8 :** Test et finalisation module Drivers.
-    - [ ] **Tâche 8.1 :** **Recrutement Intelligent** : Vérifier que l'utilisateur recruté possède bien le rôle `FLEET_DRIVER` avant de le lier.
-    - [ ] **Tâche 8.2 :** **Smart Assignment** : Implémenter la logique de permutation automatique (libérer l'ancien chauffeur si le véhicule est réassigné).
-    - [ ] **Tâche 8.3 :** **Verrouillage de Course** : Interdire le détachement d'un chauffeur ou d'un véhicule si un trajet (`Trip`) est marqué `ONGOING`.
-    - [ ] **Tâche 8.4 :** **Listing Filtré** : Permettre au manager de voir séparément ses chauffeurs "Libres" et "En course".
-- [ ] **Tâche 9 :** Test et finalisation module Vehicles (Debug PUT et ressources initiales).
+- [x] **Tâche 8 :** Test et finalisation module Drivers.
+    - [x] **Tâche 8 :** Test et finalisation module Drivers.
+    - [x] **Tâche 8.1 :** **Recrutement Intelligent** : Vérifier que l'utilisateur recruté possède bien le rôle `FLEET_DRIVER` avant de le lier.
+    - [x] **Tâche 8.2 :** **Smart Assignment** : Implémenter la logique de permutation automatique (libérer l'ancien chauffeur si le véhicule est réassigné).
+    - [x] **Tâche 8.3 :** **Verrouillage de Course** : Interdire le détachement d'un chauffeur ou d'un véhicule si un trajet (`Trip`) est marqué `ONGOING`.
+    - [x] **Tâche 8.4 :** **Listing Filtré** : Permettre au manager de voir séparément ses chauffeurs "Libres" et "En course".
+- [-] **Tâche 9 :** Test et finalisation module Vehicles (Debug PUT et ressources initiales).
+     - [ ] **Tâche 9.1 :** **Souveraineté des Ressources** : Créer le référentiel local (Marques, Carburants) géré par l'Admin.
+    - [ ] **Tâche 9.2 :** **Lookup local** : Rediriger les routes `/lookup` pour consommer les données de notre base `fleet` au lieu du service externe.
+    - [ ] **Tâche 9.3 :** **Gestion Opérationnelle** : Implémenter la route `/operational` pour permettre aux drivers de consulter/ajuster l'état du véhicule.
+    - [ ] **Tâche 9.4 :** **Nettoyage Swagger** : Appliquer le découpage en 4 sous-tags (9a, 9b, 9c, 9d) et uniformiser les erreurs.
 - [ ] **Tâche 10 :** Test et finalisation module Fleets.
 - [ ] **Tâche 11 :** Test et finalisation module Trips (Courses).
 

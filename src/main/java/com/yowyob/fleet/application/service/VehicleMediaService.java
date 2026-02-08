@@ -1,12 +1,12 @@
 package com.yowyob.fleet.application.service;
 
 import com.yowyob.fleet.domain.model.Vehicle;
-import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.VehicleIllustrationImageEntity;
 import com.yowyob.fleet.domain.ports.in.ManageVehicleMediaUseCase;
 import com.yowyob.fleet.domain.ports.in.ManageVehicleUseCase;
 import com.yowyob.fleet.domain.ports.out.ExternalVehiclePort;
-import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.VehicleIllustrationImageR2dbcRepository;
 import com.yowyob.fleet.domain.ports.out.VehiclePersistencePort;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.VehicleIllustrationImageEntity;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.VehicleIllustrationImageR2dbcRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.codec.multipart.FilePart;
@@ -24,7 +24,7 @@ public class VehicleMediaService implements ManageVehicleMediaUseCase {
     private final ExternalVehiclePort externalVehiclePort;
     private final VehiclePersistencePort localPersistencePort;
     private final VehicleIllustrationImageR2dbcRepository galleryRepo;
-    private final ManageVehicleUseCase vehicleUseCase;
+    private final ManageVehicleUseCase vehicleUseCase; // Pour récupérer l'objet complet après update
 
     @Override
     @Transactional
@@ -73,8 +73,11 @@ public class VehicleMediaService implements ManageVehicleMediaUseCase {
     @Override
     @Transactional
     public Mono<Vehicle> deleteIllustrationImage(UUID vehicleId, UUID imageId, String token) {
-        return externalVehiclePort.deleteImage(imageId.toString(), token)
-                .then(galleryRepo.deleteById(imageId))
+        // 1. Trouver l'URL pour la supprimer en externe (si besoin)
+        return galleryRepo.findById(imageId)
+                .flatMap(entity -> externalVehiclePort.deleteImage(entity.getImagePath(), token)
+                        .onErrorResume(e -> Mono.empty()) // On continue même si le distant échoue
+                        .then(galleryRepo.deleteById(imageId)))
                 .then(vehicleUseCase.getVehicleDetails(vehicleId, token));
     }
 }

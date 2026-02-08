@@ -19,7 +19,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/vehicles/{vehicleId}/media")
 @RequiredArgsConstructor
-@Tag(name = OpenApiConfig.TAG_VEHICLES, description = "Gestion unifiée des médias")
+@Tag(name = OpenApiConfig.TAG_VHC_MEDIA, description = "Gestion unifiée des médias")
 @SecurityRequirement(name = "bearerAuth")
 public class VehicleMediaController {
 
