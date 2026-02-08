@@ -187,7 +187,8 @@ private Mono<Void> updateVehicleLink(UUID vehicleId, UUID driverId) {
                         v.illustrationImages(), 
                         v.financialParameters(),
                         v.maintenanceParameters(),
-                        null);
+                        v.operationalParameters(),
+                        v.geofenceRemoteId());
                 return vehiclePersistencePort.saveLocalData(updated);
             }).then();
 }

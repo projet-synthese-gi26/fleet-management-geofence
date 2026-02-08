@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.http.HttpHeaders; // Import ajouté
+import org.springframework.http.MediaType;   // Import ajouté
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -108,6 +110,8 @@ public class WebClientConfig {
             HttpClient httpClient = HttpClient.create().secure(t -> t.sslContext(sslContext));
             return WebClient.builder()
                     .baseUrl(baseUrl)
+                    .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
                     .filter(logRequest())
                     .clientConnector(new ReactorClientHttpConnector(httpClient));
         } catch (Exception e) { 

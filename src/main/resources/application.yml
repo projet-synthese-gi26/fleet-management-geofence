@@ -66,7 +66,6 @@ application:
   external:
     vehicle-service-url:  https://vehicule-service.pynfi.com
     geofence-service-url: https://geofence-service.pynfi.com
-    # geofence-service-url: http://localhost:8081
     payment-service-url:  https://payment-service.pynfi.com
   auth:
     mode: remote
