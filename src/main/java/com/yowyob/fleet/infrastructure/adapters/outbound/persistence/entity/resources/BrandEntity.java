@@ -1,4 +1,4 @@
-package com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity;
+package com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.resources;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,9 +9,9 @@ import org.springframework.data.domain.Persistable;
 import org.springframework.data.relational.core.mapping.Table;
 import java.util.UUID;
 
-@Table(name = "manufacturers", schema = "fleet")
+@Table(name = "brands", schema = "fleet")
 @Data @NoArgsConstructor @AllArgsConstructor
-public class ManufacturerEntity implements Persistable<UUID> {
+public class BrandEntity implements Persistable<UUID> {
     @Id private UUID id;
     private String code;
     private String label;

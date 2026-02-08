@@ -26,4 +26,5 @@ public interface ManageVehicleUseCase {
 
     // --- 09d. Référentiels (Lookup Manager/Public) ---
     Flux<Map<String, Object>> getLocalLookupData(String resource);
+    Mono<Map<String, Object>> getAllResourcesCatalog();
 }

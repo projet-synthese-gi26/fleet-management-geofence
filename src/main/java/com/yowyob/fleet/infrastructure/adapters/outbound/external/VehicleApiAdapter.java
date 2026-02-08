@@ -41,13 +41,19 @@ public class VehicleApiAdapter implements ExternalVehiclePort {
     }
 
     @Override
-    public Mono<Vehicle> createRemoteVehicle(VehicleRequest req, String token) {
-        return apiClient.createSimplified(translateToRemote(req), ensureBearer(token)).map(this::mapToDomain);
+    public Mono<Vehicle> createRemoteVehicle(VehicleRequest req, String token, String brandLabel, String modelLabel, String fuelLabel, String transLabel, String colorLabel) {
+        return apiClient.createSimplified(
+            translateToRemote(req, brandLabel, modelLabel, fuelLabel, transLabel, colorLabel), 
+            ensureBearer(token)
+        ).map(this::mapToDomain);
     }
-
-    @Override
-    public Mono<Vehicle> updateRemoteVehicle(UUID vehicleId, VehicleRequest req, String token) {
-        return apiClient.updateFull(vehicleId, translateToRemote(req), ensureBearer(token)).map(this::mapToDomain);
+   @Override
+    public Mono<Vehicle> updateRemoteVehicle(UUID vehicleId, VehicleRequest req, String token, String brandLabel, String modelLabel, String fuelLabel, String transLabel, String colorLabel) {
+        return apiClient.updateFull(
+            vehicleId, 
+            translateToRemote(req, brandLabel, modelLabel, fuelLabel, transLabel, colorLabel), 
+            ensureBearer(token)
+        ).map(this::mapToDomain);
     }
 
     @Override
@@ -111,29 +117,6 @@ public class VehicleApiAdapter implements ExternalVehiclePort {
     @Override
     public Mono<Void> assignDriverRemote(UUID vehicleId, UUID driverId, String token) { return Mono.empty(); }
 
-    private VehicleRegistrationRequest translateToRemote(VehicleRequest req) {
-        return new VehicleRegistrationRequest(
-            req.brand(), req.model(), req.transmissionType(), req.manufacturerName(), req.sizeName(), req.typeName(),
-            req.fuelType(), req.vehicleSerialNumber(), req.photoUrl(), null,
-            req.licensePlate(), null, req.tankCapacity(), null, req.totalSeatNumber(),
-            req.averageFuelConsumption(), null, null, null, req.vehicleTypeId(), req.brand(),
-            false, // stateTax
-            false, // tollCharge
-            false, // driverAllowance
-            false, // carParking
-
-            
-            false, // comfortable
-            false, // petsAllow
-            false, // wifi
-            false, // soft
-            false, // screen
-            false, // alarm
-            false, // pickupAndDrop
-            false, // internet
-            false  // airConditioned
-        );
-    }
 
     private Vehicle mapToDomain(VehicleExternalResponse ext) {
         // FIX : Ajout du 24ème argument (null pour operationalParameters)
@@ -145,4 +128,31 @@ public class VehicleApiAdapter implements ExternalVehiclePort {
             ext.vehicleSerialPhoto(), ext.registrationPhoto(), null, null, null, null, null
         );
     }
+
+     private VehicleRegistrationRequest translateToRemote(VehicleRequest req, String brandLabel, String modelLabel, String fuelLabel, String transLabel, String colorLabel) {
+        return new VehicleRegistrationRequest(
+            brandLabel,           // makeName
+            modelLabel,           // modelName
+            transLabel,           // transmissionType
+            "Local Manufacturer", // manufacturerName (ou passer tuple.getT2().getLabel())
+            "Medium",             // sizeName (ou passer tuple.getT5().getLabel())
+            "Standard",           // typeName (ou passer tuple.getT6().getLabel())
+            fuelLabel,            // fuelTypeName
+            req.vehicleSerialNumber(), 
+            req.photoUrl(), 
+            null,
+            req.licensePlate(), 
+            null, 
+            req.tankCapacity(), 
+            null, 
+            req.totalSeatNumber(),
+            req.averageFuelConsumption(), 
+            null, null, null, 
+            req.vehicleTypeId(), 
+            brandLabel,
+            false, false, false, false, false, false, false, false, false, false, false, false, false
+        );
+    }
+
+    
 }

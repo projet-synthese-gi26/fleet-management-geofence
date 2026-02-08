@@ -8,7 +8,10 @@ import com.yowyob.fleet.domain.ports.out.ExternalGeofencePort;
 import com.yowyob.fleet.domain.ports.out.ExternalVehiclePort;
 import com.yowyob.fleet.domain.ports.out.VehiclePersistencePort;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.VehicleRequest;
-import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.*;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.OperationalParameterEntity;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.OperationalParameterR2dbcRepository;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.VehicleTypeR2dbcRepository;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.resources.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,6 +22,7 @@ import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -30,13 +34,22 @@ public class VehicleService implements ManageVehicleUseCase {
     private final VehiclePersistencePort localPersistencePort;
     private final ExternalVehiclePort externalVehiclePort;
     private final ExternalGeofencePort geofencePort; 
+
+    // Repositories des ressources (Souveraineté)
     private final VehicleTypeR2dbcRepository vehicleTypeRepo;
     private final ManufacturerR2dbcRepository mfrRepo;
+    private final BrandR2dbcRepository brandRepo;
+    private final VehicleModelR2dbcRepository modelRepo;
+    private final VehicleSizeR2dbcRepository sizeRepo;
+    private final UsageTypeR2dbcRepository usageRepo;
     private final FuelTypeR2dbcRepository fuelRepo;
+    private final TransmissionTypeR2dbcRepository transRepo;
+    private final VehicleColorR2dbcRepository colorRepo;
+    
     private final OperationalParameterR2dbcRepository operationalRepo;
 
     // ========================================================================
-    // --- 09a. GESTION DU PARC (CONTRAT MANAGER) ---
+    // --- 09a. GESTION DU PARC (FLEET MANAGER) ---
     // ========================================================================
 
     @Override
@@ -66,39 +79,59 @@ public class VehicleService implements ManageVehicleUseCase {
     @Override
     @Transactional
     public Mono<Vehicle> createVehicle(UUID fleetId, VehicleRequest req, UUID managerId, String token) {
-        return vehicleTypeRepo.existsById(req.vehicleTypeId())
-            .flatMap(exists -> {
-                if (!exists) return Mono.error(VehicleException.invalidVehicleType());
-                
-                return externalVehiclePort.createRemoteVehicle(req, token)
-                    .flatMap(remote -> {
-                        Vehicle shell = new Vehicle(
-                            remote.id(), fleetId, managerId, null, req.vehicleTypeId(),
-                            req.licensePlate(), remote.vehicleSerialNumber(), req.brand(), req.model(),
-                            req.manufacturingYear(), req.transmissionType(), req.fuelType(), 
-                            req.tankCapacity(), req.totalSeatNumber(), req.averageFuelConsumption(), 
-                            req.color(), "AVAILABLE", remote.photoUrl(), 
-                            null, null, Collections.emptyList(), null, null, null, null); 
-                        
-                        return localPersistencePort.saveLocalData(shell);
-                    })
-                    .flatMap(savedLocal -> {
-                        log.info("📡 Enregistrement du véhicule {} dans le moteur Geofence", savedLocal.licensePlate());
-                        return geofencePort.registerVehicleAndAssignToZone(savedLocal, null, "POLYGON")
-                                .thenReturn(savedLocal)
-                                .onErrorResume(e -> {
-                                    log.warn("⚠️ Synchro Geofence échouée pour {}: {}", savedLocal.licensePlate(), e.getMessage());
-                                    return Mono.just(savedLocal);
-                                });
-                    });
-            }).flatMap(v -> getVehicleDetails(v.id(), token));
+        return Mono.zip(
+            args -> args, // Combinateur : on retourne le tableau brut
+            vehicleTypeRepo.findById(req.vehicleTypeId()).switchIfEmpty(Mono.error(VehicleException.invalidVehicleType())),
+            mfrRepo.findById(req.manufacturerId()),
+            brandRepo.findById(req.brandId()),
+            modelRepo.findById(req.modelId()),
+            sizeRepo.findById(req.sizeId()),
+            usageRepo.findById(req.usageTypeId()),
+            fuelRepo.findById(req.fuelTypeId()),
+            transRepo.findById(req.transmissionTypeId()),
+            colorRepo.findById(req.colorId())
+        )
+        .cast(Object[].class)
+        .flatMap(args -> {
+            // On récupère les entités par leur index (0 à 8)
+            var typeEntity  = (com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.VehicleTypeEntity) args[0]; // Attention au type si different
+            var brandLabel  = ((com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.resources.BrandEntity) args[2]).getLabel();
+            var modelLabel  = ((com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.resources.VehicleModelEntity) args[3]).getLabel();
+            var fuelLabel   = ((com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.resources.FuelTypeEntity) args[6]).getLabel();
+            var transLabel  = ((com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.resources.TransmissionTypeEntity) args[7]).getLabel();
+            var colorLabel  = ((com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.resources.VehicleColorEntity) args[8]).getLabel();
+
+                return externalVehiclePort.createRemoteVehicle(
+                    req, 
+                    token, 
+                    brandLabel, 
+                    modelLabel, 
+                    fuelLabel, 
+                    transLabel, 
+                    colorLabel
+                )
+                .flatMap(remote -> {
+                    Vehicle shell = new Vehicle(
+                        remote.id(), fleetId, managerId, null, req.vehicleTypeId(),
+                        req.licensePlate(), remote.vehicleSerialNumber(), brandLabel, modelLabel,
+                        req.manufacturingYear(), transLabel, fuelLabel, 
+                        req.tankCapacity(), req.totalSeatNumber(), req.averageFuelConsumption(), 
+                        colorLabel, "AVAILABLE", remote.photoUrl(), 
+                        null, null, Collections.emptyList(), null, null, null, null); 
+                    
+                    return localPersistencePort.saveLocalData(shell);
+                })
+                .flatMap(savedLocal -> geofencePort.registerVehicleAndAssignToZone(savedLocal, null, "POLYGON")
+                        .thenReturn(savedLocal)
+                        .onErrorResume(e -> Mono.just(savedLocal)));
+        }).flatMap(v -> getVehicleDetails(v.id(), token));
     }
 
     @Override
     @Transactional
-    public Mono<Vehicle> patchVehicleInfo(UUID id, Map<String, Object> u, String t) {
-        return externalVehiclePort.patchRemoteVehicle(id, u, t)
-                .flatMap(r -> syncLocalCache(r, id));
+    public Mono<Vehicle> patchVehicleInfo(UUID id, Map<String, Object> updates, String token) {
+        return externalVehiclePort.patchRemoteVehicle(id, updates, token)
+                .flatMap(remote -> syncLocalCache(remote, id));
     }
 
     @Override
@@ -144,7 +177,7 @@ public class VehicleService implements ManageVehicleUseCase {
     }
 
     // ========================================================================
-    // --- 09c. OPÉRATIONNEL (CONTRAT DRIVER) ---
+    // --- 09c. OPÉRATIONNEL (DRIVER) ---
     // ========================================================================
 
     @Override
@@ -177,17 +210,53 @@ public class VehicleService implements ManageVehicleUseCase {
     }
 
     // ========================================================================
-    // --- 09d. RÉFÉRENTIELS (CONTRAT LOOKUP LOCAL) ---
+    // --- 09d. RÉFÉRENTIELS (LOOKUP MANAGER) ---
     // ========================================================================
 
     @Override
     public Flux<Map<String, Object>> getLocalLookupData(String resource) {
         return switch (resource.toLowerCase()) {
-            case "vehicle-types" -> vehicleTypeRepo.findAll().map(t -> Map.of("id", t.getId(), "label", t.getLabel(), "code", t.getCode()));
-            case "manufacturers" -> mfrRepo.findAll().map(m -> Map.of("id", m.getId(), "label", m.getLabel(), "code", m.getCode()));
-            case "fuel-types" -> fuelRepo.findAll().map(f -> Map.of("id", f.getId(), "label", f.getLabel(), "code", f.getCode()));
+            case "vehicle-types"  -> vehicleTypeRepo.findAll().map(t -> Map.of("id", t.getId(), "label", t.getLabel(), "code", t.getCode()));
+            case "manufacturers"  -> mfrRepo.findAll().map(m -> Map.of("id", m.getId(), "label", m.getLabel(), "code", m.getCode()));
+            case "brands"         -> brandRepo.findAll().map(b -> Map.of("id", b.getId(), "label", b.getLabel(), "code", b.getCode()));
+            case "models"         -> modelRepo.findAll().map(m -> Map.of("id", m.getId(), "label", m.getLabel(), "code", m.getCode()));
+            case "sizes"          -> sizeRepo.findAll().map(s -> Map.of("id", s.getId(), "label", s.getLabel(), "code", s.getCode()));
+            case "usages"         -> usageRepo.findAll().map(u -> Map.of("id", u.getId(), "label", u.getLabel(), "code", u.getCode()));
+            case "fuel-types"     -> fuelRepo.findAll().map(f -> Map.of("id", f.getId(), "label", f.getLabel(), "code", f.getCode()));
+            case "transmissions"  -> transRepo.findAll().map(t -> Map.of("id", t.getId(), "label", t.getLabel(), "code", t.getCode()));
+            case "colors"         -> colorRepo.findAll().map(c -> Map.of("id", c.getId(), "label", c.getLabel(), "code", c.getCode()));
             default -> Flux.error(VehicleException.invalidResource());
         };
+    }
+
+    @Override
+    public Mono<Map<String, Object>> getAllResourcesCatalog() {
+        return Mono.zip(
+            args -> args, // Combinateur
+            vehicleTypeRepo.findAll().collectList(),
+            mfrRepo.findAll().collectList(),
+            brandRepo.findAll().collectList(),
+            modelRepo.findAll().collectList(),
+            sizeRepo.findAll().collectList(),
+            usageRepo.findAll().collectList(),
+            fuelRepo.findAll().collectList(),
+            transRepo.findAll().collectList(),
+            colorRepo.findAll().collectList()
+        )
+        .cast(Object[].class)
+        .map(args -> {
+            Map<String, Object> catalog = new HashMap<>();
+            catalog.put("vehicleTypes",      args[0]);
+            catalog.put("manufacturers",     args[1]);
+            catalog.put("brands",            args[2]);
+            catalog.put("models",            args[3]);
+            catalog.put("sizes",             args[4]);
+            catalog.put("usages",            args[5]);
+            catalog.put("fuelTypes",         args[6]);
+            catalog.put("transmissionTypes", args[7]);
+            catalog.put("colors",            args[8]);
+            return catalog;
+        });
     }
 
     // ========================================================================
@@ -211,4 +280,6 @@ public class VehicleService implements ManageVehicleUseCase {
                     return localPersistencePort.saveLocalData(updated);
                 });
     }
-}
+    
+
+    }

@@ -6,13 +6,41 @@ import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 public record VehicleRequest(
-    @NotBlank(message = "La marque est obligatoire")
-    @Schema(example = "Toyota")
-    String brand,
+    @NotNull(message = "Le type de véhicule est obligatoire")
+    @Schema(description = "ID issu de /lookup/vehicle-types")
+    UUID vehicleTypeId,
 
-    @NotBlank(message = "Le modèle est obligatoire")
-    @Schema(example = "Yaris")
-    String model,
+    @NotNull(message = "Le constructeur est obligatoire")
+    @Schema(description = "ID issu de /lookup/manufacturers")
+    UUID manufacturerId,
+
+    @NotNull(message = "La marque est obligatoire")
+    @Schema(description = "ID issu de /lookup/brands")
+    UUID brandId,
+
+    @NotNull(message = "Le modèle est obligatoire")
+    @Schema(description = "ID issu de /lookup/models")
+    UUID modelId,
+
+    @NotNull(message = "Le gabarit est obligatoire")
+    @Schema(description = "ID issu de /lookup/sizes")
+    UUID sizeId,
+
+    @NotNull(message = "Le type d'usage est obligatoire")
+    @Schema(description = "ID issu de /lookup/usages")
+    UUID usageTypeId,
+
+    @NotNull(message = "L'énergie est obligatoire")
+    @Schema(description = "ID issu de /lookup/fuel-types")
+    UUID fuelTypeId,
+
+    @NotNull(message = "La transmission est obligatoire")
+    @Schema(description = "ID issu de /lookup/transmissions")
+    UUID transmissionTypeId,
+
+    @NotNull(message = "La couleur est obligatoire")
+    @Schema(description = "ID issu de /lookup/colors")
+    UUID colorId,
 
     @NotBlank(message = "La plaque d'immatriculation est obligatoire")
     @Schema(example = "LT-123-AA")
@@ -21,36 +49,8 @@ public record VehicleRequest(
     @Schema(example = "VIN-987654321")
     String vehicleSerialNumber,
 
-    @NotNull(message = "Le type de véhicule local est obligatoire")
-    UUID vehicleTypeId,
-
-    @NotBlank(message = "Le fabricant est obligatoire")
-    @Schema(example = "Toyota Motor Group")
-    String manufacturerName,
-
-    @NotBlank(message = "La taille/gabarit est obligatoire")
-    @Schema(example = "Citadine Compacte")
-    String sizeName,
-
-    @NotBlank(message = "Le type d'usage est obligatoire")
-    @Schema(example = "Personnel")
-    String typeName,
-
-    @NotBlank(message = "Le type de carburant est obligatoire")
-    @Schema(example = "Essence")
-    String fuelType,
-
-    @Schema(example = "Manuelle")
-    String transmissionType,
-
-    @Schema(example = "Rouge")
-    String color,
-
-    @Schema(example = "2022")
+    @Schema(example = "2024")
     Integer manufacturingYear,
-
-    @Schema(example = "AVAILABLE")
-    String status,
 
     Double tankCapacity,
     Integer totalSeatNumber,

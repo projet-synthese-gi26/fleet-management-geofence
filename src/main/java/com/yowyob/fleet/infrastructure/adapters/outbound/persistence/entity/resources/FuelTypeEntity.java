@@ -1,4 +1,4 @@
-package com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity;
+package com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.resources;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -35,7 +35,16 @@ public class OpenApiConfig {
     public static final String TAG_TRIPS = "11. Trips";
     public static final String TAG_GEOFENCING = "12. Geofencing";
     public static final String TAG_PAYMENTS = "13. Payments";
-
+    // --- SOUS-TAGS RESSOURCES ---
+    public static final String TAG_RES_TYPES   = "06a. Admin | Ressources : Types de véhicules";
+    public static final String TAG_RES_MFR     = "06b. Admin | Ressources : Constructeurs";
+    public static final String TAG_RES_BRANDS  = "06c. Admin | Ressources : Marques";
+    public static final String TAG_RES_MODELS  = "06d. Admin | Ressources : Modèles";
+    public static final String TAG_RES_SIZES   = "06e. Admin | Ressources : Gabarits";
+    public static final String TAG_RES_USAGES  = "06f. Admin | Ressources : Usages";
+    public static final String TAG_RES_FUELS   = "06g. Admin | Ressources : Carburants";
+    public static final String TAG_RES_TRANS   = "06h. Admin | Ressources : Transmissions";
+    public static final String TAG_RES_COLORS  = "06i. Admin | Ressources : Couleurs";
     @Bean
     public OpenAPI customOpenAPI() {
         final String securitySchemeName = "bearerAuth";
@@ -66,6 +75,15 @@ public class OpenApiConfig {
                     TAG_SUPER_ADMIN,
                     TAG_ADMIN_MANAGERS,
                     TAG_ADMIN_RESOURCES,
+                    TAG_RES_TYPES ,
+                    TAG_RES_MFR,
+                    TAG_RES_BRANDS,
+                    TAG_RES_MODELS,
+                    TAG_RES_SIZES,
+                    TAG_RES_USAGES,
+                    TAG_RES_FUELS,
+                    TAG_RES_TRANS,
+                    TAG_RES_COLORS,
                     TAG_FLEET_MANAGERS,
                     TAG_DRIVERS,
                     TAG_VHC_PARC, 

@@ -12,8 +12,25 @@ public interface ExternalVehiclePort {
     Mono<Vehicle> getExternalVehicleInfo(UUID vehicleId, String token);
     
     // On passe notre DTO métier à l'adapter
-    Mono<Vehicle> createRemoteVehicle(VehicleRequest request, String token);
-    Mono<Vehicle> updateRemoteVehicle(UUID vehicleId, VehicleRequest request, String token);
+    Mono<Vehicle> createRemoteVehicle(
+    VehicleRequest request, 
+    String token, 
+    String brandLabel, 
+    String modelLabel, 
+    String fuelLabel, 
+    String transLabel, 
+    String colorLabel
+);
+    Mono<Vehicle> updateRemoteVehicle(
+    UUID vehicleId, 
+    VehicleRequest request, 
+    String token,
+    String brandLabel, 
+    String modelLabel, 
+    String fuelLabel, 
+    String transLabel, 
+    String colorLabel
+);
     Mono<Vehicle> patchRemoteVehicle(UUID vehicleId, Map<String, Object> updates, String token);
     
     Mono<Void> deleteRemoteVehicle(UUID vehicleId, String token);

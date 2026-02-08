@@ -139,8 +139,28 @@ public class VehicleController {
 
     @Tag(name = OpenApiConfig.TAG_VHC_LOOKUP)
     @GetMapping("/vehicles/lookup/{resource}")
-    @Operation(summary = "Listes de référence", description = "Récupère les options valides (manufacturers, fuel-types, vehicle-types) de la DB locale. Acteur: Tous.")
+    @Operation(
+    summary = "Listes de référence", 
+    description = "Récupère une liste de choix spécifique depuis la base souveraine. " +
+                      "\n\n**Ressources disponibles ({resource}) :** " +
+                      "\n- `vehicle-types` : Catégories globales (BUS, CAR, etc.)" +
+                      "\n- `manufacturers` : Constructeurs industriels" +
+                      "\n- `brands` : Marques commerciales" +
+                      "\n- `models` : Modèles de véhicules" +
+                      "\n- `sizes` : Gabarits / Tailles" +
+                      "\n- `usages` : Types d'usage (Taxi, VIP, etc.)" +
+                      "\n- `fuel-types` : Types d'énergie" +
+                      "\n- `transmissions` : Types de boîtes de vitesse" +
+                      "\n- `colors` : Catalogue des couleurs autorisées" +
+                      "\n\n**Acteur :** Tous (Public/Manager)."
+)
     public Flux<Map<String, Object>> getLookup(@PathVariable String resource) {
         return vehicleUseCase.getLocalLookupData(resource);
+    }
+    @Tag(name = OpenApiConfig.TAG_VHC_LOOKUP)
+    @GetMapping("/vehicles/resources/all")
+    @Operation(summary = "Catalogue complet", description = "Récupère les 9 référentiels en un seul appel. Idéal pour initialiser les formulaires.")
+    public Mono<Map<String, Object>> getFullCatalog() {
+        return vehicleUseCase.getAllResourcesCatalog();
     }
 }
