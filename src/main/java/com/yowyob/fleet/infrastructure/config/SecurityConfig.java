@@ -32,15 +32,7 @@ public class SecurityConfig {
 
 
         jwtFilter.setRequiresAuthenticationMatcher(
-                ServerWebExchangeMatchers.pathMatchers(
-                        "/api/v1/account/**",
-                        "/api/v1/fleets/**",
-                        "/api/v1/drivers/**",
-                        "/api/v1/vehicles/**",
-                        "/api/v1/geofence/**",
-                        "/api/v1/payments/**", 
-                        "/api/v1/admin/**"
-                )
+                ServerWebExchangeMatchers.pathMatchers("/api/v1/**")
         );
 
         return http
