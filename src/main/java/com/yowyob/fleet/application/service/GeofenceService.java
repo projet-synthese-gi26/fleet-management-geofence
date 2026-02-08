@@ -279,36 +279,40 @@ public class GeofenceService implements ManageGeofenceUseCase {
     }
 
   @Override
-  @Transactional
+    @Transactional
     public Mono<Void> assignZoneToFleet(UUID zoneId, UUID fleetId, UUID managerId) {
         return zoneRepo.findById(zoneId)
-                .filter(z -> z.getManagerId().equals(managerId))
+                .filter(z -> z.getManagerId().equals(managerId)) // Sécurité propriétaire
                 .switchIfEmpty(Mono.error(new RuntimeException("Zone introuvable ou non autorisée")))
                 .flatMap(z -> {
+                    // 1. Mise à jour locale
                     z.setFleetId(fleetId);
-                    z.setNew(false);
+                    z.setNew(false); // Update
+                    
                     return zoneRepo.save(z)
+                        // 2. Déclenchement de la synchro de masse
                         .then(syncFleetVehiclesToZone(fleetId, zoneId, z.getZoneType()));
                 }).then();
     }
 
+    /**
+     * Helper : Prend tous les véhicules d'une flotte et les pousse dans une zone donnée.
+     */
     private Mono<Void> syncFleetVehiclesToZone(UUID fleetId, UUID zoneId, String zoneType) {
-        log.info("🔄 Début de l'assignation des véhicules de la flotte {} à la zone {}", fleetId, zoneId);
+        log.info("🔄 [Geofence Sync] Ajout des véhicules de la flotte {} à la zone {}", fleetId, zoneId);
 
-        // On récupère tous les véhicules de la flotte en base locale
-        return vehiclePersistencePort.getAllVehicles() // Utilisation du port, pas repository direct
-                .filter(v -> fleetId.equals(v.fleetId())) // Filtre en mémoire ou optimiser repository
-                .filter(v -> v.geofenceRemoteId() != null) // On ne traite que ceux qui ont un ID Geofence
+        return vehiclePersistencePort.getAllVehicles() // Idéalement : getVehiclesByFleetId(fleetId) serait plus performant
+                .filter(v -> fleetId.equals(v.fleetId())) // Filtrage mémoire si pas de méthode repo dédiée
+                .filter(v -> v.geofenceRemoteId() != null)
                 .flatMap(vehicle -> {
-                    log.debug("👉 Ajout du véhicule {} ({}) à la zone", vehicle.licensePlate(),
-                            vehicle.geofenceRemoteId());
+                    log.debug("👉 Ajout véhicule {} ({}) -> Zone {}", vehicle.licensePlate(), vehicle.geofenceRemoteId(), zoneId);
+                    
                     return externalApi.addVehicleToZone(vehicle.geofenceRemoteId(), zoneId, zoneType)
                             .onErrorResume(e -> {
-                                log.warn("⚠️ Échec pour le véhicule {}: {}", vehicle.licensePlate(), e.getMessage());
-                                return Mono.empty(); // On continue malgré l'erreur
+                                log.warn("⚠️ Échec partiel pour véhicule {}: {}", vehicle.licensePlate(), e.getMessage());
+                                return Mono.empty(); // Best effort : on ne bloque pas tout pour un échec
                             });
                 })
                 .then();
     }
-
 }

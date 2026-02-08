@@ -18,6 +18,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import com.yowyob.fleet.domain.ports.out.GeofencePersistencePort; // AJOUTER
+import com.yowyob.fleet.domain.ports.out.FleetRepositoryPort;     // AJOUTER
+
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -34,6 +37,9 @@ public class VehicleService implements ManageVehicleUseCase {
     private final VehiclePersistencePort localPersistencePort;
     private final ExternalVehiclePort externalVehiclePort;
     private final ExternalGeofencePort geofencePort; 
+     // Ajout des ports nécessaires pour la validation et la récupération des zones
+    private final GeofencePersistencePort geofencePersistencePort; 
+    private final FleetRepositoryPort fleetRepository;
 
     // Repositories des ressources (Souveraineté)
     private final VehicleTypeR2dbcRepository vehicleTypeRepo;
@@ -51,6 +57,56 @@ public class VehicleService implements ManageVehicleUseCase {
     // ========================================================================
     // --- 09a. GESTION DU PARC (FLEET MANAGER) ---
     // ========================================================================
+     // --- NOUVELLE MÉTHODE : SENS A (Véhicule -> Flotte -> Zones) ---
+    @Override
+    @Transactional
+    public Mono<Void> assignVehicleToFleet(UUID fleetId, UUID vehicleId, UUID managerId) {
+        // 1. Vérification : La flotte existe et appartient au manager
+        return fleetRepository.existsByIdAndManagerId(fleetId, managerId)
+            .filter(exists -> exists)
+            .switchIfEmpty(Mono.error(new RuntimeException("Flotte introuvable ou accès refusé.")))
+            
+            // 2. Récupération et mise à jour du véhicule local
+            .then(localPersistencePort.getLocalDataById(vehicleId))
+            .switchIfEmpty(Mono.error(VehicleException.notFound(vehicleId)))
+            .flatMap(vehicle -> {
+                // On met à jour le fleetId dans l'objet local
+                Vehicle updated = new Vehicle(
+                    vehicle.id(), fleetId, // Affectation FleetID
+                    vehicle.managerId(), vehicle.currentDriverId(), vehicle.vehicleTypeId(),
+                    vehicle.licensePlate(), vehicle.vehicleSerialNumber(), vehicle.brand(), vehicle.model(),
+                    vehicle.manufacturingYear(), vehicle.transmissionType(), vehicle.fuelType(),
+                    vehicle.tankCapacity(), vehicle.totalSeatNumber(), vehicle.averageFuelConsumption(),
+                    vehicle.color(), vehicle.status(), vehicle.photoUrl(), 
+                    vehicle.serialNumberPhotoUrl(), vehicle.registrationPhotoUrl(),
+                    vehicle.illustrationImages(), vehicle.financialParameters(), 
+                    vehicle.maintenanceParameters(), vehicle.operationalParameters(),
+                    vehicle.geofenceRemoteId()
+                );
+                return localPersistencePort.saveLocalData(updated);
+            })
+            
+            // 3. SYNCHRONISATION GEOFENCE : On récupère toutes les zones de cette flotte
+            .flatMap(savedVehicle -> {
+                if (savedVehicle.geofenceRemoteId() == null) {
+                    log.warn("⚠️ Le véhicule {} n'a pas d'ID Geofence distant. Synchro Geofence ignorée.", savedVehicle.licensePlate());
+                    return Mono.empty();
+                }
+
+                log.info("🔄 Synchro : Ajout du véhicule {} aux zones de la flotte {}", savedVehicle.licensePlate(), fleetId);
+
+                return geofencePersistencePort.findByFleetId(fleetId) // Récupère les zones locales liées à la flotte
+                    .flatMap(zone -> {
+                        log.debug("👉 Ajout à la zone : {}", zone.name());
+                        return geofencePort.addVehicleToZone(savedVehicle.geofenceRemoteId(), zone.id(), zone.zoneType())
+                                .onErrorResume(e -> {
+                                    log.error("❌ Échec ajout véhicule à zone {}: {}", zone.id(), e.getMessage());
+                                    return Mono.empty(); // On continue pour les autres zones
+                                });
+                    })
+                    .then();
+            });
+    }
 
     @Override
     public Mono<Vehicle> getVehicleDetails(UUID vehicleId, String token) {

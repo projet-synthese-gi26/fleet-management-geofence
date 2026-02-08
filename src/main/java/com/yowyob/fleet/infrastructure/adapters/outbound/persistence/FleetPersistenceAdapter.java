@@ -39,4 +39,9 @@ public class FleetPersistenceAdapter implements FleetRepositoryPort {
     public Mono<Void> deleteById(UUID id) {
         return repository.deleteById(id);
     }
+
+    @Override
+    public Mono<Boolean> existsByIdAndManagerId(UUID id, UUID managerId) {
+        return repository.existsByIdAndManagerId(id, managerId);
+    }
 }

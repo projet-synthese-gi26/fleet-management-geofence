@@ -9,7 +9,8 @@ import java.util.Map;
 import java.util.UUID;
 
 public interface ManageVehicleUseCase {
-
+    
+    Mono<Void> assignVehicleToFleet(UUID fleetId, UUID vehicleId, UUID managerId);
     // --- 09a. Gestion du Parc (Fleet Manager) ---
     Mono<Vehicle> getVehicleDetails(UUID vehicleId, String token);
     Flux<Vehicle> getVehicles(UUID requesterId, boolean isAdmin, String token); 

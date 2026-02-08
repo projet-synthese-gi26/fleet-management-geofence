@@ -60,7 +60,7 @@
 - [ ] **Tâche 11 :** Test et finalisation module Trips (Courses).
 
 ## 🦅 Cluster Hassana
-- [ ] **Tâche 12 :** Finalisation module Geofence.
+- [x] **Tâche 12 :** Finalisation module Geofence.
 
 ## 🐢 Cluster Raphaël
 - [ ] **Tâche 13 :** Finalisation module Payments.

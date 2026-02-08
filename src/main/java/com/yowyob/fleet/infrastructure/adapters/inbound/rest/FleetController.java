@@ -54,6 +54,7 @@ public class FleetController {
         return fleetUseCase.createFleet(domainObj, getUser(auth).id())
                 .map(mapper::toResponse);
     }
+    
 
     @GetMapping
     @Operation(summary = "Lister les flottes", description = "Admin : Tout voir / Manager : Voir ses flottes uniquement.")

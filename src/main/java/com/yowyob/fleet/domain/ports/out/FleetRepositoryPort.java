@@ -10,4 +10,5 @@ public interface FleetRepositoryPort {
     Mono<Fleet> findById(UUID id);
     Flux<Fleet> findAll();
     Mono<Void> deleteById(UUID id);
+    Mono<Boolean> existsByIdAndManagerId(UUID fleetId, UUID managerId);
 }

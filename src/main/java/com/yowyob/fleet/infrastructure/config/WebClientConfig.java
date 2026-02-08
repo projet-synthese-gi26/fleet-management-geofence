@@ -1,6 +1,7 @@
 package com.yowyob.fleet.infrastructure.config;
 
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.*;
+import io.netty.resolver.DefaultAddressResolverGroup;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -37,7 +38,10 @@ public class WebClientConfig {
     @Bean
     @Primary // Pour que ce builder soit celui utilisé par défaut partout
     public WebClient.Builder webClientBuilder() {
+         HttpClient httpClient = HttpClient.create()
+                .resolver(DefaultAddressResolverGroup.INSTANCE);
         return WebClient.builder()
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .filter(logRequest()); // On lui injecte le filtre de log
     }
 
@@ -107,7 +111,10 @@ public class WebClientConfig {
         try {
             SslContext sslContext = SslContextBuilder.forClient()
                     .trustManager(InsecureTrustManagerFactory.INSTANCE).build();
-            HttpClient httpClient = HttpClient.create().secure(t -> t.sslContext(sslContext));
+            HttpClient httpClient = HttpClient.create()
+                .secure(t -> t.sslContext(sslContext))
+                .resolver(DefaultAddressResolverGroup.INSTANCE); 
+
             return WebClient.builder()
                     .baseUrl(baseUrl)
                     .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)

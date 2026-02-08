@@ -52,6 +52,18 @@ public class VehicleController {
     public Mono<Vehicle> create(@Valid @RequestBody VehicleRequest request, Authentication auth) {
         return vehicleUseCase.createIndependentVehicle(request, getUserId(auth), extractToken(auth));
     }
+    @Tag(name = OpenApiConfig.TAG_VHC_PARC)
+    @PostMapping("/fleets/{fleetId}/vehicles/{vehicleId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('FLEET_MANAGER')")
+    @Operation(summary = "Assigner un véhicule à une flotte", description = "Assigne le véhicule et l'ajoute automatiquement à toutes les zones de geofencing de cette flotte.")
+    public Mono<Void> assignToFleet(
+            @PathVariable UUID fleetId, 
+            @PathVariable UUID vehicleId, 
+            Authentication auth) {
+        return vehicleUseCase.assignVehicleToFleet(fleetId, vehicleId, getUserId(auth));
+    }
+
 
     @Tag(name = OpenApiConfig.TAG_VHC_PARC)
     @GetMapping("/vehicles")
