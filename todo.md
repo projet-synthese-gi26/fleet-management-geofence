@@ -56,9 +56,41 @@
     - [x] **Tâche 9.2 :** **Lookup local** : Rediriger les routes `/lookup` pour consommer les données de notre base `fleet` au lieu du service externe.
     - [x] **Tâche 9.3 :** **Gestion Opérationnelle** : Implémenter la route `/operational` pour permettre aux drivers de consulter/ajuster l'état du véhicule.
     - [x] **Tâche 9.4 :** **Nettoyage Swagger** : Appliquer le découpage en 4 sous-tags (9a, 9b, 9c, 9d) et uniformiser les erreurs.
-- [ ] **Tâche 10 :** Test et finalisation module Fleets.
-- [ ] **Tâche 11 :** Test et finalisation module Trips (Courses).
-
+- [x] **Tâche 10 : Test et finalisation module Fleets (Gestion Intégrale).**
+    - [x] **10.1 : Fondations & Robustesse**
+        - [x] Création de `FleetException` (Codes FLT_001 à FLT_006) pour une gestion d'erreur granulaire.
+        - [x] Implémentation des DTOs documentés (`FleetAssignVehicleRequest`, `RecruitDriverRequest`).
+    - [x] **10.2 : Administration & CRUD (10a)**
+        - [x] Finalisation des endpoints de base (Create, Read, Update, Delete).
+        - [x] Sécurisation de la suppression : Interdire `DELETE` si la flotte contient encore des véhicules ou chauffeurs actifs.
+        - [x] Validation des statistiques de flotte (KPIs temps réel).
+    - [x] **10.3 : Gestion du Parc Véhicules (10b)**
+        - [x] Migration et adaptation de la route d'assignation (Véhicule -> Flotte).
+        - [x] Implémentation du retrait de véhicule (Détachement de la flotte).
+        - [x] **Trigger Geofence** : Automatiser l'ajout/retrait du véhicule dans les zones liées à la flotte lors du changement d'affectation.
+    - [x] **10.4 : Gestion des Chauffeurs (10c)**
+        - [x] Endpoint de création directe : `POST /fleets/{id}/drivers/register` (Nouveau compte + Profil métier).
+        - [x] Endpoint de recrutement : `POST /fleets/{id}/drivers` (Lier un chauffeur existant via email/username).
+        - [x] Logique de détachement : Retirer un chauffeur d'une flotte sans supprimer son compte.
+    - [x] **10.5 : Finalisation Swagger & Clean-up**
+        - [x] Application du découpage en 3 sous-tags (10a, 10b, 10c).
+        - [x] Nettoyage définitif des routes redondantes dans `VehicleController` et `DriverController`.
+- [x] **Tâche 11 :** Test et finalisation module Trips (Courses).
+    - [x] **Tâche 11 : Test et finalisation module Trips (Courses & Télémétrie).**
+    - [x] **11.1 : Fondations**
+        - [x] Création de `TripException` (TRP_001 à TRP_006).
+        - [x] Implémentation du filtrage strict : Un driver ne peut démarrer que sur SON véhicule assigné.
+    - [x] **11.2 : Logique de Course (11a)**
+        - [x] Sécurisation du `startTrip` : Vérification multi-niveaux (Driver dispo, Véhicule dispo, Assignation valide).
+        - [x] Optimisation `sendTelemetry` : Pipeline Redis pour performance.
+        - [x] Finalisation `endTrip` : Calcul de distance et mise à jour de l'odomètre global du véhicule dans `operational_parameters`.
+    - [x] **11.3 : Monitoring & Historique (11b)**
+        - [x] Implémentation du listing paginé pour le Manager.
+        - [x] Ajout de la route `/active` pour le monitoring temps réel du parc.
+    - [x] **11.4 : Intégration Geofence Live**
+        - [x] Trigger automatique de détection de zone lors de la télémétrie.
+    - [x] **11.5 : Nettoyage Swagger**
+        - [x] Application des tags `11a` et `11b` et documentation des DTOs.
 ## 🦅 Cluster Hassana
 - [x] **Tâche 12 :** Finalisation module Geofence.
 

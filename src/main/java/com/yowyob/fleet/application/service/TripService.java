@@ -1,22 +1,23 @@
 package com.yowyob.fleet.application.service;
 
+import com.yowyob.fleet.domain.exception.TripException;
 import com.yowyob.fleet.domain.model.Trip;
 import com.yowyob.fleet.domain.ports.in.ManageTripUseCase;
-import com.yowyob.fleet.domain.ports.out.DistanceCalculatorPort;
+import com.yowyob.fleet.domain.ports.out.*;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.RedisTelemetryAdapter;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.TripEntity;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.TripR2dbcRepository;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.VehicleLocalR2dbcRepository;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.OperationalParameterR2dbcRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneOffset;
+import java.math.BigDecimal;
+import java.time.*;
 import java.util.UUID;
 
 @Slf4j
@@ -26,58 +27,72 @@ public class TripService implements ManageTripUseCase {
 
     private final TripR2dbcRepository tripRepository;
     private final VehicleLocalR2dbcRepository vehicleRepository;
+    private final DriverPersistencePort driverPersistence;
+    private final OperationalParameterR2dbcRepository operationalRepo;
     private final RedisTelemetryAdapter redisTelemetry;
     private final DistanceCalculatorPort distanceCalculator;
+    private final ExternalGeofencePort geofenceApi;
 
     @Override
     @Transactional
     public Mono<Trip> startTrip(UUID driverId, UUID vehicleId) {
-        // 1. Vérifications : Chauffeur déjà en course ? Véhicule déjà pris ?
-        return tripRepository.findByDriverIdAndStatus(driverId, "ONGOING")
-            .flatMap(t -> Mono.error(new IllegalStateException("Vous avez déjà une course en cours !")))
-            .switchIfEmpty(
-                vehicleRepository.findById(vehicleId)
-                    .filter(v -> "AVAILABLE".equals(v.getStatus()))
-                    .switchIfEmpty(Mono.error(new IllegalStateException("Véhicule non disponible ou inexistant")))
-            )
-            .then(Mono.defer(() -> {
-                // Capture du temps UTC
-                Instant now = Instant.now();
-                LocalDate today = LocalDate.ofInstant(now, ZoneOffset.UTC);
-                LocalTime currentTime = LocalTime.ofInstant(now, ZoneOffset.UTC);
+        return Mono.zip(
+            tripRepository.findByDriverIdAndStatus(driverId, "ONGOING").hasElement(),
+            vehicleRepository.findById(vehicleId).switchIfEmpty(Mono.error(TripException.notFound(vehicleId))),
+            driverPersistence.findById(driverId)
+        ).flatMap(tuple -> {
+            boolean hasActiveTrip = tuple.getT1();
+            var vehicle = tuple.getT2();
+            var driver = tuple.getT3();
 
-                // 2. Création du Trip
-                TripEntity trip = new TripEntity();
-                trip.setId(UUID.randomUUID());
-                trip.setDriverId(driverId);
-                trip.setVehicleId(vehicleId);
-                
-                // Correction du typage ici : Instant -> LocalDate / LocalTime
-                trip.setStartDate(today);
-                trip.setStartTime(currentTime);
-                
-                trip.setStatus("ONGOING");
-                trip.setNew(true); // Force INSERT pour R2DBC
+            if (hasActiveTrip) return Mono.error(TripException.driverOccupied());
+            if (!"AVAILABLE".equals(vehicle.getStatus())) return Mono.error(TripException.vehicleOccupied());
+            if (driver.assignedVehicleId() == null || !driver.assignedVehicleId().equals(vehicleId)) 
+                return Mono.error(TripException.vehicleNotAssigned());
 
-                // 3. Mise à jour Véhicule -> ON_TRIP
-                return vehicleRepository.findById(vehicleId)
-                        .flatMap(v -> {
-                            v.setStatus("ON_TRIP");
-                            // IMPORTANT : isNew false car c'est un update
-                            v.setNew(false); 
-                            return vehicleRepository.save(v);
-                        })
-                        .then(tripRepository.save(trip));
-            }))
-            .map(this::mapToDomain);
+            // Création Trip
+            TripEntity entity = new TripEntity();
+            entity.setId(UUID.randomUUID());
+            entity.setDriverId(driverId);
+            entity.setVehicleId(vehicleId);
+            entity.setStartDate(LocalDate.now(ZoneOffset.UTC));
+            entity.setStartTime(LocalTime.now(ZoneOffset.UTC));
+            entity.setStatus("ONGOING");
+            entity.setNew(true);
+
+            // Verrouillage véhicule
+            vehicle.setStatus("ON_TRIP");
+            vehicle.setNew(false);
+
+            return vehicleRepository.save(vehicle)
+                    .then(tripRepository.save(entity))
+                    .map(this::mapToDomain);
+        });
     }
 
     @Override
     public Mono<Void> sendTelemetry(UUID tripId, Double lat, Double lng, Double speed) {
-        // 1. Mise à jour Redis (Historique pour distance)
-        return redisTelemetry.addPoint(tripId, lat, lng)
-            // 2. TODO: Mise à jour OperationalParams dans Postgres (Dernière position) au prochain Jalon
-            .then();
+        return tripRepository.findById(tripId)
+            .filter(t -> "ONGOING".equals(t.getStatus()))
+            .switchIfEmpty(Mono.error(TripException.actionOnCompletedTrip()))
+            .flatMap(trip -> {
+                // 1. Redis (chaud)
+                Mono<Void> redisTask = redisTelemetry.addPoint(tripId, lat, lng);
+                
+                // 2. Postgres Operational Params (Position Live)
+                Mono<Void> sqlTask = operationalRepo.findByVehicleId(trip.getVehicleId())
+                    .flatMap(op -> {
+                        op.setCurrentLocation(lat + "," + lng);
+                        op.setCurrentSpeed(BigDecimal.valueOf(speed != null ? speed : 0.0));
+                        op.setTimestamp(Instant.now());
+                        return operationalRepo.save(op);
+                    }).then();
+
+                // 3. Geofence Check (Fire & Forget)
+                geofenceApi.checkPointInZone(null, lat, lng).subscribe(); 
+
+                return Mono.when(redisTask, sqlTask);
+            });
     }
 
     @Override
@@ -85,63 +100,39 @@ public class TripService implements ManageTripUseCase {
     public Mono<Trip> endTrip(UUID tripId) {
         return tripRepository.findById(tripId)
             .filter(t -> "ONGOING".equals(t.getStatus()))
-            .switchIfEmpty(Mono.error(new IllegalStateException("Trajet introuvable ou déjà terminé")))
-            .flatMap(trip -> {
-                // 1. Calcul Distance via Redis
-                return redisTelemetry.getTripPath(tripId)
-                    .collectList()
-                    .map(points -> distanceCalculator.calculateTotalDistanceKm(points))
-                    .flatMap(distance -> {
-                        // Capture du temps de fin UTC
-                        Instant now = Instant.now();
-                        
-                        // 2. Mise à jour Trip
-                        trip.setEndDate(LocalDate.ofInstant(now, ZoneOffset.UTC));
-                        trip.setEndTime(LocalTime.ofInstant(now, ZoneOffset.UTC));
-                        trip.setStatus("COMPLETED");
-                        trip.setDistanceKm(distance); 
-                        trip.setNew(false); // Update
+            .flatMap(trip -> redisTelemetry.getTripPath(tripId).collectList()
+                .flatMap(points -> {
+                    Double distance = distanceCalculator.calculateTotalDistanceKm(points);
+                    
+                    // Mise à jour Trip
+                    trip.setStatus("COMPLETED");
+                    trip.setEndDate(LocalDate.now(ZoneOffset.UTC));
+                    trip.setEndTime(LocalTime.now(ZoneOffset.UTC));
+                    trip.setDistanceKm(distance);
+                    trip.setNew(false);
 
-                        // 3. Libération Véhicule
-                        return vehicleRepository.findById(trip.getVehicleId())
-                                .flatMap(v -> {
-                                    v.setStatus("AVAILABLE");
-                                    v.setNew(false);
-                                    return vehicleRepository.save(v);
-                                })
-                                .then(tripRepository.save(trip))
-                                // 4. Nettoyage Redis (Fire & Forget)
-                                .doOnSuccess(t -> redisTelemetry.clearTripPath(tripId).subscribe());
-                    });
-            })
+                    // Libération véhicule + Mise à jour Odomètre
+                    return vehicleRepository.findById(trip.getVehicleId())
+                        .flatMap(v -> { v.setStatus("AVAILABLE"); v.setNew(false); return vehicleRepository.save(v); })
+                        .then(operationalRepo.findByVehicleId(trip.getVehicleId()))
+                        .flatMap(op -> {
+                            double currentOdo = op.getOdometerReading() != null ? op.getOdometerReading().doubleValue() : 0.0;
+                            op.setOdometerReading(BigDecimal.valueOf(currentOdo + distance));
+                            op.setMileage(BigDecimal.valueOf(currentOdo + distance));
+                            return operationalRepo.save(op);
+                        })
+                        .then(tripRepository.save(trip))
+                        .doOnSuccess(t -> redisTelemetry.clearTripPath(tripId).subscribe());
+                }))
             .map(this::mapToDomain);
     }
 
-    @Override
-    public Mono<Trip> getCurrentTrip(UUID driverId) {
-        return tripRepository.findByDriverIdAndStatus(driverId, "ONGOING")
-                .map(this::mapToDomain);
-    }
+    @Override public Mono<Trip> getMyActiveTrip(UUID d) { return tripRepository.findByDriverIdAndStatus(d, "ONGOING").map(this::mapToDomain); }
+    @Override public Flux<Trip> getMyTripHistory(UUID d) { return tripRepository.findAll().filter(t -> d.equals(t.getDriverId())).map(this::mapToDomain); }
+    @Override public Mono<Trip> getTripById(UUID id) { return tripRepository.findById(id).map(this::mapToDomain); }
+    @Override public Flux<Trip> getManagerTrips(UUID m, UUID f) { return tripRepository.findAll().map(this::mapToDomain); } // Simplifié
 
-    @Override
-    public Mono<Trip> getTripById(UUID tripId) {
-        return tripRepository.findById(tripId)
-                .map(this::mapToDomain);
-    }
-
-    // Helper Mapper
     private Trip mapToDomain(TripEntity e) {
-        return new Trip(
-            e.getId(), 
-            e.getVehicleId(),
-            e.getDriverId(),
-            e.getStatus(),
-            e.getStartDate(),
-            e.getStartTime(),
-            e.getEndDate(),
-            e.getEndTime(),
-            e.getDistanceKm(),
-            e.getDurationMinutes()
-        );
+        return new Trip(e.getId(), e.getVehicleId(), e.getDriverId(), e.getStatus(), e.getStartDate(), e.getStartTime(), e.getEndDate(), e.getEndTime(), e.getDistanceKm(), e.getDurationMinutes());
     }
 }
