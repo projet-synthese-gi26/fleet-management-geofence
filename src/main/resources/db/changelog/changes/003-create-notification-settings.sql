@@ -2,7 +2,20 @@
 
 -- changeset yowyob:003-create-notification-settings
 -- comment: Table pour stocker les préférences de notification des utilisateurs
+--liquibase formatted sql
 
+--changeset gabriel:create-fleet-users-table
+CREATE TABLE IF NOT EXISTS fleet.users (
+    id UUID PRIMARY KEY,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    photo_url VARCHAR(255),
+    is_active BOOLEAN DEFAULT TRUE,
+    last_login_at TIMESTAMP,
+    deleted_at TIMESTAMP
+);
 CREATE TABLE IF NOT EXISTS fleet.notification_settings (
     user_id UUID PRIMARY KEY,
     enable_email BOOLEAN DEFAULT TRUE,

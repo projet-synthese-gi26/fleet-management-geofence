@@ -13,6 +13,10 @@ databaseChangeLog:
   - include:
       file: db/changelog/changes/002-fleet-tables.sql
 
+  # 3. Paramétrages et notifications
+  - include:
+      file: db/changelog/changes/003-create-notification-settings.sql
+
   # 4. Mise à jour Geofence (Dépend de 002 car référence la table fleets)
   - include:
       file: db/changelog/changes/004-update_geofence_tables.sql
@@ -22,10 +26,6 @@ databaseChangeLog:
       file: db/changelog/changes/005-move-users-to-fleet.sql
   - include:
       file: db/changelog/changes/006-add-photo-url-to-users.sql
-
-      # 3. Paramétrages et notifications (Dépend de 002 pour les références à fleet et users)
-  - include:
-      file: db/changelog/changes/003-create-notification-settings.sql
 
   # 6. Extensions véhicules et ressources (Dépend de 002)
   - include:

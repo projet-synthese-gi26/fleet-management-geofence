@@ -3,22 +3,6 @@
 --changeset gabriel:move-users-to-fleet-schema-v5 splitStatements:false
 --comment: Migration vers fleet.users utilisant l'email comme username pour garantir l'unicité et l'accès
 
--- 1. GARANTIR L'EXISTENCE DU SCHÉMA
-CREATE SCHEMA IF NOT EXISTS fleet;
-
--- 2. CRÉATION DE LA TABLE SOUVERAINE
-CREATE TABLE IF NOT EXISTS fleet.users (
-    id UUID PRIMARY KEY,
-    username VARCHAR(255) UNIQUE NOT NULL, -- Augmenté à 255 pour les emails
-    email VARCHAR(255) UNIQUE NOT NULL,
-    first_name VARCHAR(100),
-    last_name VARCHAR(100),
-    photo_url VARCHAR(255),
-    is_active BOOLEAN DEFAULT TRUE,
-    last_login_at TIMESTAMP,
-    deleted_at TIMESTAMP
-);
-
 -- 3. BLOC PROCÉDURAL POUR LA MIGRATION
 DO $$ 
 BEGIN 

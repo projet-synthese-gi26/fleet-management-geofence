@@ -1,5 +1,5 @@
 ﻿# Contexte du Projet : Fleet & Geofence API
-GÃ©nÃ©rÃ© le : 02/09/2026 08:42:25
+GÃ©nÃ©rÃ© le : 02/09/2026 10:10:27
 Framework : Spring Boot WebFlux (Reactive)
 
 ## 1. Arborescence du Projet
@@ -706,7 +706,7 @@ D:.
     ª   ª               ª       +---external
     ª   ª               ª       ª   ª   FakeAuthAdapter.class
     ª   ª               ª       ª   ª   FakeDistanceAdapter.class
-    ª   ª               ª       ª   ª   GeofenceApiAdapter$1.class
+    ª   ª               ª       ª   ª   GeofenceApiAdapter$6.class
     ª   ª               ª       ª   ª   GeofenceApiAdapter.class
     ª   ª               ª       ª   ª   PaymentApiAdapter.class
     ª   ª               ª       ª   ª   RemoteAuthAdapter$1.class
@@ -8009,6 +8009,7 @@ public class GeofenceService implements ManageGeofenceUseCase {
     public Mono<Map<String, Object>> getExternalAlerts(int p, int s) {
         return externalApi.fetchRemoteAlerts(p, s);
     }
+    
 
 
     // @Override
@@ -13235,77 +13236,50 @@ public class GeofenceApiAdapter implements ExternalGeofencePort {
     // Dans GeofenceApiAdapter.java
 
     // Helper pour construire le JSON complexe attendu par Geofence
-    private Map<String, Object> buildGeofenceMap(GeofenceZone zone) {
+   private Map<String, Object> buildGeofenceMap(GeofenceZone zone) {
         Map<String, Object> request = new HashMap<>();
         
-        // Champs obligatoires
         request.put("title", zone.name());
-        request.put("description", zone.description() != null ? zone.description() : ""); // Eviter null
-        
-        // BoolÃ©ens avec valeurs par dÃ©faut
+        request.put("description", zone.description() != null ? zone.description() : ""); 
         request.put("isTemporalEnabled", Boolean.TRUE.equals(zone.getIsTemporalEnabled()));
         request.put("isConditionalEnabled", Boolean.TRUE.equals(zone.getIsConditionalEnabled()));
         request.put("isActive", true);
 
-        // Dates : On ne les met que si elles existent, et on les formate en String pour Ãªtre sÃ»r
         if (zone.startTime() != null) {
-            request.put("startTime", zone.startTime().toString()); // ex: "08:00:00"
+            request.put("startTime", zone.startTime().toString());
         }
         if (zone.endTime() != null) {
             request.put("endTime", zone.endTime().toString());
         }
 
-        // Gestion Typage (Circle vs Polygon)
-        // L'API de Kamga semble attendre "type": "circle" ou "polygon" (minuscule souvent prÃ©fÃ©rÃ© en JSON)
         if ("CIRCLE".equalsIgnoreCase(zone.zoneType())) {
             request.put("type", "circle");
-            
-            // Format GeoJSON standard pour le point
             request.put("center", Map.of(
                 "type", "Point",
                 "coordinates", Arrays.asList(zone.centerLongitude(), zone.centerLatitude())
             ));
-            
-            // S'assurer que le radius est un nombre valide
             request.put("radius", zone.radius() != null ? zone.radius() : 100.0);
-            
         } else {
             request.put("type", "polygon");
-            
-            // Construction du Polygone GeoJSON
-            // Note: GeoJSON exige que le dernier point soit le mÃªme que le premier (fermeture)
             List<List<Double>> ring = new ArrayList<>();
             if (zone.vertices() != null) {
                 ring = new ArrayList<>(zone.vertices().stream()
                         .map(v -> Arrays.asList(v.longitude(), v.latitude())).toList());
                 
-                // Fermeture du polygone si nÃ©cessaire
                 if (!ring.isEmpty() && !ring.get(0).equals(ring.get(ring.size()-1))) {
                     ring.add(ring.get(0));
                 }
             }
-            
             request.put("polygon", Map.of(
                 "type", "Polygon", 
                 "coordinates", List.of(ring)
             ));
         }
-        
-        // Log pour debug (Ã  retirer en prod si trop verbeux)
-        try {
-            log.info("ðŸ“¤ Payload envoyÃ© Ã  Geofence: {}", objectMapper.writeValueAsString(request));
-        } catch (JsonProcessingException e) {
-            log.error("Erreur log payload", e);
-        }
-
         return request;
     }
+
     @Override
     public Flux<Map<String, Object>> getZonesByManager(UUID managerId, String category) {
-        // On dÃ©lÃ¨gue Ã  la mÃ©thode de listing interne qui gÃ¨re dÃ©jÃ  l'appel API et le
-        // Token
-        // Note: Le filtrage par managerId n'est pas encore gÃ©rÃ© par l'API externe, on
-        // renvoie tout.
         return listRemoteZones(category)
                 .flatMapMany(Flux::fromIterable);
     }
@@ -13326,7 +13300,6 @@ public class GeofenceApiAdapter implements ExternalGeofencePort {
 
     // MÃ©thode helper pour Ã©viter la duplication
     private Mono<List<Map<String, Object>>> fetchZonesInternal(String category, UUID userId, String token) {
-        // Le type local doit correspondre au retour du Client (Mono<JsonNode>)
         Mono<JsonNode> response;
 
         if ("circles".equalsIgnoreCase(category)) {
@@ -13340,22 +13313,33 @@ public class GeofenceApiAdapter implements ExternalGeofencePort {
         return response.map(jsonNode -> {
             List<Map<String, Object>> result = new ArrayList<>();
             
-            // Cas 1 : C'est un tableau JSON direct [...]
+            // Cas 1 : C'est un tableau JSON direct (Rare pour 'all', courant pour spÃ©cifique)
             if (jsonNode.isArray()) {
                 jsonNode.forEach(node -> result.add(convertNodeToMap(node)));
             } 
-            // Cas 2 : C'est un objet (Pagination ?) qui contient une liste "content"
+            // Cas 2 : Structure Geofence Engine { "polygons": [], "circles": [] }
+            else if (jsonNode.has("polygons") || jsonNode.has("circles")) {
+                if (jsonNode.has("polygons") && jsonNode.get("polygons").isArray()) {
+                    jsonNode.get("polygons").forEach(node -> result.add(convertNodeToMap(node)));
+                }
+                if (jsonNode.has("circles") && jsonNode.get("circles").isArray()) {
+                    jsonNode.get("circles").forEach(node -> result.add(convertNodeToMap(node)));
+                }
+            }
+            // Cas 3 : Pagination classique "content"
             else if (jsonNode.has("content") && jsonNode.get("content").isArray()) {
                 jsonNode.get("content").forEach(node -> result.add(convertNodeToMap(node)));
             } 
-            // Cas 3 : C'est un objet unique (ou une erreur wrapped)
+            // Cas 4 : Objet unique (Erreur ou fallback) -> On Ã©vite de l'ajouter si c'est le conteneur racine vide
             else if (!jsonNode.isEmpty()) {
-                result.add(convertNodeToMap(jsonNode));
+                // On log pour debug si on tombe ici, car Ã§a cause souvent des soucis
+                // log.debug("Structure JSON inconnue reÃ§ue : {}", jsonNode.fieldNames());
             }
             
             return result;
         }).defaultIfEmpty(Collections.emptyList());
     }
+
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> convertNodeToMap(JsonNode node) {
@@ -18173,6 +18157,7 @@ spring:
   kafka:
     bootstrap-servers: ${KAFKA_HOST:168.119.122.86}:${KAFKA_PORT:9092}
     consumer:
+      group-id: ${KAFKA_GROUP_ID:fleet-management-group}
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
