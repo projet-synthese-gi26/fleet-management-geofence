@@ -4,6 +4,7 @@ import com.yowyob.fleet.domain.model.Vehicle;
 import com.yowyob.fleet.domain.model.VehicleParameters;
 import com.yowyob.fleet.domain.ports.in.ManageVehicleUseCase;
 import com.yowyob.fleet.domain.ports.out.AuthPort;
+import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.MaintenanceUpdateRequest;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.VehicleRequest;
 import com.yowyob.fleet.infrastructure.config.OpenApiConfig;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,6 +18,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.VehiclePatchRequest; 
+
+import com.fasterxml.jackson.databind.ObjectMapper; 
 
 import java.util.Map;
 import java.util.UUID;
@@ -28,6 +32,7 @@ import java.util.UUID;
 public class VehicleController {
 
     private final ManageVehicleUseCase vehicleUseCase;
+    private final ObjectMapper objectMapper;
 
     /**
      * Helper pour extraire le token JWT
@@ -52,17 +57,19 @@ public class VehicleController {
     public Mono<Vehicle> create(@Valid @RequestBody VehicleRequest request, Authentication auth) {
         return vehicleUseCase.createIndependentVehicle(request, getUserId(auth), extractToken(auth));
     }
-    @Tag(name = OpenApiConfig.TAG_VHC_PARC)
-    @PostMapping("/fleets/{fleetId}/vehicles/{vehicleId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('FLEET_MANAGER')")
-    @Operation(summary = "Assigner un véhicule à une flotte", description = "Assigne le véhicule et l'ajoute automatiquement à toutes les zones de geofencing de cette flotte.")
-    public Mono<Void> assignToFleet(
-            @PathVariable UUID fleetId, 
-            @PathVariable UUID vehicleId, 
-            Authentication auth) {
-        return vehicleUseCase.assignVehicleToFleet(fleetId, vehicleId, getUserId(auth));
-    }
+
+    
+    // @Tag(name = OpenApiConfig.TAG_VHC_PARC)
+    // @PostMapping("/fleets/{fleetId}/vehicles/{vehicleId}")
+    // @ResponseStatus(HttpStatus.NO_CONTENT)
+    // @PreAuthorize("hasRole('FLEET_MANAGER')")
+    // @Operation(summary = "Assigner un véhicule à une flotte", description = "Assigne le véhicule et l'ajoute automatiquement à toutes les zones de geofencing de cette flotte.")
+    // public Mono<Void> assignToFleet(
+    //         @PathVariable UUID fleetId, 
+    //         @PathVariable UUID vehicleId, 
+    //         Authentication auth) {
+    //     return vehicleUseCase.assignVehicleToFleet(fleetId, vehicleId, getUserId(auth));
+    // }
 
 
     @Tag(name = OpenApiConfig.TAG_VHC_PARC)
@@ -92,11 +99,23 @@ public class VehicleController {
     }
     */
 
-    @Tag(name = OpenApiConfig.TAG_VHC_PARC)
+@Tag(name = OpenApiConfig.TAG_VHC_PARC)
     @PatchMapping("/vehicles/{vehicleId}")
     @PreAuthorize("hasRole('FLEET_MANAGER')")
-    @Operation(summary = "Mise à jour partielle", description = "Modifier couleur, statut ou marque. Acteur: Manager.")
-    public Mono<Vehicle> patch(@PathVariable UUID vehicleId, @RequestBody Map<String, Object> updates, Authentication auth) {
+    @Operation(summary = "Mise à jour partielle (Admin/Correction)", description = "Permet de corriger une immatriculation ou un VIN.")
+    public Mono<Vehicle> patch(
+            @PathVariable UUID vehicleId, 
+            @RequestBody VehiclePatchRequest request, // Utilisation du DTO documenté
+            Authentication auth) {
+        
+        // Conversion du Record en Map<String, Object> en excluant les nulls
+        // Le service attend une Map pour savoir quels champs EXACTEMENT ont été envoyés
+        @SuppressWarnings("unchecked")
+        Map<String, Object> updates = objectMapper.convertValue(request, Map.class);
+        
+        // Nettoyage des nulls pour ne pas écraser des données existantes
+        updates.values().removeIf(java.util.Objects::isNull);
+
         return vehicleUseCase.patchVehicleInfo(vehicleId, updates, extractToken(auth));
     }
 
@@ -108,13 +127,26 @@ public class VehicleController {
         return vehicleUseCase.updateFinancialParameters(vehicleId, params, extractToken(auth));
     }
 
-    @Tag(name = OpenApiConfig.TAG_VHC_PARC)
+@Tag(name = OpenApiConfig.TAG_VHC_PARC)
     @PutMapping("/vehicles/{vehicleId}/maintenance-parameters")
     @PreAuthorize("hasRole('FLEET_MANAGER')")
-    @Operation(summary = "Paramètres Maintenance", description = "Mise à jour État moteur, Batterie, Révisions. Acteur: Manager.")
-    public Mono<Vehicle> updateMaintenance(@PathVariable UUID vehicleId, @RequestBody VehicleParameters.Maintenance params, Authentication auth) {
+    @Operation(summary = "Paramètres Maintenance", description = "Mise à jour des statuts techniques.")
+    public Mono<Vehicle> updateMaintenance(
+            @PathVariable UUID vehicleId, 
+            @RequestBody MaintenanceUpdateRequest request, 
+            Authentication auth) {
+        
+        VehicleParameters.Maintenance params = new VehicleParameters.Maintenance(
+            request.lastMaintenanceDate(),
+            request.nextMaintenanceDue(),
+            request.engineStatus(),
+            request.batteryHealth(),
+            request.maintenanceStatus()
+        );
+
         return vehicleUseCase.updateMaintenanceParameters(vehicleId, params, extractToken(auth));
     }
+
 
     @Tag(name = OpenApiConfig.TAG_VHC_PARC)
     @DeleteMapping("/vehicles/{vehicleId}")

@@ -6,7 +6,6 @@ import com.yowyob.fleet.domain.ports.out.AuthPort;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.StartTripRequest;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.TelemetryRequest;
 import com.yowyob.fleet.infrastructure.config.OpenApiConfig;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -15,14 +14,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/trips")
 @RequiredArgsConstructor
-@Tag(name = OpenApiConfig.TAG_TRIPS , description = "Gestion des courses et télémétrie")
 @SecurityRequirement(name = "bearerAuth")
 public class TripController {
 
@@ -32,40 +30,48 @@ public class TripController {
         return ((AuthPort.UserDetail) auth.getPrincipal()).id();
     }
 
+    // --- 11a. CHAUFFEUR ---
+    @Tag(name = OpenApiConfig.TAG_TRIPS_OPS)
     @PostMapping("/start")
+    @PreAuthorize("hasRole('FLEET_DRIVER')")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('FLEET_DRIVER')")
-    @Operation(summary = "Démarrer une course (Driver)")
-    public Mono<Trip> start(@RequestBody StartTripRequest request, Authentication auth) {
-        return tripUseCase.startTrip(getUserId(auth), request.vehicleId());
+    public Mono<Trip> start(@RequestBody StartTripRequest r, Authentication a) {
+        return tripUseCase.startTrip(getUserId(a), r.vehicleId());
     }
 
+    @Tag(name = OpenApiConfig.TAG_TRIPS_OPS)
     @PostMapping("/{id}/telemetry")
-    @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasRole('FLEET_DRIVER')")
-    @Operation(summary = "Envoyer un point GPS (Driver)")
-    public Mono<Void> telemetry(@PathVariable UUID id, @RequestBody TelemetryRequest request) {
-        return tripUseCase.sendTelemetry(id, request.lat(), request.lng(), request.speed());
+    public Mono<Void> telemetry(@PathVariable UUID id, @RequestBody TelemetryRequest r) {
+        return tripUseCase.sendTelemetry(id, r.lat(), r.lng(), r.speed());
     }
 
+    @Tag(name = OpenApiConfig.TAG_TRIPS_OPS)
     @PostMapping("/{id}/end")
     @PreAuthorize("hasRole('FLEET_DRIVER')")
-    @Operation(summary = "Terminer une course (Driver)")
     public Mono<Trip> end(@PathVariable UUID id) {
         return tripUseCase.endTrip(id);
     }
 
-    @GetMapping("/current")
+    @Tag(name = OpenApiConfig.TAG_TRIPS_OPS)
+    @GetMapping("/my-active")
     @PreAuthorize("hasRole('FLEET_DRIVER')")
-    @Operation(summary = "Récupérer ma course en cours (Driver)")
-    public Mono<Trip> getCurrent(Authentication auth) {
-        return tripUseCase.getCurrentTrip(getUserId(auth));
+    public Mono<Trip> getMyActive(Authentication a) {
+        return tripUseCase.getMyActiveTrip(getUserId(a));
     }
 
+    // --- 11b. MANAGER ---
+    @Tag(name = OpenApiConfig.TAG_TRIPS_MGT)
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'FLEET_ADMIN')")
-    @Operation(summary = "Détail d'une course (Manager)")
+    @PreAuthorize("hasRole('FLEET_MANAGER')")
     public Mono<Trip> getById(@PathVariable UUID id) {
         return tripUseCase.getTripById(id);
+    }
+
+    @Tag(name = OpenApiConfig.TAG_TRIPS_MGT)
+    @GetMapping
+    @PreAuthorize("hasRole('FLEET_MANAGER')")
+    public Flux<Trip> list(Authentication a, @RequestParam(required = false) UUID fleetId) {
+        return tripUseCase.getManagerTrips(getUserId(a), fleetId);
     }
 }

@@ -45,6 +45,16 @@ public class OpenApiConfig {
     public static final String TAG_RES_FUELS   = "06g. Admin | Ressources : Carburants";
     public static final String TAG_RES_TRANS   = "06h. Admin | Ressources : Transmissions";
     public static final String TAG_RES_COLORS  = "06i. Admin | Ressources : Couleurs";
+
+      // --- MODULE 10 : FLEETS ---
+    public static final String TAG_FLEETS_CRUD = "10a. Fleets | Administration (CRUD)";
+    public static final String TAG_FLEETS_VHC  = "10b. Fleets | Mes Véhicules";
+    public static final String TAG_FLEETS_DRV  = "10c. Fleets | Mes Chauffeurs";
+
+    // --- MODULE 11 : TRIPS ---
+    public static final String TAG_TRIPS_OPS = "11a. Trips | Opérations Chauffeur (Mobile)";
+    public static final String TAG_TRIPS_MGT = "11b. Trips | Suivi & Historique (Manager)";
+
     @Bean
     public OpenAPI customOpenAPI() {
         final String securitySchemeName = "bearerAuth";
@@ -91,7 +101,12 @@ public class OpenApiConfig {
                     TAG_VHC_OP,
                     TAG_VHC_LOOKUP,
                     TAG_FLEETS,
+                    TAG_FLEETS_CRUD,
+                    TAG_FLEETS_VHC,
+                    TAG_FLEETS_DRV,
                     TAG_TRIPS,
+                    TAG_TRIPS_OPS,
+                    TAG_TRIPS_MGT,
                     TAG_GEOFENCING,
                     TAG_PAYMENTS
             );

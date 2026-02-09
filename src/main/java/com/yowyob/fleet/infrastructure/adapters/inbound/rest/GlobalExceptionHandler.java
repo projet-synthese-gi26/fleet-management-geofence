@@ -2,8 +2,10 @@ package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
 
 import com.yowyob.fleet.domain.exception.DomainException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException; // Import nécessaire
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.security.access.AccessDeniedException; // Import nécessaire
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.support.WebExchangeBindException;
@@ -16,13 +18,9 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    /**
-     * LE COEUR : Gère n'importe quelle exception du domaine (Auth, Fleet, Trip, etc.)
-     */
     @ExceptionHandler(DomainException.class)
     public ProblemDetail handleDomainException(DomainException ex) {
         log.warn("⚠️ Business Exception [{}] : {}", ex.getBusinessCode(), ex.getMessage());
-        
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(ex.getStatus(), ex.getMessage());
         problem.setTitle("Business Error");
         problem.setProperty("code", ex.getBusinessCode());
@@ -30,9 +28,17 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
-    /**
-     * Gère les erreurs de validation des DTOs (@Valid)
-     */
+    // --- CORRECTION 1 : GESTION SÉCURITÉ ---
+    @ExceptionHandler(AccessDeniedException.class)
+    public ProblemDetail handleAccessDenied(AccessDeniedException ex) {
+        log.warn("⛔ Access Denied : {}", ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, "Vous n'avez pas les droits nécessaires pour effectuer cette action.");
+        problem.setTitle("Access Denied");
+        problem.setType(URI.create("https://traensys.com/errors/forbidden"));
+        return problem;
+    }
+
+    // --- CORRECTION 2 : ERREURS VALIDATION (inchangé) ---
     @ExceptionHandler(WebExchangeBindException.class)
     public ProblemDetail handleValidationException(WebExchangeBindException ex) {
         String details = ex.getBindingResult().getFieldErrors().stream()
@@ -41,13 +47,36 @@ public class GlobalExceptionHandler {
         
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, details);
         problem.setTitle("Validation Failed");
-        problem.setType(URI.create("https://traensys.com/errors/validation"));
         return problem;
     }
 
-    /**
-     * FALLBACK : Toutes les autres erreurs imprévues
-     */
+    // --- CORRECTION 3 : CONTRAINTES DB (ENUMS) ---
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ProblemDetail handleDbViolation(DataIntegrityViolationException ex) {
+        log.error("🗄️ Database Integrity Error: {}", ex.getMessage());
+        // On masque le message SQL brut pour la sécurité, on donne un indice générique
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, 
+            "Une valeur fournie ne respecte pas les contraintes du système (ex: Statut invalide, Doublon unique). Vérifiez vos Enums.");
+        problem.setTitle("Data Integrity Violation");
+        return problem;
+    }
+
+    // --- GESTION ERREURS EXTERNES ---
+    @ExceptionHandler(WebClientResponseException.class)
+    public ProblemDetail handleWebClientException(WebClientResponseException ex) {
+        String responseBody = ex.getResponseBodyAsString();
+        log.error("❌ EXTERNAL API ERROR [{} {}] : {}", ex.getStatusCode(), ex.getStatusText(), responseBody);
+        
+        // On renvoie 502 (Bad Gateway) pour bien signifier que c'est le service tiers qui a échoué
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_GATEWAY, 
+            "Le service distant a retourné une erreur : " + ex.getStatusCode());
+        problem.setTitle("External Service Error");
+        problem.setProperty("remoteStatus", ex.getStatusCode().value());
+        // On inclut le corps de l'erreur distante pour aider le debug frontend
+        problem.setProperty("remoteDetails", responseBody); 
+        return problem;
+    }
+
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGeneralException(Exception ex) {
         log.error("💥 Critical error caught : ", ex);
@@ -57,27 +86,10 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
-    /**
-     * Gère les exceptions de Spring
-     */
     @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
     public ProblemDetail handleResponseStatusException(org.springframework.web.server.ResponseStatusException ex) {
-        // On respecte le statut demandé par Spring mais on reste propre
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(ex.getStatusCode(), ex.getReason());
         problem.setTitle("Protocol Error");
         return problem;
     }
-    
-    @ExceptionHandler(WebClientResponseException.class)
-    public ProblemDetail handleWebClientException(WebClientResponseException ex) {
-        String responseBody = ex.getResponseBodyAsString();
-        
-        log.error("❌ EXTERNAL API ERROR [{} {}] : {}", ex.getStatusCode(), ex.getStatusText(), responseBody);
-        
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_GATEWAY, 
-            "Erreur du service externe (" + ex.getStatusCode() + "): " + responseBody);
-        problem.setTitle("External Service Error");
-        return problem;
-    }
-    
 }
