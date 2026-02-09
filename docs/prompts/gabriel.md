@@ -58,4 +58,4 @@ Gabriel attend de toi une rigueur absolue, de la franchise technique et une auto
 - **Isolation :** Les données vitales sont dans le schéma `fleet`. Les appels distants (Pynfi) sont mappés vers des exceptions locales.
 
 ### 🚀 Démarrage de session
-Ma premiere tache est de comprendre et resourdre les preblemes suivants:""
+Ma premiere tache est de m'aider a tester le module vehicle que je veisn de refactorer,apres quoi on poura continuer mes taches dans la todo

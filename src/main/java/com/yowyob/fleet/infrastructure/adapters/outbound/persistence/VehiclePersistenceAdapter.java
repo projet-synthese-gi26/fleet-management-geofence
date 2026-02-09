@@ -1,11 +1,13 @@
 package com.yowyob.fleet.infrastructure.adapters.outbound.persistence;
 
+import com.yowyob.fleet.domain.exception.VehicleException;
 import com.yowyob.fleet.domain.model.Vehicle;
 import com.yowyob.fleet.domain.ports.out.VehiclePersistencePort;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.*;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.*;
 import com.yowyob.fleet.infrastructure.mappers.VehicleLocalMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -33,6 +35,8 @@ public class VehiclePersistenceAdapter implements VehiclePersistencePort {
                     vEntity.setNew(!exists); 
                     return vehicleRepo.save(vEntity);
                 })
+                // Correction : On transforme l'erreur technique SQL en erreur métier explicite (409)
+                .onErrorMap(DataIntegrityViolationException.class, e -> VehicleException.plateConflict())
                 .flatMap(savedV -> saveParameters(vehicle, savedV.getId()))
                 .flatMap(savedV -> getLocalDataById(savedV.getId()));
     }

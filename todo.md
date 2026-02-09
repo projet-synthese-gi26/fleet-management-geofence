@@ -51,11 +51,11 @@
     - [x] **Tâche 8.2 :** **Smart Assignment** : Implémenter la logique de permutation automatique (libérer l'ancien chauffeur si le véhicule est réassigné).
     - [x] **Tâche 8.3 :** **Verrouillage de Course** : Interdire le détachement d'un chauffeur ou d'un véhicule si un trajet (`Trip`) est marqué `ONGOING`.
     - [x] **Tâche 8.4 :** **Listing Filtré** : Permettre au manager de voir séparément ses chauffeurs "Libres" et "En course".
-- [-] **Tâche 9 :** Test et finalisation module Vehicles (Debug PUT et ressources initiales).
-     - [ ] **Tâche 9.1 :** **Souveraineté des Ressources** : Créer le référentiel local (Marques, Carburants) géré par l'Admin.
-    - [ ] **Tâche 9.2 :** **Lookup local** : Rediriger les routes `/lookup` pour consommer les données de notre base `fleet` au lieu du service externe.
-    - [ ] **Tâche 9.3 :** **Gestion Opérationnelle** : Implémenter la route `/operational` pour permettre aux drivers de consulter/ajuster l'état du véhicule.
-    - [ ] **Tâche 9.4 :** **Nettoyage Swagger** : Appliquer le découpage en 4 sous-tags (9a, 9b, 9c, 9d) et uniformiser les erreurs.
+- [x] **Tâche 9 :** Test et finalisation module Vehicles (Debug PUT et ressources initiales).
+     - [x] **Tâche 9.1 :** **Souveraineté des Ressources** : Créer le référentiel local (Marques, Carburants) géré par l'Admin.
+    - [x] **Tâche 9.2 :** **Lookup local** : Rediriger les routes `/lookup` pour consommer les données de notre base `fleet` au lieu du service externe.
+    - [x] **Tâche 9.3 :** **Gestion Opérationnelle** : Implémenter la route `/operational` pour permettre aux drivers de consulter/ajuster l'état du véhicule.
+    - [x] **Tâche 9.4 :** **Nettoyage Swagger** : Appliquer le découpage en 4 sous-tags (9a, 9b, 9c, 9d) et uniformiser les erreurs.
 - [ ] **Tâche 10 :** Test et finalisation module Fleets.
 - [ ] **Tâche 11 :** Test et finalisation module Trips (Courses).
 
