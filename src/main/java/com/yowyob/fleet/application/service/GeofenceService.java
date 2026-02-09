@@ -7,28 +7,21 @@ import com.yowyob.fleet.domain.ports.out.GeofencePersistencePort;
 import com.yowyob.fleet.domain.ports.out.VehiclePersistencePort;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.GeofenceEventEntity;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.GeofenceZoneEntity;
-import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.FleetEntity;
-import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.FleetR2dbcRepository;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.GeofenceR2dbcRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -41,6 +34,7 @@ public class GeofenceService implements ManageGeofenceUseCase {
     private final ExternalGeofencePort externalApi;
     private final GeofenceR2dbcRepository zoneRepo;
     private final VehiclePersistencePort vehiclePersistencePort;
+    
 
     @Override
     @Transactional
@@ -66,21 +60,6 @@ public class GeofenceService implements ManageGeofenceUseCase {
                 .doOnError(e -> log.error("❌ Échec de la synchronisation Geofence: {}", e.getMessage()));
     }
 
-    // Helpers
-    private boolean isType(Map<String, Object> zoneData, String type) {
-        Object t = zoneData.get("type");
-        return t != null && t.toString().equalsIgnoreCase(type);
-    }
-
-    private String normalizeType(String type) {
-        if (type == null)
-            return "";
-        if (type.toLowerCase().startsWith("c"))
-            return "circle";
-        if (type.toLowerCase().startsWith("p"))
-            return "polygon";
-        return type;
-    }
 
     
     @Override
@@ -134,10 +113,9 @@ public class GeofenceService implements ManageGeofenceUseCase {
     // Dans GeofenceService.java
 
     @Override
-    public Flux<Map<String, Object>> getMyExternalZones(String category) {
+    public Flux<Map<String, Object>> getMyExternalZones(UUID managerId, String category) {
         log.info("🔍 Récupération des zones externes pour la catégorie : {}", category);
-        return externalApi.listRemoteZones(category)
-                .flatMapMany(Flux::fromIterable);
+        return getFilteredRemoteZones(managerId, category, null);
     }
 
     @Override
@@ -192,24 +170,65 @@ public class GeofenceService implements ManageGeofenceUseCase {
     }
 
     private Flux<Map<String, Object>> getFilteredRemoteZones(UUID managerId, String category, UUID optionalFleetId) {
-        // 1. Récupérer les IDs autorisés en local
-        Flux<GeofenceZoneEntity> localLinks = (optionalFleetId == null)
+        log.info("🔍 [HYBRID FETCH] Manager: {}, Category: {}, FleetFilter: {}", managerId, category, optionalFleetId);
+
+        // ETAPE 1 : Récupérer les métadonnées locales (Souveraineté)
+        // On cherche quelles zones ce manager a le droit de voir dans NOTRE base.
+        Flux<GeofenceZoneEntity> localQuery = (optionalFleetId == null)
                 ? zoneRepo.findByManagerId(managerId)
                 : zoneRepo.findAllByManagerIdAndFleetId(managerId, optionalFleetId);
 
-        return localLinks.map(GeofenceZoneEntity::getId)
+        return localQuery
+                // ETAPE 2 : Filtrer localement par TYPE si nécessaire
+                .filter(localEntity -> isTypeMatch(localEntity.getZoneType(), category))
+                
+                // ETAPE 3 : Extraire les IDs autorisés
+                .map(GeofenceZoneEntity::getId)
                 .collect(Collectors.toSet())
-                .flatMapMany(myIds -> {
-                    if (myIds.isEmpty())
+                .flatMapMany(authorizedIds -> {
+                    
+                    if (authorizedIds.isEmpty()) {
+                        log.info("🚫 Aucune zone trouvée localement pour ce manager.");
                         return Flux.empty();
-                    // 2. Appel distant et intersection
+                    }
+
+                    log.info("✅ {} IDs autorisés trouvés localement. Récupération des données distantes...", authorizedIds.size());
+
+                    // ETAPE 4 : Appeler le moteur externe (qui renvoie TOUT via le token système)
                     return externalApi.listRemoteZones(category)
                             .flatMapMany(Flux::fromIterable)
-                            .filter(remoteMap -> {
-                                String rId = (String) remoteMap.get("id");
-                                return rId != null && myIds.contains(UUID.fromString(rId));
+                            .doOnNext(map -> log.info("📦 ZONE DISTANTE REÇUE BRUTE : keys={}", map.keySet()))
+                            .doOnNext(map -> log.info("📦 ZONE DISTANTE REÇUE BRUTE : polygons={}", map.get("polygons")))
+                            .filter(remoteZoneData -> {
+                                // ETAPE 5 : Intersection (Remote ID doit être dans Local IDs)
+                                String remoteIdStr = (String) remoteZoneData.get("id");
+                                if (remoteIdStr == null) return false;
+                                
+                                try {
+                                    UUID remoteId = UUID.fromString(remoteIdStr);
+                                    return authorizedIds.contains(remoteId);
+                                } catch (IllegalArgumentException e) {
+                                    return false; // Ignorer les IDs malformés
+                                }
                             });
                 });
+    }
+     private boolean isTypeMatch(String localType, String requestedCategory) {
+        if ("all".equalsIgnoreCase(requestedCategory)) return true;
+        if (localType == null) return false;
+
+        String normLocal = localType.toLowerCase();
+        String normReq = requestedCategory.toLowerCase();
+
+        // Si on demande des cercles
+        if (normReq.contains("circle")) {
+            return normLocal.contains("circle") || normLocal.equals("c");
+        }
+        // Si on demande des polygones
+        if (normReq.contains("polygon")) {
+            return normLocal.contains("polygon") || normLocal.equals("p");
+        }
+        return true;
     }
 
     @Override // GET ALL par Flotte pour un manager
@@ -264,11 +283,6 @@ public class GeofenceService implements ManageGeofenceUseCase {
     }
 
     @Override
-    public Mono<Map<String, Object>> getExternalAlerts(int p, int s) {
-        return externalApi.fetchRemoteAlerts(p, s);
-    }
-
-    @Override
     public Mono<Void> updateRemoteZone(String t, UUID id, Map<String, Object> u) {
         return externalApi.updateRemoteZone(t, id, u);
     }
@@ -315,4 +329,72 @@ public class GeofenceService implements ManageGeofenceUseCase {
                 })
                 .then();
     }
+
+     public Mono<Map<String, Object>> getManagerAlerts(UUID managerId, int page, int size) {
+        return localPersistence.findAlertsByManager(managerId, page, size)
+            .collectList()
+            .map(events -> {
+                // On formate la réponse pour qu'elle ressemble à ce que le frontend attend (Pagination)
+                Map<String, Object> response = new HashMap<>();
+                response.put("content", events);
+                response.put("page", page);
+                response.put("size", size);
+                response.put("totalElements", events.size()); // Approximation (il faudrait un count() séparé pour le vrai total)
+                return response;
+            });
+    }
+    
+    @Override
+    public Mono<Map<String, Object>> getExternalAlerts(int p, int s) {
+        return externalApi.fetchRemoteAlerts(p, s);
+    }
+
+
+    // @Override
+    // public Mono<Void> handleIncomingAlert(UUID remoteVehicleId, UUID zoneId, String type, Instant timestamp) {
+    //     log.info("⚡ [ALERTE KAFKA] Traitement : Véhicule {} -> Zone {} ({})", remoteVehicleId, zoneId, type);
+
+    //     // 2. Sauvegarde locale (Historique)
+    //     return localPersistence.saveEvent(remoteVehicleId, zoneId, type)
+    //             .flatMap(unused -> {
+    //                 // 3. Récupération des infos pour enrichir le message (Optionnel mais mieux)
+    //                 // Idéalement, on chercherait le manager propriétaire de la zone pour avoir son email/token
+    //                 // Pour l'exemple, on envoie une notif générique au manager concerné
+                    
+    //                 return sendAlertNotification(remoteVehicleId, zoneId, type, timestamp);
+    //             })
+    //             .doOnSuccess(v -> log.info("✅ Alerte traitée et notifiée."))
+    //             .doOnError(e -> log.error("❌ Erreur traitement alerte : {}", e.getMessage()));
+    // }
+
+    /**
+     * Construit et envoie la notification
+     */
+    // private Mono<Void> sendAlertNotification(UUID vehicleId, UUID zoneId, String type, Instant timestamp) {
+    //     // Logique métier : On n'alerte que si c'est CRITIQUE ou selon paramètres
+    //     // Ici on alerte sur tout pour tester.
+
+    //     String message = String.format("Alerte Geofence : Le véhicule %s vient de faire %s dans la zone %s", 
+    //                                    vehicleId, type, zoneId);
+
+    //     SendNotificationRequest request = SendNotificationRequest.builder()
+    //             .notificationType(NotificationType.PUSH) // Ou EMAIL, SMS
+    //             .templateId(101) // ID fictif d'un template "Geofence Alert" dans ton système de notif
+    //             .to(List.of("manager_token_firebase_ou_email")) // À récupérer dynamiquement via le FleetManager
+    //             .data(Map.of(
+    //                     "vehicleId", vehicleId.toString(),
+    //                     "zoneId", zoneId.toString(),
+    //                     "event", type,
+    //                     "time", timestamp.toString()
+    //             ))
+    //             .build();
+
+    //     // On envoie en "Fire & Forget" (on ne bloque pas si la notif échoue)
+    //     return notificationPort.sendNotification(request)
+    //             .onErrorResume(e -> {
+    //                 log.warn("⚠️ Impossible d'envoyer la notification Push : {}", e.getMessage());
+    //                 return Mono.just(false);
+    //             })
+    //             .then();
+    // }
 }

@@ -23,4 +23,9 @@ public interface GeofencePersistencePort {
     Mono<Void> linkZoneToFleetManager(UUID fleetManagerId, UUID zoneId);
     
     Flux<GeofenceZone> findByManagerId(UUID fleetManagerId);
+
+    /**
+     * Récupère les alertes filtrées par manager avec pagination.
+     */
+    Flux<GeofenceEventEntity> findAlertsByManager(UUID managerId, int page, int size);
 }

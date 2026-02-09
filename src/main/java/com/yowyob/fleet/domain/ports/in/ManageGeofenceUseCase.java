@@ -5,6 +5,7 @@ import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.Geof
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -12,14 +13,7 @@ import java.util.UUID;
 
 public interface ManageGeofenceUseCase {
 
-    // --- LECTURE (Moteur Externe) ---
     /**
-     * Récupère les zones depuis le moteur externe.
-     * @param category : "all", "circles" ou "polygons"
-     */
-    
-    Flux<Map<String, Object>> getMyExternalZones(String category);
-     /**
      * Récupère le détail d'une zone spécifique par son type et son ID.
      */
     Mono<Map<String, Object>> getExternalZoneDetails(String type, UUID id);
@@ -43,16 +37,17 @@ public interface ManageGeofenceUseCase {
 
     // --- PERSISTANCE LOCALE (Optionnel selon ton besoin) ---
     Flux<GeofenceEventEntity> getEvents(UUID vehicleId, UUID zoneId, String type, LocalDate date);
-    
+
     // Anciennes méthodes à garder si tu les utilises encore pour la DB locale :
     Flux<GeofenceZone> getZonesByFleet(UUID fleetId);
-    
+
     /**
      * Récupère les zones associées à un FleetManager via la table de liaison
      */
-    Flux<Map<String, Object>>  getZonesByFleetManager(UUID fleetManagerId);
-    
+    Flux<Map<String, Object>> getZonesByFleetManager(UUID fleetManagerId);
+
     Mono<GeofenceZone> getZoneDetails(UUID zoneId);
+
     Mono<GeofenceZone> updateZone(UUID zoneId, GeofenceZone zone);
 
     Flux<GeofenceZone> getMyZones(UUID managerId);
@@ -66,9 +61,19 @@ public interface ManageGeofenceUseCase {
     Mono<Map<String, Object>> getZoneDetails(UUID zoneId, UUID managerId);
 
     Mono<GeofenceZone> createZone(GeofenceZone zone);
+
     Mono<Void> assignZoneToFleet(UUID zoneId, UUID fleetId, UUID managerId);
+
     Flux<GeofenceZone> getZonesByFleet1(UUID fleetId);
-    
+
     Flux<Map<String, Object>> getAllExternalZones(String category);
 
+    Mono<Map<String, Object>> getManagerAlerts(UUID managerId, int page, int size);
+
+    /**
+     * Traite une alerte reÃ§ue via Kafka et la sauvegarde en local.
+     */
+    // Mono<Void> handleIncomingAlert(UUID remoteVehicleId, UUID zoneId, String type, Instant timestamp);
+
+    Flux<Map<String, Object>> getMyExternalZones(UUID managerId, String category);
 }

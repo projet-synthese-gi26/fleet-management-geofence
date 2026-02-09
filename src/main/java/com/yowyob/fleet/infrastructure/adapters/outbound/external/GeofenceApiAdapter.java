@@ -8,7 +8,6 @@ import com.yowyob.fleet.domain.ports.out.ExternalGeofencePort;
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.GeofenceApiClient;
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.GeofenceAuthClient;
 
-import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
 
 import lombok.RequiredArgsConstructor;

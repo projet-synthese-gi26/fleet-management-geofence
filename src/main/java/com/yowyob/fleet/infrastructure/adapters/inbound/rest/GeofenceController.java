@@ -100,14 +100,14 @@ public class GeofenceController {
     @Operation(summary = "Lister mes zones circulaires")
     @PreAuthorize("hasRole('FLEET_MANAGER')")
     public Flux<Map<String, Object>> listCircles(Authentication auth) {
-        return geofenceService.getMyExternalZones("CIRCLE");
+        return geofenceService.getMyExternalZones(getUserId(auth), "CIRCLE");
     }
 
     @GetMapping("/polygons")
     @Operation(summary = "Lister mes zones polygonales")
     @PreAuthorize("hasRole('FLEET_MANAGER')")
     public Flux<Map<String, Object>> listPolygons(Authentication auth) {
-        return geofenceService.getMyExternalZones("POLYGON");
+        return geofenceService.getMyExternalZones(getUserId(auth), "POLYGON");
     }
 
     @GetMapping("/fleet/{fleetId}")
@@ -158,7 +158,7 @@ public class GeofenceController {
     @Operation(summary = "Ressortir mes zones de géofence")
     public Flux<Map<String, Object>> listMyZones(Authentication auth) {
         AuthPort.UserDetail user = (AuthPort.UserDetail) auth.getPrincipal();
-        return geofenceService.getMyExternalZones("all");
+        return geofenceService.getMyExternalZones(getUserId(auth), "all");
     }
     // Dans GeofenceController.java
 
@@ -169,12 +169,27 @@ public class GeofenceController {
         return geofenceService.getAllExternalZones("all");
     }
 
-    @GetMapping("/alerts")
-    @Operation(summary = "Récupérer toutes mes alertes")
+    @GetMapping("/alerts/all")
+    @Operation(summary = "Récupérer toutes les alertes du service")
     public Mono<Map<String, Object>> getAlerts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         return geofenceService.getExternalAlerts(page, size);
+    }
+    
+    @GetMapping("/alerts")
+    @Operation(summary = "Récupérer mes alertes (Sécurisé par Flotte)", description = "Retourne uniquement les alertes des véhicules appartenant au manager connecté.")
+    @PreAuthorize("hasRole('FLEET_MANAGER')")
+    public Mono<Map<String, Object>> getAlerts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            Authentication auth) {
+        
+        // 1. On récupère l'ID du manager connecté
+        UUID managerId = getUserId(auth);
+        
+        // 2. On appelle la méthode sécurisée du service
+        return geofenceService.getManagerAlerts(managerId, page, size);
     }
 
     @PatchMapping("/{id}/assign-fleet/{fleetId}")
@@ -188,6 +203,18 @@ public class GeofenceController {
     @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'FLEET_ADMIN')")
     public Mono<Void> delete(@PathVariable String type, @PathVariable UUID id, Authentication auth) {
         return geofenceService.deleteZone(id, type, getUserId(auth));
+    }
+    @GetMapping("/events") // Endpoint pour les donnÃ©es LOCALES
+    @Operation(summary = "Historique local des alertes", description = "RÃ©cupÃ¨re les Ã©vÃ©nements stockÃ©s localement (via Kafka).")
+    @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'FLEET_ADMIN')")
+    public Flux<GeofenceEventEntity> getLocalEvents(
+            @RequestParam(required = false) UUID vehicleId,
+            @RequestParam(required = false) UUID zoneId,
+            @RequestParam(required = false) String type, // ENTRY / EXIT
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            Authentication auth) {
+        
+        return geofenceService.getEvents(vehicleId, zoneId, type, date);
     }
 
 }

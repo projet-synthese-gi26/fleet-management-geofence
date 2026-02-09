@@ -8,7 +8,6 @@ import com.yowyob.fleet.domain.ports.out.ExternalGeofencePort;
 import com.yowyob.fleet.domain.ports.out.ExternalVehiclePort;
 import com.yowyob.fleet.domain.ports.out.VehiclePersistencePort;
 import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.VehicleRequest;
-import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.OperationalParameterEntity;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.OperationalParameterR2dbcRepository;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.VehicleTypeR2dbcRepository;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.resources.*;
@@ -177,9 +176,18 @@ public class VehicleService implements ManageVehicleUseCase {
                     
                     return localPersistencePort.saveLocalData(shell);
                 })
-                .flatMap(savedLocal -> geofencePort.registerVehicleAndAssignToZone(savedLocal, null, "POLYGON")
-                        .thenReturn(savedLocal)
-                        .onErrorResume(e -> Mono.just(savedLocal)));
+                .flatMap(savedLocal -> geofencePort.registerRemoteVehicle(savedLocal)
+                         .flatMap(geofenceRemoteId -> {
+                            log.info("✅ Véhicule synchronisé Geofence. RemoteID: {}", geofenceRemoteId);
+                            // Mise à jour de l'ID distant localement
+                            Vehicle updated = savedLocal.withGeofenceRemoteId(geofenceRemoteId);
+                            return localPersistencePort.saveLocalData(updated);
+                        })
+                        .onErrorResume(e -> {
+                            log.warn("⚠️ Échec partiel Synchro Geofence (Le véhicule est créé mais pas lié au moteur geo): {}", e.getMessage());
+                            return Mono.just(savedLocal);
+                        })
+                );
         }).flatMap(v -> getVehicleDetails(v.id(), token));
     }
 

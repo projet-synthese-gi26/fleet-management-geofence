@@ -1,5 +1,5 @@
 ﻿# Contexte du Projet : Fleet & Geofence API
-GÃ©nÃ©rÃ© le : 02/08/2026 21:12:37
+GÃ©nÃ©rÃ© le : 02/09/2026 08:18:16
 Framework : Spring Boot WebFlux (Reactive)
 
 ## 1. Arborescence du Projet
@@ -353,6 +353,7 @@ D:.
 ª   ª   ª                   ª   ª       ª   DriverController.java
 ª   ª   ª                   ª   ª       ª   FleetController.java
 ª   ª   ª                   ª   ª       ª   FleetManagerController.java
+ª   ª   ª                   ª   ª       ª   GeofenceAlertConsumer.java
 ª   ª   ª                   ª   ª       ª   GeofenceController.java
 ª   ª   ª                   ª   ª       ª   GlobalExceptionHandler.java
 ª   ª   ª                   ª   ª       ª   HealthCheckController.java
@@ -372,6 +373,7 @@ D:.
 ª   ª   ª                   ª   ª           ª   FleetResponse.java
 ª   ª   ª                   ª   ª           ª   FleetStatsResponse.java
 ª   ª   ª                   ª   ª           ª   FuelTypeRequest.java
+ª   ª   ª                   ª   ª           ª   GeofenceAlertMessage.java
 ª   ª   ª                   ª   ª           ª   GlobalStatsResponse.java
 ª   ª   ª                   ª   ª           ª   LoginRequest.java
 ª   ª   ª                   ª   ª           ª   MaintenanceUpdateRequest.java
@@ -532,6 +534,7 @@ D:.
 ª   ª               ª       006-add-photo-url-to-users.sql
 ª   ª               ª       007-add-geofence-remote-id.sql
 ª   ª               ª       008-add-vehicle-resources.sql
+ª   ª               ª       009-add-geofence-details.sql
 ª   ª               ª       
 ª   ª               +---data
 ª   ª                       001-local-public-mock.sql
@@ -647,6 +650,7 @@ D:.
     ª   ª               ª   ª       ª   DriverController.class
     ª   ª               ª   ª       ª   FleetController.class
     ª   ª               ª   ª       ª   FleetManagerController.class
+    ª   ª               ª   ª       ª   GeofenceAlertConsumer.class
     ª   ª               ª   ª       ª   GeofenceController.class
     ª   ª               ª   ª       ª   GlobalExceptionHandler.class
     ª   ª               ª   ª       ª   HealthCheckController.class
@@ -668,6 +672,8 @@ D:.
     ª   ª               ª   ª           ª   FleetResponse.class
     ª   ª               ª   ª           ª   FleetStatsResponse.class
     ª   ª               ª   ª           ª   FuelTypeRequest.class
+    ª   ª               ª   ª           ª   GeofenceAlertMessage$Coordinates.class
+    ª   ª               ª   ª           ª   GeofenceAlertMessage.class
     ª   ª               ª   ª           ª   GlobalStatsResponse.class
     ª   ª               ª   ª           ª   LoginRequest.class
     ª   ª               ª   ª           ª   MaintenanceUpdateRequest.class
@@ -693,7 +699,7 @@ D:.
     ª   ª               ª       +---external
     ª   ª               ª       ª   ª   FakeAuthAdapter.class
     ª   ª               ª       ª   ª   FakeDistanceAdapter.class
-    ª   ª               ª       ª   ª   GeofenceApiAdapter$6.class
+    ª   ª               ª       ª   ª   GeofenceApiAdapter$1.class
     ª   ª               ª       ª   ª   GeofenceApiAdapter.class
     ª   ª               ª       ª   ª   PaymentApiAdapter.class
     ª   ª               ª       ª   ª   RemoteAuthAdapter$1.class
@@ -836,6 +842,7 @@ D:.
     ª           ª       006-add-photo-url-to-users.sql
     ª           ª       007-add-geofence-remote-id.sql
     ª           ª       008-add-vehicle-resources.sql
+    ª           ª       009-add-geofence-details.sql
     ª           ª       
     ª           +---data
     ª                   001-local-public-mock.sql
@@ -1271,7 +1278,7 @@ Si vous avez des erreurs Liquibase ou de schÃ©ma, rÃ©initialisez la base ave
 - [ ] **TÃ¢che 11 :** Test et finalisation module Trips (Courses).
 
 ## ðŸ¦… Cluster Hassana
-- [ ] **TÃ¢che 12 :** Finalisation module Geofence.
+- [x] **TÃ¢che 12 :** Finalisation module Geofence.
 
 ## ðŸ¢ Cluster RaphaÃ«l
 - [ ] **TÃ¢che 13 :** Finalisation module Payments.
@@ -7527,28 +7534,21 @@ import com.yowyob.fleet.domain.ports.out.GeofencePersistencePort;
 import com.yowyob.fleet.domain.ports.out.VehiclePersistencePort;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.GeofenceEventEntity;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.GeofenceZoneEntity;
-import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.FleetEntity;
-import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.FleetR2dbcRepository;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.GeofenceR2dbcRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -7561,6 +7561,7 @@ public class GeofenceService implements ManageGeofenceUseCase {
     private final ExternalGeofencePort externalApi;
     private final GeofenceR2dbcRepository zoneRepo;
     private final VehiclePersistencePort vehiclePersistencePort;
+    
 
     @Override
     @Transactional
@@ -7586,21 +7587,6 @@ public class GeofenceService implements ManageGeofenceUseCase {
                 .doOnError(e -> log.error("âŒ Ã‰chec de la synchronisation Geofence: {}", e.getMessage()));
     }
 
-    // Helpers
-    private boolean isType(Map<String, Object> zoneData, String type) {
-        Object t = zoneData.get("type");
-        return t != null && t.toString().equalsIgnoreCase(type);
-    }
-
-    private String normalizeType(String type) {
-        if (type == null)
-            return "";
-        if (type.toLowerCase().startsWith("c"))
-            return "circle";
-        if (type.toLowerCase().startsWith("p"))
-            return "polygon";
-        return type;
-    }
 
     
     @Override
@@ -7654,10 +7640,9 @@ public class GeofenceService implements ManageGeofenceUseCase {
     // Dans GeofenceService.java
 
     @Override
-    public Flux<Map<String, Object>> getMyExternalZones(String category) {
+    public Flux<Map<String, Object>> getMyExternalZones(UUID managerId, String category) {
         log.info("ðŸ” RÃ©cupÃ©ration des zones externes pour la catÃ©gorie : {}", category);
-        return externalApi.listRemoteZones(category)
-                .flatMapMany(Flux::fromIterable);
+        return getFilteredRemoteZones(managerId, category, null);
     }
 
     @Override
@@ -7712,24 +7697,65 @@ public class GeofenceService implements ManageGeofenceUseCase {
     }
 
     private Flux<Map<String, Object>> getFilteredRemoteZones(UUID managerId, String category, UUID optionalFleetId) {
-        // 1. RÃ©cupÃ©rer les IDs autorisÃ©s en local
-        Flux<GeofenceZoneEntity> localLinks = (optionalFleetId == null)
+        log.info("ðŸ” [HYBRID FETCH] Manager: {}, Category: {}, FleetFilter: {}", managerId, category, optionalFleetId);
+
+        // ETAPE 1 : RÃ©cupÃ©rer les mÃ©tadonnÃ©es locales (SouverainetÃ©)
+        // On cherche quelles zones ce manager a le droit de voir dans NOTRE base.
+        Flux<GeofenceZoneEntity> localQuery = (optionalFleetId == null)
                 ? zoneRepo.findByManagerId(managerId)
                 : zoneRepo.findAllByManagerIdAndFleetId(managerId, optionalFleetId);
 
-        return localLinks.map(GeofenceZoneEntity::getId)
+        return localQuery
+                // ETAPE 2 : Filtrer localement par TYPE si nÃ©cessaire
+                .filter(localEntity -> isTypeMatch(localEntity.getZoneType(), category))
+                
+                // ETAPE 3 : Extraire les IDs autorisÃ©s
+                .map(GeofenceZoneEntity::getId)
                 .collect(Collectors.toSet())
-                .flatMapMany(myIds -> {
-                    if (myIds.isEmpty())
+                .flatMapMany(authorizedIds -> {
+                    
+                    if (authorizedIds.isEmpty()) {
+                        log.info("ðŸš« Aucune zone trouvÃ©e localement pour ce manager.");
                         return Flux.empty();
-                    // 2. Appel distant et intersection
+                    }
+
+                    log.info("âœ… {} IDs autorisÃ©s trouvÃ©s localement. RÃ©cupÃ©ration des donnÃ©es distantes...", authorizedIds.size());
+
+                    // ETAPE 4 : Appeler le moteur externe (qui renvoie TOUT via le token systÃ¨me)
                     return externalApi.listRemoteZones(category)
                             .flatMapMany(Flux::fromIterable)
-                            .filter(remoteMap -> {
-                                String rId = (String) remoteMap.get("id");
-                                return rId != null && myIds.contains(UUID.fromString(rId));
+                            .doOnNext(map -> log.info("ðŸ“¦ ZONE DISTANTE REÃ‡UE BRUTE : keys={}", map.keySet()))
+                            .doOnNext(map -> log.info("ðŸ“¦ ZONE DISTANTE REÃ‡UE BRUTE : polygons={}", map.get("polygons")))
+                            .filter(remoteZoneData -> {
+                                // ETAPE 5 : Intersection (Remote ID doit Ãªtre dans Local IDs)
+                                String remoteIdStr = (String) remoteZoneData.get("id");
+                                if (remoteIdStr == null) return false;
+                                
+                                try {
+                                    UUID remoteId = UUID.fromString(remoteIdStr);
+                                    return authorizedIds.contains(remoteId);
+                                } catch (IllegalArgumentException e) {
+                                    return false; // Ignorer les IDs malformÃ©s
+                                }
                             });
                 });
+    }
+     private boolean isTypeMatch(String localType, String requestedCategory) {
+        if ("all".equalsIgnoreCase(requestedCategory)) return true;
+        if (localType == null) return false;
+
+        String normLocal = localType.toLowerCase();
+        String normReq = requestedCategory.toLowerCase();
+
+        // Si on demande des cercles
+        if (normReq.contains("circle")) {
+            return normLocal.contains("circle") || normLocal.equals("c");
+        }
+        // Si on demande des polygones
+        if (normReq.contains("polygon")) {
+            return normLocal.contains("polygon") || normLocal.equals("p");
+        }
+        return true;
     }
 
     @Override // GET ALL par Flotte pour un manager
@@ -7784,11 +7810,6 @@ public class GeofenceService implements ManageGeofenceUseCase {
     }
 
     @Override
-    public Mono<Map<String, Object>> getExternalAlerts(int p, int s) {
-        return externalApi.fetchRemoteAlerts(p, s);
-    }
-
-    @Override
     public Mono<Void> updateRemoteZone(String t, UUID id, Map<String, Object> u) {
         return externalApi.updateRemoteZone(t, id, u);
     }
@@ -7799,38 +7820,110 @@ public class GeofenceService implements ManageGeofenceUseCase {
     }
 
   @Override
-  @Transactional
+    @Transactional
     public Mono<Void> assignZoneToFleet(UUID zoneId, UUID fleetId, UUID managerId) {
         return zoneRepo.findById(zoneId)
-                .filter(z -> z.getManagerId().equals(managerId))
+                .filter(z -> z.getManagerId().equals(managerId)) // SÃ©curitÃ© propriÃ©taire
                 .switchIfEmpty(Mono.error(new RuntimeException("Zone introuvable ou non autorisÃ©e")))
                 .flatMap(z -> {
+                    // 1. Mise Ã  jour locale
                     z.setFleetId(fleetId);
-                    z.setNew(false);
+                    z.setNew(false); // Update
+                    
                     return zoneRepo.save(z)
+                        // 2. DÃ©clenchement de la synchro de masse
                         .then(syncFleetVehiclesToZone(fleetId, zoneId, z.getZoneType()));
                 }).then();
     }
 
+    /**
+     * Helper : Prend tous les vÃ©hicules d'une flotte et les pousse dans une zone donnÃ©e.
+     */
     private Mono<Void> syncFleetVehiclesToZone(UUID fleetId, UUID zoneId, String zoneType) {
-        log.info("ðŸ”„ DÃ©but de l'assignation des vÃ©hicules de la flotte {} Ã  la zone {}", fleetId, zoneId);
+        log.info("ðŸ”„ [Geofence Sync] Ajout des vÃ©hicules de la flotte {} Ã  la zone {}", fleetId, zoneId);
 
-        // On rÃ©cupÃ¨re tous les vÃ©hicules de la flotte en base locale
-        return vehiclePersistencePort.getAllVehicles() // Utilisation du port, pas repository direct
-                .filter(v -> fleetId.equals(v.fleetId())) // Filtre en mÃ©moire ou optimiser repository
-                .filter(v -> v.geofenceRemoteId() != null) // On ne traite que ceux qui ont un ID Geofence
+        return vehiclePersistencePort.getAllVehicles() // IdÃ©alement : getVehiclesByFleetId(fleetId) serait plus performant
+                .filter(v -> fleetId.equals(v.fleetId())) // Filtrage mÃ©moire si pas de mÃ©thode repo dÃ©diÃ©e
+                .filter(v -> v.geofenceRemoteId() != null)
                 .flatMap(vehicle -> {
-                    log.debug("ðŸ‘‰ Ajout du vÃ©hicule {} ({}) Ã  la zone", vehicle.licensePlate(),
-                            vehicle.geofenceRemoteId());
+                    log.debug("ðŸ‘‰ Ajout vÃ©hicule {} ({}) -> Zone {}", vehicle.licensePlate(), vehicle.geofenceRemoteId(), zoneId);
+                    
                     return externalApi.addVehicleToZone(vehicle.geofenceRemoteId(), zoneId, zoneType)
                             .onErrorResume(e -> {
-                                log.warn("âš ï¸ Ã‰chec pour le vÃ©hicule {}: {}", vehicle.licensePlate(), e.getMessage());
-                                return Mono.empty(); // On continue malgrÃ© l'erreur
+                                log.warn("âš ï¸ Ã‰chec partiel pour vÃ©hicule {}: {}", vehicle.licensePlate(), e.getMessage());
+                                return Mono.empty(); // Best effort : on ne bloque pas tout pour un Ã©chec
                             });
                 })
                 .then();
     }
 
+     public Mono<Map<String, Object>> getManagerAlerts(UUID managerId, int page, int size) {
+        return localPersistence.findAlertsByManager(managerId, page, size)
+            .collectList()
+            .map(events -> {
+                // On formate la rÃ©ponse pour qu'elle ressemble Ã  ce que le frontend attend (Pagination)
+                Map<String, Object> response = new HashMap<>();
+                response.put("content", events);
+                response.put("page", page);
+                response.put("size", size);
+                response.put("totalElements", events.size()); // Approximation (il faudrait un count() sÃ©parÃ© pour le vrai total)
+                return response;
+            });
+    }
+    
+    @Override
+    public Mono<Map<String, Object>> getExternalAlerts(int p, int s) {
+        return externalApi.fetchRemoteAlerts(p, s);
+    }
+
+
+    // @Override
+    // public Mono<Void> handleIncomingAlert(UUID remoteVehicleId, UUID zoneId, String type, Instant timestamp) {
+    //     log.info("âš¡ [ALERTE KAFKA] Traitement : VÃ©hicule {} -> Zone {} ({})", remoteVehicleId, zoneId, type);
+
+    //     // 2. Sauvegarde locale (Historique)
+    //     return localPersistence.saveEvent(remoteVehicleId, zoneId, type)
+    //             .flatMap(unused -> {
+    //                 // 3. RÃ©cupÃ©ration des infos pour enrichir le message (Optionnel mais mieux)
+    //                 // IdÃ©alement, on chercherait le manager propriÃ©taire de la zone pour avoir son email/token
+    //                 // Pour l'exemple, on envoie une notif gÃ©nÃ©rique au manager concernÃ©
+                    
+    //                 return sendAlertNotification(remoteVehicleId, zoneId, type, timestamp);
+    //             })
+    //             .doOnSuccess(v -> log.info("âœ… Alerte traitÃ©e et notifiÃ©e."))
+    //             .doOnError(e -> log.error("âŒ Erreur traitement alerte : {}", e.getMessage()));
+    // }
+
+    /**
+     * Construit et envoie la notification
+     */
+    // private Mono<Void> sendAlertNotification(UUID vehicleId, UUID zoneId, String type, Instant timestamp) {
+    //     // Logique mÃ©tier : On n'alerte que si c'est CRITIQUE ou selon paramÃ¨tres
+    //     // Ici on alerte sur tout pour tester.
+
+    //     String message = String.format("Alerte Geofence : Le vÃ©hicule %s vient de faire %s dans la zone %s", 
+    //                                    vehicleId, type, zoneId);
+
+    //     SendNotificationRequest request = SendNotificationRequest.builder()
+    //             .notificationType(NotificationType.PUSH) // Ou EMAIL, SMS
+    //             .templateId(101) // ID fictif d'un template "Geofence Alert" dans ton systÃ¨me de notif
+    //             .to(List.of("manager_token_firebase_ou_email")) // Ã€ rÃ©cupÃ©rer dynamiquement via le FleetManager
+    //             .data(Map.of(
+    //                     "vehicleId", vehicleId.toString(),
+    //                     "zoneId", zoneId.toString(),
+    //                     "event", type,
+    //                     "time", timestamp.toString()
+    //             ))
+    //             .build();
+
+    //     // On envoie en "Fire & Forget" (on ne bloque pas si la notif Ã©choue)
+    //     return notificationPort.sendNotification(request)
+    //             .onErrorResume(e -> {
+    //                 log.warn("âš ï¸ Impossible d'envoyer la notification Push : {}", e.getMessage());
+    //                 return Mono.just(false);
+    //             })
+    //             .then();
+    // }
 }
 
 ---
@@ -8307,6 +8400,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import com.yowyob.fleet.domain.ports.out.GeofencePersistencePort; // AJOUTER
+import com.yowyob.fleet.domain.ports.out.FleetRepositoryPort;     // AJOUTER
+
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -8323,6 +8419,9 @@ public class VehicleService implements ManageVehicleUseCase {
     private final VehiclePersistencePort localPersistencePort;
     private final ExternalVehiclePort externalVehiclePort;
     private final ExternalGeofencePort geofencePort; 
+     // Ajout des ports nÃ©cessaires pour la validation et la rÃ©cupÃ©ration des zones
+    private final GeofencePersistencePort geofencePersistencePort; 
+    private final FleetRepositoryPort fleetRepository;
 
     // Repositories des ressources (SouverainetÃ©)
     private final VehicleTypeR2dbcRepository vehicleTypeRepo;
@@ -8340,6 +8439,56 @@ public class VehicleService implements ManageVehicleUseCase {
     // ========================================================================
     // --- 09a. GESTION DU PARC (FLEET MANAGER) ---
     // ========================================================================
+     // --- NOUVELLE MÃ‰THODE : SENS A (VÃ©hicule -> Flotte -> Zones) ---
+    @Override
+    @Transactional
+    public Mono<Void> assignVehicleToFleet(UUID fleetId, UUID vehicleId, UUID managerId) {
+        // 1. VÃ©rification : La flotte existe et appartient au manager
+        return fleetRepository.existsByIdAndManagerId(fleetId, managerId)
+            .filter(exists -> exists)
+            .switchIfEmpty(Mono.error(new RuntimeException("Flotte introuvable ou accÃ¨s refusÃ©.")))
+            
+            // 2. RÃ©cupÃ©ration et mise Ã  jour du vÃ©hicule local
+            .then(localPersistencePort.getLocalDataById(vehicleId))
+            .switchIfEmpty(Mono.error(VehicleException.notFound(vehicleId)))
+            .flatMap(vehicle -> {
+                // On met Ã  jour le fleetId dans l'objet local
+                Vehicle updated = new Vehicle(
+                    vehicle.id(), fleetId, // Affectation FleetID
+                    vehicle.managerId(), vehicle.currentDriverId(), vehicle.vehicleTypeId(),
+                    vehicle.licensePlate(), vehicle.vehicleSerialNumber(), vehicle.brand(), vehicle.model(),
+                    vehicle.manufacturingYear(), vehicle.transmissionType(), vehicle.fuelType(),
+                    vehicle.tankCapacity(), vehicle.totalSeatNumber(), vehicle.averageFuelConsumption(),
+                    vehicle.color(), vehicle.status(), vehicle.photoUrl(), 
+                    vehicle.serialNumberPhotoUrl(), vehicle.registrationPhotoUrl(),
+                    vehicle.illustrationImages(), vehicle.financialParameters(), 
+                    vehicle.maintenanceParameters(), vehicle.operationalParameters(),
+                    vehicle.geofenceRemoteId()
+                );
+                return localPersistencePort.saveLocalData(updated);
+            })
+            
+            // 3. SYNCHRONISATION GEOFENCE : On rÃ©cupÃ¨re toutes les zones de cette flotte
+            .flatMap(savedVehicle -> {
+                if (savedVehicle.geofenceRemoteId() == null) {
+                    log.warn("âš ï¸ Le vÃ©hicule {} n'a pas d'ID Geofence distant. Synchro Geofence ignorÃ©e.", savedVehicle.licensePlate());
+                    return Mono.empty();
+                }
+
+                log.info("ðŸ”„ Synchro : Ajout du vÃ©hicule {} aux zones de la flotte {}", savedVehicle.licensePlate(), fleetId);
+
+                return geofencePersistencePort.findByFleetId(fleetId) // RÃ©cupÃ¨re les zones locales liÃ©es Ã  la flotte
+                    .flatMap(zone -> {
+                        log.debug("ðŸ‘‰ Ajout Ã  la zone : {}", zone.name());
+                        return geofencePort.addVehicleToZone(savedVehicle.geofenceRemoteId(), zone.id(), zone.zoneType())
+                                .onErrorResume(e -> {
+                                    log.error("âŒ Ã‰chec ajout vÃ©hicule Ã  zone {}: {}", zone.id(), e.getMessage());
+                                    return Mono.empty(); // On continue pour les autres zones
+                                });
+                    })
+                    .then();
+            });
+    }
 
     @Override
     public Mono<Vehicle> getVehicleDetails(UUID vehicleId, String token) {
@@ -9298,6 +9447,7 @@ import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.Geof
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -9305,14 +9455,7 @@ import java.util.UUID;
 
 public interface ManageGeofenceUseCase {
 
-    // --- LECTURE (Moteur Externe) ---
     /**
-     * RÃ©cupÃ¨re les zones depuis le moteur externe.
-     * @param category : "all", "circles" ou "polygons"
-     */
-    
-    Flux<Map<String, Object>> getMyExternalZones(String category);
-     /**
      * RÃ©cupÃ¨re le dÃ©tail d'une zone spÃ©cifique par son type et son ID.
      */
     Mono<Map<String, Object>> getExternalZoneDetails(String type, UUID id);
@@ -9336,16 +9479,17 @@ public interface ManageGeofenceUseCase {
 
     // --- PERSISTANCE LOCALE (Optionnel selon ton besoin) ---
     Flux<GeofenceEventEntity> getEvents(UUID vehicleId, UUID zoneId, String type, LocalDate date);
-    
+
     // Anciennes mÃ©thodes Ã  garder si tu les utilises encore pour la DB locale :
     Flux<GeofenceZone> getZonesByFleet(UUID fleetId);
-    
+
     /**
      * RÃ©cupÃ¨re les zones associÃ©es Ã  un FleetManager via la table de liaison
      */
-    Flux<Map<String, Object>>  getZonesByFleetManager(UUID fleetManagerId);
-    
+    Flux<Map<String, Object>> getZonesByFleetManager(UUID fleetManagerId);
+
     Mono<GeofenceZone> getZoneDetails(UUID zoneId);
+
     Mono<GeofenceZone> updateZone(UUID zoneId, GeofenceZone zone);
 
     Flux<GeofenceZone> getMyZones(UUID managerId);
@@ -9359,11 +9503,21 @@ public interface ManageGeofenceUseCase {
     Mono<Map<String, Object>> getZoneDetails(UUID zoneId, UUID managerId);
 
     Mono<GeofenceZone> createZone(GeofenceZone zone);
+
     Mono<Void> assignZoneToFleet(UUID zoneId, UUID fleetId, UUID managerId);
+
     Flux<GeofenceZone> getZonesByFleet1(UUID fleetId);
-    
+
     Flux<Map<String, Object>> getAllExternalZones(String category);
 
+    Mono<Map<String, Object>> getManagerAlerts(UUID managerId, int page, int size);
+
+    /**
+     * Traite une alerte reÃƒÂ§ue via Kafka et la sauvegarde en local.
+     */
+    // Mono<Void> handleIncomingAlert(UUID remoteVehicleId, UUID zoneId, String type, Instant timestamp);
+
+    Flux<Map<String, Object>> getMyExternalZones(UUID managerId, String category);
 }
 
 ---
@@ -9440,7 +9594,8 @@ import java.util.Map;
 import java.util.UUID;
 
 public interface ManageVehicleUseCase {
-
+    
+    Mono<Void> assignVehicleToFleet(UUID fleetId, UUID vehicleId, UUID managerId);
     // --- 09a. Gestion du Parc (Fleet Manager) ---
     Mono<Vehicle> getVehicleDetails(UUID vehicleId, String token);
     Flux<Vehicle> getVehicles(UUID requesterId, boolean isAdmin, String token); 
@@ -9682,6 +9837,7 @@ public interface FleetRepositoryPort {
     Mono<Fleet> findById(UUID id);
     Flux<Fleet> findAll();
     Mono<Void> deleteById(UUID id);
+    Mono<Boolean> existsByIdAndManagerId(UUID fleetId, UUID managerId);
 }
 
 ---
@@ -9712,6 +9868,11 @@ public interface GeofencePersistencePort {
     Mono<Void> linkZoneToFleetManager(UUID fleetManagerId, UUID zoneId);
     
     Flux<GeofenceZone> findByManagerId(UUID fleetManagerId);
+
+    /**
+     * RÃ©cupÃ¨re les alertes filtrÃ©es par manager avec pagination.
+     */
+    Flux<GeofenceEventEntity> findAlertsByManager(UUID managerId, int page, int size);
 }
 
 ---
@@ -10501,6 +10662,7 @@ public class FleetController {
         return fleetUseCase.createFleet(domainObj, getUser(auth).id())
                 .map(mapper::toResponse);
     }
+    
 
     @GetMapping
     @Operation(summary = "Lister les flottes", description = "Admin : Tout voir / Manager : Voir ses flottes uniquement.")
@@ -10617,6 +10779,55 @@ public class FleetManagerController {
 }
 
 ---
+### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\src\main\java\com\yowyob\fleet\infrastructure\adapters\inbound\rest\GeofenceAlertConsumer.java
+`$ext
+package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
+
+import com.yowyob.fleet.domain.ports.in.ManageGeofenceUseCase;
+import com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.GeofenceAlertMessage;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.stereotype.Component;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class GeofenceAlertConsumer {
+
+    private final ManageGeofenceUseCase geofenceUseCase;
+
+    /**
+     * Ãƒâ€°coute le topic dÃƒÂ©fini dans application.yml : application.kafka.topics.geofence-alerts
+     */
+    @KafkaListener(
+        topics = "${application.kafka.topics.geofence-alerts}", 
+        groupId = "${spring.kafka.consumer.group-id}"
+    )
+    public void consumeAlert(GeofenceAlertMessage message) {
+        log.debug("Ã°Å¸â€œÂ© Payload Kafka reÃƒÂ§u : {}", message);
+
+        if (message.vehicleId() == null || message.zoneId() == null) {
+            log.warn("Ã¢Å¡Â Ã¯Â¸  Alerte Kafka ignorÃƒÂ©e : IDs manquants.");
+            return;
+        }
+
+        // On dÃƒÂ©clenche le flux rÃƒÂ©actif
+        // Note : Dans un contexte @KafkaListener non-rÃƒÂ©actif (Spring Kafka standard), 
+        // on doit souscrire manuellement pour exÃƒÂ©cuter le Mono.
+        // geofenceUseCase.handleIncomingAlert(
+        //         message.vehicleId(),
+        //         message.zoneId(),
+        //         message.type(),
+        //         message.timestamp()
+        // ).subscribe(
+        //     success -> {}, // On ne fait rien au succÃƒÂ¨s (dÃƒÂ©jÃƒÂ  loggÃƒÂ© dans le service)
+        //     error -> log.error("Ã¢ Å’ Erreur critique processing Kafka : ", error)
+        // );
+    }
+}
+
+---
 ### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\src\main\java\com\yowyob\fleet\infrastructure\adapters\inbound\rest\GeofenceController.java
 `$ext
 package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
@@ -10721,14 +10932,14 @@ public class GeofenceController {
     @Operation(summary = "Lister mes zones circulaires")
     @PreAuthorize("hasRole('FLEET_MANAGER')")
     public Flux<Map<String, Object>> listCircles(Authentication auth) {
-        return geofenceService.getMyExternalZones("CIRCLE");
+        return geofenceService.getMyExternalZones(getUserId(auth), "CIRCLE");
     }
 
     @GetMapping("/polygons")
     @Operation(summary = "Lister mes zones polygonales")
     @PreAuthorize("hasRole('FLEET_MANAGER')")
     public Flux<Map<String, Object>> listPolygons(Authentication auth) {
-        return geofenceService.getMyExternalZones("POLYGON");
+        return geofenceService.getMyExternalZones(getUserId(auth), "POLYGON");
     }
 
     @GetMapping("/fleet/{fleetId}")
@@ -10779,7 +10990,7 @@ public class GeofenceController {
     @Operation(summary = "Ressortir mes zones de gÃ©ofence")
     public Flux<Map<String, Object>> listMyZones(Authentication auth) {
         AuthPort.UserDetail user = (AuthPort.UserDetail) auth.getPrincipal();
-        return geofenceService.getMyExternalZones("all");
+        return geofenceService.getMyExternalZones(getUserId(auth), "all");
     }
     // Dans GeofenceController.java
 
@@ -10790,12 +11001,27 @@ public class GeofenceController {
         return geofenceService.getAllExternalZones("all");
     }
 
-    @GetMapping("/alerts")
-    @Operation(summary = "RÃ©cupÃ©rer toutes mes alertes")
+    @GetMapping("/alerts/all")
+    @Operation(summary = "RÃ©cupÃ©rer toutes les alertes du service")
     public Mono<Map<String, Object>> getAlerts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         return geofenceService.getExternalAlerts(page, size);
+    }
+    
+    @GetMapping("/alerts")
+    @Operation(summary = "RÃ©cupÃ©rer mes alertes (SÃ©curisÃ© par Flotte)", description = "Retourne uniquement les alertes des vÃ©hicules appartenant au manager connectÃ©.")
+    @PreAuthorize("hasRole('FLEET_MANAGER')")
+    public Mono<Map<String, Object>> getAlerts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            Authentication auth) {
+        
+        // 1. On rÃ©cupÃ¨re l'ID du manager connectÃ©
+        UUID managerId = getUserId(auth);
+        
+        // 2. On appelle la mÃ©thode sÃ©curisÃ©e du service
+        return geofenceService.getManagerAlerts(managerId, page, size);
     }
 
     @PatchMapping("/{id}/assign-fleet/{fleetId}")
@@ -10809,6 +11035,18 @@ public class GeofenceController {
     @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'FLEET_ADMIN')")
     public Mono<Void> delete(@PathVariable String type, @PathVariable UUID id, Authentication auth) {
         return geofenceService.deleteZone(id, type, getUserId(auth));
+    }
+    @GetMapping("/events") // Endpoint pour les donnÃƒÂ©es LOCALES
+    @Operation(summary = "Historique local des alertes", description = "RÃƒÂ©cupÃƒÂ¨re les ÃƒÂ©vÃƒÂ©nements stockÃƒÂ©s localement (via Kafka).")
+    @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'FLEET_ADMIN')")
+    public Flux<GeofenceEventEntity> getLocalEvents(
+            @RequestParam(required = false) UUID vehicleId,
+            @RequestParam(required = false) UUID zoneId,
+            @RequestParam(required = false) String type, // ENTRY / EXIT
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            Authentication auth) {
+        
+        return geofenceService.getEvents(vehicleId, zoneId, type, date);
     }
 
 }
@@ -11057,14 +11295,19 @@ package com.yowyob.fleet.infrastructure.adapters.inbound.rest;
 
 import com.yowyob.fleet.domain.model.Notification;
 import com.yowyob.fleet.domain.ports.out.NotificationHistoryRepositoryPort;
+import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.GeofenceEventEntity;
 import com.yowyob.fleet.infrastructure.config.OpenApiConfig;
 
+
+import org.springframework.http.MediaType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.web.bind.annotation.*;
+
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
@@ -11076,6 +11319,14 @@ import java.util.UUID;
 public class NotificationController {
 
     private final NotificationHistoryRepositoryPort historyPort;
+
+    // @GetMapping(value = "/stream/alerts", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    // @Operation(summary = "Flux d'alertes en temps rÃ©el (SSE)", description = "Le client garde la connexion ouverte et reÃ§oit les alertes en direct.")
+    // public Flux<GeofenceEventEntity> streamAlerts() {
+    //     // Note: Pour que Ã§a marche, il faut que ton Adapter Kafka publie aussi dans un Sinks.Many<GeofenceEventEntity>
+    //     // C'est le niveau au-dessus, dis-moi si tu veux l'implÃ©menter.
+    //     return Flux.empty(); 
+    // }
 
     @GetMapping
     @Operation(summary = "Get my notifications", description = "Paginated list of notifications for the connected user.")
@@ -11438,6 +11689,18 @@ public class VehicleController {
     public Mono<Vehicle> create(@Valid @RequestBody VehicleRequest request, Authentication auth) {
         return vehicleUseCase.createIndependentVehicle(request, getUserId(auth), extractToken(auth));
     }
+    @Tag(name = OpenApiConfig.TAG_VHC_PARC)
+    @PostMapping("/fleets/{fleetId}/vehicles/{vehicleId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('FLEET_MANAGER')")
+    @Operation(summary = "Assigner un vÃ©hicule Ã  une flotte", description = "Assigne le vÃ©hicule et l'ajoute automatiquement Ã  toutes les zones de geofencing de cette flotte.")
+    public Mono<Void> assignToFleet(
+            @PathVariable UUID fleetId, 
+            @PathVariable UUID vehicleId, 
+            Authentication auth) {
+        return vehicleUseCase.assignVehicleToFleet(fleetId, vehicleId, getUserId(auth));
+    }
+
 
     @Tag(name = OpenApiConfig.TAG_VHC_PARC)
     @GetMapping("/vehicles")
@@ -11757,6 +12020,29 @@ public record FuelTypeRequest(
     @NotBlank(message = "Le libellÃ© est obligatoire (ex: Gasoil)") String label,
     String description
 ) {}
+
+---
+### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\src\main\java\com\yowyob\fleet\infrastructure\adapters\inbound\rest\dto\GeofenceAlertMessage.java
+`$ext
+package com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import java.time.Instant;
+import java.util.UUID;
+
+/**
+ * ReprÃƒÂ©sentation du message JSON envoyÃƒÂ© par le moteur Geofence sur le topic Kafka.
+ */
+public record GeofenceAlertMessage(
+    @JsonProperty("vehicleId") UUID vehicleId, // ID distant (ex: geofenceRemoteId)
+    @JsonProperty("zoneId") UUID zoneId,
+    @JsonProperty("type") String type, // ENTRY ou EXIT
+    @JsonProperty("timestamp") Instant timestamp,
+    @JsonProperty("speed") Double speed,
+    @JsonProperty("coordinates") Coordinates coordinates
+) {
+    public record Coordinates(Double lat, Double lng) {}
+}
 
 ---
 ### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\src\main\java\com\yowyob\fleet\infrastructure\adapters\inbound\rest\dto\GlobalStatsResponse.java
@@ -12379,7 +12665,6 @@ import com.yowyob.fleet.domain.ports.out.ExternalGeofencePort;
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.GeofenceApiClient;
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.GeofenceAuthClient;
 
-import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
 
 import lombok.RequiredArgsConstructor;
@@ -14031,6 +14316,11 @@ public class FleetPersistenceAdapter implements FleetRepositoryPort {
     public Mono<Void> deleteById(UUID id) {
         return repository.deleteById(id);
     }
+
+    @Override
+    public Mono<Boolean> existsByIdAndManagerId(UUID id, UUID managerId) {
+        return repository.existsByIdAndManagerId(id, managerId);
+    }
 }
 
 ---
@@ -14066,17 +14356,17 @@ public class GeofencePersistenceAdapter implements GeofencePersistencePort {
     private final GeofenceMapper mapper;
     private final DatabaseClient databaseClient;
 
-  @Override
-public Mono<GeofenceZone> saveZone(GeofenceZone zone) {
-    GeofenceZoneEntity entity = mapper.toEntity(zone);
-    
-    // Crucial : Comme l'ID est dÃ©jÃ  rempli par l'API externe, 
-    // on force R2DBC Ã  faire un INSERT SQL.
-    entity.markNew(); 
-    
-    return zoneRepo.save(entity)
-            .map(mapper::toDomain);
-}
+    @Override
+    public Mono<GeofenceZone> saveZone(GeofenceZone zone) {
+        GeofenceZoneEntity entity = mapper.toEntity(zone);
+
+        // Crucial : Comme l'ID est dÃ©jÃ  rempli par l'API externe,
+        // on force R2DBC Ã  faire un INSERT SQL.
+        entity.markNew();
+
+        return zoneRepo.save(entity)
+                .map(mapper::toDomain);
+    }
 
     @Override
     public Mono<GeofenceZone> findById(UUID id) {
@@ -14084,11 +14374,11 @@ public Mono<GeofenceZone> saveZone(GeofenceZone zone) {
     }
 
     @Override
-public Flux<GeofenceZone> findByFleetId(UUID fleetId) {
-    return zoneRepo.findAllByFleetId(fleetId)
-            // âœ… Utilise une lambda explicite pour aider le compilateur
-            .map(entity -> mapper.toDomain(entity));
-}
+    public Flux<GeofenceZone> findByFleetId(UUID fleetId) {
+        return zoneRepo.findAllByFleetId(fleetId)
+                // âœ… Utilise une lambda explicite pour aider le compilateur
+                .map(entity -> mapper.toDomain(entity));
+    }
 
     @Override
     public Mono<Void> deleteById(UUID zoneId) {
@@ -14108,42 +14398,52 @@ public Flux<GeofenceZone> findByFleetId(UUID fleetId) {
                 .build();
 
         return eventRepo.save(event)
-                .doOnSuccess(e -> log.info("ðŸŒ Event Geofence sauvegardÃ©: {} - Zone: {} - Vehicule: {}", type, zoneId, vehicleId))
+                .doOnSuccess(e -> log.info("ðŸŒ Event Geofence sauvegardÃ©: {} - Zone: {} - Vehicule: {}", type, zoneId,
+                        vehicleId))
                 .then();
     }
 
-    // RequÃªte dynamique pour les Ã©vÃ©nements (Binding manuel pour Ã©viter l'injection SQL)
+    // RequÃªte dynamique pour les Ã©vÃ©nements (Binding manuel pour Ã©viter l'injection
+    // SQL)
     @Override
     public Flux<GeofenceEventEntity> findEventsWithFilters(UUID vehicleId, UUID zoneId, String type, LocalDate date) {
         StringBuilder queryBuilder = new StringBuilder("SELECT * FROM fleet.geofence_events WHERE 1=1");
-        
-        if (vehicleId != null) queryBuilder.append(" AND vehicle_id = :vehicleId");
-        if (zoneId != null) queryBuilder.append(" AND zone_id = :zoneId");
-        if (type != null) queryBuilder.append(" AND type = :type");
-        if (date != null) queryBuilder.append(" AND DATE(timestamp) = :date");
-        
+
+        if (vehicleId != null)
+            queryBuilder.append(" AND vehicle_id = :vehicleId");
+        if (zoneId != null)
+            queryBuilder.append(" AND zone_id = :zoneId");
+        if (type != null)
+            queryBuilder.append(" AND type = :type");
+        if (date != null)
+            queryBuilder.append(" AND DATE(timestamp) = :date");
+
         DatabaseClient.GenericExecuteSpec spec = databaseClient.sql(queryBuilder.toString());
 
-        if (vehicleId != null) spec = spec.bind("vehicleId", vehicleId);
-        if (zoneId != null) spec = spec.bind("zoneId", zoneId);
-        if (type != null) spec = spec.bind("type", type);
-        if (date != null) spec = spec.bind("date", date);
-        
+        if (vehicleId != null)
+            spec = spec.bind("vehicleId", vehicleId);
+        if (zoneId != null)
+            spec = spec.bind("zoneId", zoneId);
+        if (type != null)
+            spec = spec.bind("type", type);
+        if (date != null)
+            spec = spec.bind("date", date);
+
         return spec.map((row, metadata) -> GeofenceEventEntity.builder()
-                        .id(row.get("id", UUID.class))
-                        .vehicleId(row.get("vehicle_id", UUID.class))
-                        .zoneId(row.get("zone_id", UUID.class))
-                        .type(row.get("type", String.class))
-                        .timestamp(row.get("timestamp", Instant.class))
-                        .isRead(row.get("is_read", Boolean.class))
-                        .severity(row.get("severity", String.class))
-                        .build())
+                .id(row.get("id", UUID.class))
+                .vehicleId(row.get("vehicle_id", UUID.class))
+                .zoneId(row.get("zone_id", UUID.class))
+                .type(row.get("type", String.class))
+                .timestamp(row.get("timestamp", Instant.class))
+                .isRead(row.get("is_read", Boolean.class))
+                .severity(row.get("severity", String.class))
+                .build())
                 .all();
     }
 
     // ... (Imports et dÃ©but de classe existants)
 
-      @Override
+    @Override
     public Mono<Void> linkZoneToFleetManager(UUID fleetManagerId, UUID zoneId) {
         // 1. On cherche d'abord UNE flotte appartenant au manager (la plus rÃ©cente)
         String findFleetSql = "SELECT id FROM fleet.fleets WHERE manager_id = :managerId ORDER BY created_at DESC LIMIT 1";
@@ -14153,7 +14453,8 @@ public Flux<GeofenceZone> findByFleetId(UUID fleetId) {
                 .map((row, metadata) -> row.get("id", UUID.class))
                 .first()
                 // Si aucune flotte trouvÃ©e, on renvoie une erreur claire
-                .switchIfEmpty(Mono.error(new IllegalStateException("Impossible de crÃ©er une zone : Vous devez d'abord crÃ©er une Flotte.")))
+                .switchIfEmpty(Mono.error(new IllegalStateException(
+                        "Impossible de crÃ©er une zone : Vous devez d'abord crÃ©er une Flotte.")))
                 .flatMap(fleetId -> {
                     // 2. Si flotte trouvÃ©e, on lie la zone Ã  cette flotte
                     String updateSql = "UPDATE fleet.geofence_zones SET fleet_id = :fleetId WHERE id = :zoneId";
@@ -14164,21 +14465,54 @@ public Flux<GeofenceZone> findByFleetId(UUID fleetId) {
                             .rowsUpdated()
                             .flatMap(rows -> {
                                 if (rows == 0) {
-                                    return Mono.error(new RuntimeException("Erreur technique : Zone crÃ©Ã©e mais introuvable pour la liaison (ID: " + zoneId + ")"));
+                                    return Mono.error(new RuntimeException(
+                                            "Erreur technique : Zone crÃ©Ã©e mais introuvable pour la liaison (ID: "
+                                                    + zoneId + ")"));
                                 }
                                 return Mono.empty();
                             });
                 });
     }
 
-   // Dans GeofencePersistenceAdapter.java
+    // Dans GeofencePersistenceAdapter.java
 
-@Override
-public Flux<GeofenceZone> findByManagerId(UUID fleetManagerId) {
-    log.debug("ðŸ” Recherche des zones pour le manager : {}", fleetManagerId);
-    return zoneRepo.findByManagerId(fleetManagerId)
-            .map(entity -> mapper.toDomain(entity));
-}
+    @Override
+    public Flux<GeofenceZone> findByManagerId(UUID fleetManagerId) {
+        log.debug("ðŸ” Recherche des zones pour le manager : {}", fleetManagerId);
+        return zoneRepo.findByManagerId(fleetManagerId)
+                .map(entity -> mapper.toDomain(entity));
+    }
+
+    // --- IMPLÃ‰MENTATION DE LA SÃ‰CURISATION ---
+    @Override
+    public Flux<GeofenceEventEntity> findAlertsByManager(UUID managerId, int page, int size) {
+        // JOINTURE : Events -> Vehicles -> VÃ©rification manager_id
+        String sql = """
+                    SELECT e.*
+                    FROM fleet.geofence_events e
+                    INNER JOIN fleet.vehicles v ON e.vehicle_id = v.id
+                    WHERE v.manager_id = :managerId
+                    ORDER BY e.timestamp DESC
+                    LIMIT :limit OFFSET :offset
+                """;
+
+        return databaseClient.sql(sql)
+                .bind("managerId", managerId)
+                .bind("limit", size)
+                .bind("offset", page * size)
+                .map((row, metadata) -> GeofenceEventEntity.builder()
+                        .id(row.get("id", UUID.class))
+                        .vehicleId(row.get("vehicle_id", UUID.class))
+                        .zoneId(row.get("zone_id", UUID.class))
+                        .type(row.get("type", String.class))
+                        .speed(row.get("speed", Double.class))
+                        .dwellTimeMinutes(row.get("dwell_time_minutes", Integer.class))
+                        .severity(row.get("severity", String.class))
+                        .isRead(row.get("is_read", Boolean.class))
+                        .timestamp(row.get("timestamp", Instant.class))
+                        .build())
+                .all();
+    }
 
 }
 
@@ -15676,11 +16010,13 @@ import java.util.UUID;
 
 @Repository
 public interface GeofenceR2dbcRepository extends ReactiveCrudRepository<GeofenceZoneEntity, UUID> {
+   
+   
+    Flux<GeofenceZoneEntity> findByManagerId(UUID managerId);
     // On cherche directement dans la table de liaison par manager_id
  @Query("SELECT z.* FROM fleet.geofence_zones z " +
            "INNER JOIN fleet.fleets f ON z.fleet_id = f.id " +
            "WHERE f.manager_id = :managerId")
-    Flux<GeofenceZoneEntity> findByManagerId(UUID managerId);
      Flux<GeofenceZoneEntity> findAllByManagerIdAndFleetId(UUID managerId, UUID fleetId);
 
      Flux<GeofenceZoneEntity> findAllByFleetId(UUID fleetId);
@@ -16524,6 +16860,7 @@ public class SystemUserInitializer {
 package com.yowyob.fleet.infrastructure.config;
 
 import com.yowyob.fleet.infrastructure.adapters.outbound.external.client.*;
+import io.netty.resolver.DefaultAddressResolverGroup;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -16560,7 +16897,10 @@ public class WebClientConfig {
     @Bean
     @Primary // Pour que ce builder soit celui utilisÃ© par dÃ©faut partout
     public WebClient.Builder webClientBuilder() {
+         HttpClient httpClient = HttpClient.create()
+                .resolver(DefaultAddressResolverGroup.INSTANCE);
         return WebClient.builder()
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .filter(logRequest()); // On lui injecte le filtre de log
     }
 
@@ -16630,7 +16970,10 @@ public class WebClientConfig {
         try {
             SslContext sslContext = SslContextBuilder.forClient()
                     .trustManager(InsecureTrustManagerFactory.INSTANCE).build();
-            HttpClient httpClient = HttpClient.create().secure(t -> t.sslContext(sslContext));
+            HttpClient httpClient = HttpClient.create()
+                .secure(t -> t.sslContext(sslContext))
+                .resolver(DefaultAddressResolverGroup.INSTANCE); 
+
             return WebClient.builder()
                     .baseUrl(baseUrl)
                     .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
@@ -17235,7 +17578,10 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
         spring.json.trusted.packages: "*"
+        spring.json.value.default.type: com.yowyob.fleet.infrastructure.adapters.inbound.rest.dto.GeofenceAlertMessage
+        spring.json.use.type.headers: false
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -17372,7 +17718,10 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
         spring.json.trusted.packages: "*"
+        spring.json.value.default.type: com.yowyob.fleet.infrastructure.adapters.inbound.kafka.dto.GeofenceAlertMessage
+        spring.json.use.type.headers: false
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -17856,6 +18205,20 @@ CREATE INDEX idx_usage_lookup ON fleet.usage_types(code);
 CREATE INDEX idx_fuel_lookup ON fleet.fuel_types(code);
 CREATE INDEX idx_trans_lookup ON fleet.transmission_types(code);
 CREATE INDEX idx_color_lookup ON fleet.vehicle_colors(code);
+
+---
+### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\src\main\resources\db\changelog\changes\009-add-geofence-details.sql
+`$ext
+--liquibase formatted sql
+
+--changeset gabriel:add-geofence-event-details
+--comment: Ajout des dÃ©tails (vitesse, durÃ©e) pour les alertes Geofence
+
+ALTER TABLE fleet.geofence_events 
+ADD COLUMN IF NOT EXISTS speed NUMERIC,
+ADD COLUMN IF NOT EXISTS dwell_time_minutes INTEGER,
+ADD COLUMN IF NOT EXISTS severity VARCHAR(20) DEFAULT 'INFO',
+ADD COLUMN IF NOT EXISTS is_read BOOLEAN DEFAULT FALSE;
 
 ---
 ### Fichier : D:\Ecole\HASSANA_5GI_2025_2026\Projet Synthèse\fleetman\fleet-management-geofence\src\main\resources\db\changelog\data\001-local-public-mock.sql
