@@ -202,7 +202,6 @@ public class GeofenceApiAdapter implements ExternalGeofencePort {
 
     // Méthode helper pour éviter la duplication
     private Mono<List<Map<String, Object>>> fetchZonesInternal(String category, UUID userId, String token) {
-        // Le type local doit correspondre au retour du Client (Mono<JsonNode>)
         Mono<JsonNode> response;
 
         if ("circles".equalsIgnoreCase(category)) {
@@ -216,22 +215,33 @@ public class GeofenceApiAdapter implements ExternalGeofencePort {
         return response.map(jsonNode -> {
             List<Map<String, Object>> result = new ArrayList<>();
             
-            // Cas 1 : C'est un tableau JSON direct [...]
+            // Cas 1 : C'est un tableau JSON direct (Rare pour 'all', courant pour spécifique)
             if (jsonNode.isArray()) {
                 jsonNode.forEach(node -> result.add(convertNodeToMap(node)));
             } 
-            // Cas 2 : C'est un objet (Pagination ?) qui contient une liste "content"
+            // Cas 2 : Structure Geofence Engine { "polygons": [], "circles": [] }
+            else if (jsonNode.has("polygons") || jsonNode.has("circles")) {
+                if (jsonNode.has("polygons") && jsonNode.get("polygons").isArray()) {
+                    jsonNode.get("polygons").forEach(node -> result.add(convertNodeToMap(node)));
+                }
+                if (jsonNode.has("circles") && jsonNode.get("circles").isArray()) {
+                    jsonNode.get("circles").forEach(node -> result.add(convertNodeToMap(node)));
+                }
+            }
+            // Cas 3 : Pagination classique "content"
             else if (jsonNode.has("content") && jsonNode.get("content").isArray()) {
                 jsonNode.get("content").forEach(node -> result.add(convertNodeToMap(node)));
             } 
-            // Cas 3 : C'est un objet unique (ou une erreur wrapped)
+            // Cas 4 : Objet unique (Erreur ou fallback) -> On évite de l'ajouter si c'est le conteneur racine vide
             else if (!jsonNode.isEmpty()) {
-                result.add(convertNodeToMap(jsonNode));
+                // On log pour debug si on tombe ici, car ça cause souvent des soucis
+                // log.debug("Structure JSON inconnue reçue : {}", jsonNode.fieldNames());
             }
             
             return result;
         }).defaultIfEmpty(Collections.emptyList());
     }
+
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> convertNodeToMap(JsonNode node) {

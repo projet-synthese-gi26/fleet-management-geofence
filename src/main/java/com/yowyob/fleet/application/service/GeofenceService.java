@@ -348,6 +348,7 @@ public class GeofenceService implements ManageGeofenceUseCase {
     public Mono<Map<String, Object>> getExternalAlerts(int p, int s) {
         return externalApi.fetchRemoteAlerts(p, s);
     }
+    
 
 
     // @Override
