@@ -169,50 +169,38 @@ public class GeofenceService implements ManageGeofenceUseCase {
         throw new UnsupportedOperationException("Unimplemented method 'getMyZones'");
     }
 
-    private Flux<Map<String, Object>> getFilteredRemoteZones(UUID managerId, String category, UUID optionalFleetId) {
-        log.info("🔍 [HYBRID FETCH] Manager: {}, Category: {}, FleetFilter: {}", managerId, category, optionalFleetId);
+    // Dans GeofenceService.java, remplace la méthode getFilteredRemoteZones par celle-ci :
+private Flux<Map<String, Object>> getFilteredRemoteZones(UUID managerId, String category, UUID optionalFleetId) {
+    log.info("ðŸ”  [HYBRID FETCH] Start - Manager: {}, Fleet: {}", managerId, optionalFleetId);
 
-        // ETAPE 1 : Récupérer les métadonnées locales (Souveraineté)
-        // On cherche quelles zones ce manager a le droit de voir dans NOTRE base.
-        Flux<GeofenceZoneEntity> localQuery = (optionalFleetId == null)
-                ? zoneRepo.findByManagerId(managerId)
-                : zoneRepo.findAllByManagerIdAndFleetId(managerId, optionalFleetId);
+    Flux<GeofenceZoneEntity> localQuery = (optionalFleetId == null)
+            ? zoneRepo.findByManagerId(managerId)
+            : zoneRepo.findAllByManagerIdAndFleetId(managerId, optionalFleetId);
 
-        return localQuery
-                // ETAPE 2 : Filtrer localement par TYPE si nécessaire
-                .filter(localEntity -> isTypeMatch(localEntity.getZoneType(), category))
+    return localQuery
+            .map(entity -> entity.getId().toString().toLowerCase()) // Conversion String minuscule
+            .collect(Collectors.toSet())
+            .flatMapMany(authorizedIds -> {
                 
-                // ETAPE 3 : Extraire les IDs autorisés
-                .map(GeofenceZoneEntity::getId)
-                .collect(Collectors.toSet())
-                .flatMapMany(authorizedIds -> {
-                    
-                    if (authorizedIds.isEmpty()) {
-                        log.info("🚫 Aucune zone trouvée localement pour ce manager.");
-                        return Flux.empty();
-                    }
+                if (authorizedIds.isEmpty()) {
+                    log.warn("ðŸš« Aucune zone trouvée en DB locale pour Manager: {} | Flotte: {}", managerId, optionalFleetId);
+                    return Flux.empty();
+                }
 
-                    log.info("✅ {} IDs autorisés trouvés localement. Récupération des données distantes...", authorizedIds.size());
+                log.info("âœ… {} zones trouvées localement. Synchronisation avec le moteur Pynfi...", authorizedIds.size());
 
-                    // ETAPE 4 : Appeler le moteur externe (qui renvoie TOUT via le token système)
-                    return externalApi.listRemoteZones(category)
-                            .flatMapMany(Flux::fromIterable)
-                            .doOnNext(map -> log.info("📦 ZONE DISTANTE REÇUE BRUTE : keys={}", map.keySet()))
-                            .doOnNext(map -> log.info("📦 ZONE DISTANTE REÇUE BRUTE : polygons={}", map.get("polygons")))
-                            .filter(remoteZoneData -> {
-                                // ETAPE 5 : Intersection (Remote ID doit être dans Local IDs)
-                                String remoteIdStr = (String) remoteZoneData.get("id");
-                                if (remoteIdStr == null) return false;
-                                
-                                try {
-                                    UUID remoteId = UUID.fromString(remoteIdStr);
-                                    return authorizedIds.contains(remoteId);
-                                } catch (IllegalArgumentException e) {
-                                    return false; // Ignorer les IDs malformés
-                                }
-                            });
-                });
-    }
+                return externalApi.listRemoteZones(category)
+                        .flatMapMany(Flux::fromIterable)
+                        .filter(remoteZoneData -> {
+                            Object remoteIdObj = remoteZoneData.get("id");
+                            if (remoteIdObj == null) return false;
+                            
+                            // Nettoyage de l'ID distant (certains moteurs ajoutent des guillemets)
+                            String remoteId = remoteIdObj.toString().toLowerCase().replace("\"", "").trim();
+                            return authorizedIds.contains(remoteId);
+                        });
+            });
+}
      private boolean isTypeMatch(String localType, String requestedCategory) {
         if ("all".equalsIgnoreCase(requestedCategory)) return true;
         if (localType == null) return false;
