@@ -110,11 +110,11 @@ public class GeofenceController {
         return geofenceService.getMyExternalZones(getUserId(auth), "POLYGON");
     }
 
-    @GetMapping("/fleet/{fleetId}")
-    @Operation(summary = "Lister les zones d'une flotte spécifique")
+        @GetMapping("/fleet/{fleetId}")
+    @Operation(summary = "Lister les zones d'une flotte spécifique", description = "Retourne les zones enrichies avec la géométrie du moteur externe.")
+    @PreAuthorize("hasRole('FLEET_MANAGER')")
     public Flux<Map<String, Object>> listByFleet(@PathVariable UUID fleetId, Authentication auth) {
-        return geofenceService.getZonesByFleet1(fleetId)
-                .map(z -> Map.of("id", z.id(), "name", z.name(), "type", z.zoneType())); // Mapping simplifié pour l'exemple
+        return geofenceService.getZonesByFleet(getUserId(auth), fleetId);
     }
     
 

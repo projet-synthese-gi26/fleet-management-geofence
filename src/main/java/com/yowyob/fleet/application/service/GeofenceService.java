@@ -1,11 +1,12 @@
 package com.yowyob.fleet.application.service;
 
+import com.yowyob.fleet.domain.exception.FleetException;
 import com.yowyob.fleet.domain.model.GeofenceZone;
 import com.yowyob.fleet.domain.ports.in.ManageGeofenceUseCase;
 import com.yowyob.fleet.domain.ports.out.ExternalGeofencePort;
+import com.yowyob.fleet.domain.ports.out.FleetRepositoryPort;
 import com.yowyob.fleet.domain.ports.out.GeofencePersistencePort;
 import com.yowyob.fleet.domain.ports.out.VehiclePersistencePort;
-import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.GeofenceEventEntity;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.entity.GeofenceZoneEntity;
 import com.yowyob.fleet.infrastructure.adapters.outbound.persistence.repository.GeofenceR2dbcRepository;
 
@@ -18,8 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -34,6 +33,7 @@ public class GeofenceService implements ManageGeofenceUseCase {
     private final ExternalGeofencePort externalApi;
     private final GeofenceR2dbcRepository zoneRepo;
     private final VehiclePersistencePort vehiclePersistencePort;
+    private final FleetRepositoryPort fleetRepositoryPort;
     
 
     @Override
@@ -231,18 +231,21 @@ public class GeofenceService implements ManageGeofenceUseCase {
         return true;
     }
 
-    @Override // GET ALL par Flotte pour un manager
+    @Override // C'EST ICI : La méthode corrigée
     public Flux<Map<String, Object>> getZonesByFleet(UUID managerId, UUID fleetId) {
-        return getFilteredRemoteZones(managerId, "all", fleetId);
+        log.info("ðŸ”  Récupération des zones pour la flotte {} (Manager: {})", fleetId, managerId);
+        
+        // 1. Vérification de la souveraineté (Est-ce ma flotte ?)
+        return fleetRepositoryPort.existsByIdAndManagerId(fleetId, managerId)
+                .flatMapMany(exists -> {
+                    if (!exists) return Flux.error(FleetException.accessDenied());
+                    
+                    // 2. Utilisation du moteur de filtrage hybride
+                    return getFilteredRemoteZones(managerId, "all", fleetId);
+                });
     }
 
-    @Override
-    public Flux<GeofenceZone> getZonesByFleet1(UUID fleetId) {
-        return localPersistence.findByFleetId(fleetId)
-                .flatMap(localLink -> externalApi.getRemoteZoneDetails("all", localLink.id())
-                        .map(details -> mapRemoteToDomain(localLink.id(), fleetId, localLink.managerId(), details))
-                        .onErrorResume(e -> Mono.empty()));
-    }
+
 
     @Override // GET by ID (Sécurisé par managerId)
     public Mono<Map<String, Object>> getZoneDetails(UUID zoneId, UUID managerId) {

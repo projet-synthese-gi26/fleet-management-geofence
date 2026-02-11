@@ -13,67 +13,43 @@ import java.util.UUID;
 
 public interface ManageGeofenceUseCase {
 
-    /**
-     * Récupère le détail d'une zone spécifique par son type et son ID.
-     */
-    Mono<Map<String, Object>> getExternalZoneDetails(String type, UUID id);
-
-    // --- MODIFICATION ---
-    /**
-     * Mise à jour partielle d'une zone sur le moteur externe.
-     */
-    Mono<Void> updateRemoteZone(String type, UUID id, Map<String, Object> updates);
-
-    // --- OPÉRATIONS SPATIALES & ALERTES ---
-    /**
-     * Vérifie en temps réel si un point est dans une zone.
-     */
-    Mono<String> checkPointInZone(UUID zoneId, Double lat, Double lng);
-
-    /**
-     * Récupère l'historique des alertes (violations de zone) paginé.
-     */
-    Mono<Map<String, Object>> getExternalAlerts(int page, int size);
-
-    // --- PERSISTANCE LOCALE (Optionnel selon ton besoin) ---
-    // Flux<GeofenceEventEntity> getEvents(UUID vehicleId, UUID zoneId, String type, LocalDate date);
-
-    // Anciennes méthodes à garder si tu les utilises encore pour la DB locale :
-    Flux<GeofenceZone> getZonesByFleet(UUID fleetId);
-
-    /**
-     * Récupère les zones associées à un FleetManager via la table de liaison
-     */
-    Flux<Map<String, Object>> getZonesByFleetManager(UUID fleetManagerId);
-
-    Mono<GeofenceZone> getZoneDetails(UUID zoneId);
-
-    Mono<GeofenceZone> updateZone(UUID zoneId, GeofenceZone zone);
-
-    Flux<GeofenceZone> getMyZones(UUID managerId);
-
-    Mono<Void> deleteZone(UUID zoneId, String type, UUID managerId);
-
-    Flux<Map<String, Object>> getZonesByManager(UUID managerId, String category);
-
-    Flux<Map<String, Object>> getZonesByFleet(UUID managerId, UUID fleetId);
-
-    Mono<Map<String, Object>> getZoneDetails(UUID zoneId, UUID managerId);
 
     Mono<GeofenceZone> createZone(GeofenceZone zone);
 
     Mono<Void> assignZoneToFleet(UUID zoneId, UUID fleetId, UUID managerId);
 
-    Flux<GeofenceZone> getZonesByFleet1(UUID fleetId);
-
     Flux<Map<String, Object>> getAllExternalZones(String category);
 
-    // Mono<Map<String, Object>> getManagerAlerts(UUID managerId, int page, int size);
-
-    /**
-     * Traite une alerte reÃ§ue via Kafka et la sauvegarde en local.
-     */
-    // Mono<Void> handleIncomingAlert(UUID remoteVehicleId, UUID zoneId, String type, Instant timestamp);
-
     Flux<Map<String, Object>> getMyExternalZones(UUID managerId, String category);
+    
+    Flux<Map<String, Object>> getZonesByManager(UUID managerId, String category);
+
+    Flux<Map<String, Object>> getZonesByFleet(UUID managerId, UUID fleetId);
+
+    Mono<Map<String, Object>> getZoneDetails(UUID zoneId, UUID managerId);
+    
+    Flux<GeofenceZone> getMyZones(UUID managerId);
+    
+    Flux<GeofenceZone> getZonesByFleet(UUID fleetId);
+
+    Flux<Map<String, Object>> getZonesByFleetManager(UUID fleetManagerId);
+
+    Mono<GeofenceZone> getZoneDetails(UUID zoneId);
+    
+    Mono<Map<String, Object>> getExternalAlerts(int page, int size);
+        
+    Mono<Map<String, Object>> getExternalZoneDetails(String type, UUID id);
+
+    Mono<Void> updateRemoteZone(String type, UUID id, Map<String, Object> updates);
+
+    Mono<String> checkPointInZone(UUID zoneId, Double lat, Double lng);
+
+    Mono<GeofenceZone> updateZone(UUID zoneId, GeofenceZone zone);
+
+    Mono<Void> deleteZone(UUID zoneId, String type, UUID managerId);
+
+
+
+
+
 }
