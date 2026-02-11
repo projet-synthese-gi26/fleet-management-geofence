@@ -36,7 +36,7 @@ public interface ManageGeofenceUseCase {
     Mono<Map<String, Object>> getExternalAlerts(int page, int size);
 
     // --- PERSISTANCE LOCALE (Optionnel selon ton besoin) ---
-    Flux<GeofenceEventEntity> getEvents(UUID vehicleId, UUID zoneId, String type, LocalDate date);
+    // Flux<GeofenceEventEntity> getEvents(UUID vehicleId, UUID zoneId, String type, LocalDate date);
 
     // Anciennes méthodes à garder si tu les utilises encore pour la DB locale :
     Flux<GeofenceZone> getZonesByFleet(UUID fleetId);
@@ -68,7 +68,7 @@ public interface ManageGeofenceUseCase {
 
     Flux<Map<String, Object>> getAllExternalZones(String category);
 
-    Mono<Map<String, Object>> getManagerAlerts(UUID managerId, int page, int size);
+    // Mono<Map<String, Object>> getManagerAlerts(UUID managerId, int page, int size);
 
     /**
      * Traite une alerte reÃ§ue via Kafka et la sauvegarde en local.

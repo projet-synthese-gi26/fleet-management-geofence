@@ -189,7 +189,7 @@ public class GeofenceController {
         UUID managerId = getUserId(auth);
         
         // 2. On appelle la méthode sécurisée du service
-        return geofenceService.getManagerAlerts(managerId, page, size);
+        return geofenceService.getExternalAlerts(page, size);
     }
 
     @PatchMapping("/{id}/assign-fleet/{fleetId}")
@@ -204,17 +204,17 @@ public class GeofenceController {
     public Mono<Void> delete(@PathVariable String type, @PathVariable UUID id, Authentication auth) {
         return geofenceService.deleteZone(id, type, getUserId(auth));
     }
-    @GetMapping("/events") // Endpoint pour les donnÃ©es LOCALES
-    @Operation(summary = "Historique local des alertes", description = "RÃ©cupÃ¨re les Ã©vÃ©nements stockÃ©s localement (via Kafka).")
-    @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'FLEET_ADMIN')")
-    public Flux<GeofenceEventEntity> getLocalEvents(
-            @RequestParam(required = false) UUID vehicleId,
-            @RequestParam(required = false) UUID zoneId,
-            @RequestParam(required = false) String type, // ENTRY / EXIT
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            Authentication auth) {
+    // @GetMapping("/events") // Endpoint pour les donnÃ©es LOCALES
+    // @Operation(summary = "Historique local des alertes", description = "RÃ©cupÃ¨re les Ã©vÃ©nements stockÃ©s localement (via Kafka).")
+    // @PreAuthorize("hasAnyRole('FLEET_MANAGER', 'FLEET_ADMIN')")
+    // public Flux<GeofenceEventEntity> getLocalEvents(
+    //         @RequestParam(required = false) UUID vehicleId,
+    //         @RequestParam(required = false) UUID zoneId,
+    //         @RequestParam(required = false) String type, // ENTRY / EXIT
+    //         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+    //         Authentication auth) {
         
-        return geofenceService.getEvents(vehicleId, zoneId, type, date);
-    }
+    //     return geofenceService.getEvents(vehicleId, zoneId, type, date);
+    // }
 
 }

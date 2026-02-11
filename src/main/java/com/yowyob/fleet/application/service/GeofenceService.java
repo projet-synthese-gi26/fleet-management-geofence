@@ -287,10 +287,10 @@ public class GeofenceService implements ManageGeofenceUseCase {
         return externalApi.updateRemoteZone(t, id, u);
     }
 
-    @Override
-    public Flux<GeofenceEventEntity> getEvents(UUID v, UUID z, String t, LocalDate d) {
-        return localPersistence.findEventsWithFilters(v, z, t, d);
-    }
+    // @Override
+    // public Flux<GeofenceEventEntity> getEvents(UUID v, UUID z, String t, LocalDate d) {
+    //     return localPersistence.findEventsWithFilters(v, z, t, d);
+    // }
 
   @Override
     @Transactional
@@ -330,19 +330,19 @@ public class GeofenceService implements ManageGeofenceUseCase {
                 .then();
     }
 
-     public Mono<Map<String, Object>> getManagerAlerts(UUID managerId, int page, int size) {
-        return localPersistence.findAlertsByManager(managerId, page, size)
-            .collectList()
-            .map(events -> {
-                // On formate la réponse pour qu'elle ressemble à ce que le frontend attend (Pagination)
-                Map<String, Object> response = new HashMap<>();
-                response.put("content", events);
-                response.put("page", page);
-                response.put("size", size);
-                response.put("totalElements", events.size()); // Approximation (il faudrait un count() séparé pour le vrai total)
-                return response;
-            });
-    }
+    //  public Mono<Map<String, Object>> getManagerAlerts(UUID managerId, int page, int size) {
+    //     return localPersistence.findAlertsByManager(managerId, page, size)
+    //         .collectList()
+    //         .map(events -> {
+    //             // On formate la réponse pour qu'elle ressemble à ce que le frontend attend (Pagination)
+    //             Map<String, Object> response = new HashMap<>();
+    //             response.put("content", events);
+    //             response.put("page", page);
+    //             response.put("size", size);
+    //             response.put("totalElements", events.size()); // Approximation (il faudrait un count() séparé pour le vrai total)
+    //             return response;
+    //         });
+    // }
     
     @Override
     public Mono<Map<String, Object>> getExternalAlerts(int p, int s) {
