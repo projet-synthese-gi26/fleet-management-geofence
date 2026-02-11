@@ -96,7 +96,8 @@ public class AdminService implements ManageAdminUseCase {
                                 remote.firstName(), remote.lastName(), remote.service(),
                                 remote.roles(), remote.permissions(), remote.photoUrl(), 
                                 company, null, null, 
-                                localUser.isActive() // <-- Maintenant localUser est résolu
+                                localUser.isActive() ,
+                                localUser.getLastLoginAt()
                         ))
                 );
     }

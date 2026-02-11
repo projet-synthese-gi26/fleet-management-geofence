@@ -102,7 +102,8 @@ public class SuperAdminService implements ManageSuperAdminUseCase {
                         remote.firstName(), remote.lastName(), remote.service(),
                         remote.roles(), remote.permissions(), local.getPhotoUrl(), 
                         null, null, null, 
-                        local.isActive() // <-- Utilisation de l'entité locale
+                        local.isActive(),
+                        local.getLastLoginAt()
                 ));
     }
 }

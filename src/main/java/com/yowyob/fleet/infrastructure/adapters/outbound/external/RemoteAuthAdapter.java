@@ -157,7 +157,7 @@ public class RemoteAuthAdapter implements AuthPort {
             res.id(), res.username(), res.email(), res.phone(),
             res.firstName(), res.lastName(), res.service(),
             res.roles(), res.permissions(), res.photoUri(),
-            null, null, null, true // On considère que si on a une réponse, le compte est actif. Les statuts plus fins sont gérés localement.
+            null, null, null, true ,null
         );
     }
 

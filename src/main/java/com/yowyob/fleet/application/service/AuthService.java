@@ -218,7 +218,8 @@ public class AuthService implements AuthUseCase {
                         remote.firstName(), remote.lastName(), remote.service(), 
                         remote.roles(), remote.permissions(), remote.photoUrl(), 
                         c, null, null, 
-                        remote.isActive() // <-- Ajout du boolean
+                        remote.isActive() ,
+                        remote.lastLoginAt()
                     ))
                     .defaultIfEmpty(remote);
         }
@@ -229,7 +230,7 @@ public class AuthService implements AuthUseCase {
                         remote.firstName(), remote.lastName(), remote.service(), 
                         remote.roles(), remote.permissions(), remote.photoUrl(), 
                         null, d.licenceNumber(), d.assignedVehicleId() != null ? d.assignedVehicleId().toString() : null, 
-                        remote.isActive() // <-- Ajout du boolean
+                        remote.isActive(),remote.lastLoginAt()
                     ))
                     .defaultIfEmpty(remote);
         }

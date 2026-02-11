@@ -75,7 +75,7 @@ public class FakeAuthAdapter implements AuthPort {
                 newUserId, command.username(), command.email(), command.phone(),
                 command.firstName(), command.lastName(), "FLEET_MANAGEMENT",
                 command.roles(), List.of("fleet:read", "fleet:write"),
-                "https://i.pravatar.cc/150?u=" + newUserId, null, null, null, true
+                "https://i.pravatar.cc/150?u=" + newUserId, null, null, null, true,null
         );
         return Mono.just(new AuthResponse("fake-token-" + command.username(), "fake-refresh", newUser));
     }
@@ -137,7 +137,7 @@ public class FakeAuthAdapter implements AuthPort {
         return new UserDetail(
                 id, username, email, "+237600000000", "Fake", "User", "FLEET_MANAGEMENT",
                 List.of(role), List.of("fleet:read", "fleet:write", "fleet:admin"),
-                "https://i.pravatar.cc/150?u=" + id, null, null, null,true
+                "https://i.pravatar.cc/150?u=" + id, null, null, null,true, null
         );
     }
 }
