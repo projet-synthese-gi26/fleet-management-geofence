@@ -210,15 +210,27 @@ public class AuthService implements AuthUseCase {
         return ensureRoleProfileExists(user); // Réutilisation pour éviter les doublons
     }
 
-    private Mono<AuthPort.UserDetail> enrichWithLocalData(AuthPort.UserDetail remote) {
+   private Mono<AuthPort.UserDetail> enrichWithLocalData(AuthPort.UserDetail remote) {
         if (remote.roles().contains("FLEET_MANAGER")) {
             return managerPort.getCompanyName(remote.id())
-                    .map(c -> new AuthPort.UserDetail(remote.id(), remote.username(), remote.email(), remote.phone(), remote.firstName(), remote.lastName(), remote.service(), remote.roles(), remote.permissions(), remote.photoUrl(), c, null, null))
+                    .map(c -> new AuthPort.UserDetail(
+                        remote.id(), remote.username(), remote.email(), remote.phone(), 
+                        remote.firstName(), remote.lastName(), remote.service(), 
+                        remote.roles(), remote.permissions(), remote.photoUrl(), 
+                        c, null, null, 
+                        remote.isActive() // <-- Ajout du boolean
+                    ))
                     .defaultIfEmpty(remote);
         }
         if (remote.roles().contains("FLEET_DRIVER")) {
             return driverPort.findById(remote.id())
-                    .map(d -> new AuthPort.UserDetail(remote.id(), remote.username(), remote.email(), remote.phone(), remote.firstName(), remote.lastName(), remote.service(), remote.roles(), remote.permissions(), remote.photoUrl(), null, d.licenceNumber(), d.assignedVehicleId() != null ? d.assignedVehicleId().toString() : null))
+                    .map(d -> new AuthPort.UserDetail(
+                        remote.id(), remote.username(), remote.email(), remote.phone(), 
+                        remote.firstName(), remote.lastName(), remote.service(), 
+                        remote.roles(), remote.permissions(), remote.photoUrl(), 
+                        null, d.licenceNumber(), d.assignedVehicleId() != null ? d.assignedVehicleId().toString() : null, 
+                        remote.isActive() // <-- Ajout du boolean
+                    ))
                     .defaultIfEmpty(remote);
         }
         return Mono.just(remote);

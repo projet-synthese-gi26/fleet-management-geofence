@@ -78,7 +78,7 @@ public class SuperAdminService implements ManageSuperAdminUseCase {
     /**
      * Synchronise les informations d'identité dans fleet.users
      */
-    private Mono<AuthPort.UserDetail> syncIdentityOnly(AuthPort.UserDetail remote) {
+   private Mono<AuthPort.UserDetail> syncIdentityOnly(AuthPort.UserDetail remote) {
         return userRepo.findById(remote.id())
                 .flatMap(local -> {
                     local.setUsername(remote.username());
@@ -101,6 +101,8 @@ public class SuperAdminService implements ManageSuperAdminUseCase {
                         remote.id(), remote.username(), remote.email(), remote.phone(),
                         remote.firstName(), remote.lastName(), remote.service(),
                         remote.roles(), remote.permissions(), local.getPhotoUrl(), 
-                        null, null, null));
+                        null, null, null, 
+                        local.isActive() // <-- Utilisation de l'entité locale
+                ));
     }
 }

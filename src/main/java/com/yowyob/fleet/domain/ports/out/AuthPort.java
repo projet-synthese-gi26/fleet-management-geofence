@@ -32,6 +32,6 @@ public interface AuthPort {
         UUID id, String username, String email, String phone,
         String firstName, String lastName, String service,
         List<String> roles, List<String> permissions,
-        String photoUrl, String companyName, String licenceNumber, String vehicleId, String vehicleId, boolean isActive
+        String photoUrl, String companyName, String licenceNumber, String vehicleId, boolean isActive
     ) {}
 }

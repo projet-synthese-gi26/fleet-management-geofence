@@ -69,8 +69,7 @@ public class AdminService implements ManageAdminUseCase {
      * 3. Retourne le UserDetail enrichi.
      */
     private Mono<AuthPort.UserDetail> syncIdentityAndRepairProfile(AuthPort.UserDetail remote) {
-        // A. Synchro Identité
-        Mono<UserLocalEntity> identitySync = userRepo.findById(remote.id())
+        return userRepo.findById(remote.id())
                 .flatMap(local -> {
                     local.setUsername(remote.username());
                     local.setEmail(remote.email());
@@ -87,20 +86,18 @@ public class AdminService implements ManageAdminUseCase {
                             .photoUrl(remote.photoUrl()).isActive(true).build();
                     n.setNewRecord(true);
                     return userRepo.save(n);
-                }));
-
-        // B. Auto-réparation Profil Métier
-        Mono<Void> profileRepair = managerRepo.existsById(remote.id())
-                .flatMap(exists -> exists ? Mono.empty() : 
-                    managerPersistencePort.createProfile(remote.id(), "Société de " + remote.lastName()));
-
-        return identitySync
-                .then(profileRepair)
-                .then(managerPersistencePort.getCompanyName(remote.id()))
-                .map(company -> new AuthPort.UserDetail(
-                        remote.id(), remote.username(), remote.email(), remote.phone(),
-                        remote.firstName(), remote.lastName(), remote.service(),
-                        remote.roles(), remote.permissions(), remote.photoUrl(), 
-                        company, null, null),  localUser.isActive());
+                }))
+                .flatMap(localUser -> // On récupère l'entité sauvegardée ici
+                    managerPersistencePort.createProfile(remote.id(), "Société de " + remote.lastName())
+                        .onErrorResume(e -> Mono.empty()) // Self-healing : ignore si déjà là
+                        .then(managerPersistencePort.getCompanyName(remote.id()))
+                        .map(company -> new AuthPort.UserDetail(
+                                remote.id(), remote.username(), remote.email(), remote.phone(),
+                                remote.firstName(), remote.lastName(), remote.service(),
+                                remote.roles(), remote.permissions(), remote.photoUrl(), 
+                                company, null, null, 
+                                localUser.isActive() // <-- Maintenant localUser est résolu
+                        ))
+                );
     }
 }
