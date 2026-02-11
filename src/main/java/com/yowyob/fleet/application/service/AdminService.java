@@ -87,17 +87,17 @@ public class AdminService implements ManageAdminUseCase {
                     n.setNewRecord(true);
                     return userRepo.save(n);
                 }))
-                .flatMap(localUser -> // On récupère l'entité sauvegardée ici
+                .flatMap(localUser -> 
                     managerPersistencePort.createProfile(remote.id(), "Société de " + remote.lastName())
-                        .onErrorResume(e -> Mono.empty()) // Self-healing : ignore si déjà là
+                        .onErrorResume(e -> Mono.empty())
                         .then(managerPersistencePort.getCompanyName(remote.id()))
                         .map(company -> new AuthPort.UserDetail(
                                 remote.id(), remote.username(), remote.email(), remote.phone(),
                                 remote.firstName(), remote.lastName(), remote.service(),
                                 remote.roles(), remote.permissions(), remote.photoUrl(), 
                                 company, null, null, 
-                                localUser.isActive() ,
-                                localUser.getLastLoginAt()
+                                localUser.isActive(),      // <--- À l'intérieur des parenthèses
+                                localUser.getLastLoginAt() // <--- À l'intérieur des parenthèses
                         ))
                 );
     }

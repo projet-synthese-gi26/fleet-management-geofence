@@ -102,7 +102,7 @@ public class SuperAdminService implements ManageSuperAdminUseCase {
                         remote.firstName(), remote.lastName(), remote.service(),
                         remote.roles(), remote.permissions(), local.getPhotoUrl(), 
                         null, null, null, 
-                        local.isActive(),
+                        local.isActive(), 
                         local.getLastLoginAt()
                 ));
     }
