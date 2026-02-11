@@ -101,6 +101,6 @@ public class AdminService implements ManageAdminUseCase {
                         remote.id(), remote.username(), remote.email(), remote.phone(),
                         remote.firstName(), remote.lastName(), remote.service(),
                         remote.roles(), remote.permissions(), remote.photoUrl(), 
-                        company, null, null));
+                        company, null, null),  localUser.isActive());
     }
 }
