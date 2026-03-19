@@ -24,15 +24,6 @@ spring:
     liquibase-schema: ${DB_SCHEMA:fleet}
 
   # ------------------------------------------------------------------
-  # DATABASE — Datasource JDBC
-  # ------------------------------------------------------------------
-  datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT:5432}/${DB_NAME:yowyob}?currentSchema=${DB_SCHEMA:fleet}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-    driver-class-name: org.postgresql.Driver
-
-  # ------------------------------------------------------------------
   # DATABASE — R2DBC réactif
   # ------------------------------------------------------------------
   r2dbc:
