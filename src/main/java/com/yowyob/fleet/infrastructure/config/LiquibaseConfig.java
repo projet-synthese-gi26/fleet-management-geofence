@@ -12,19 +12,19 @@ import javax.sql.DataSource;
 @Configuration
 public class LiquibaseConfig {
 
-    @Value("${spring.datasource.url}")
+    @Value("${spring.liquibase.url}")
     private String url;
-
-    @Value("${spring.datasource.username}")
+    
+    @Value("${spring.liquibase.user}")
     private String username;
-
-    @Value("${spring.datasource.password}")
+    
+    @Value("${spring.liquibase.password}")
     private String password;
 
     @Value("${spring.liquibase.change-log}")
     private String changeLog;
 
-    @Value("${spring.liquibase.default-schema:public}")
+    @Value("${spring.liquibase.default-schema}")
     private String defaultSchema;
 
     /**
