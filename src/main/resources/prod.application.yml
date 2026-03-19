@@ -11,52 +11,86 @@ spring:
     compose:
       enabled: false
 
-  # 1. R2DBC (Runtime - Réactif)
+  # ------------------------------------------------------------------
+  # DATABASE — Liquibase
+  # ------------------------------------------------------------------
+  liquibase:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT:5432}/${DB_NAME:yowyob}
+    user: ${DB_LIQUIBASE_USERNAME}
+    password: ${DB_LIQUIBASE_PASSWORD}
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    default-schema: ${DB_SCHEMA:fleet}
+    liquibase-schema: ${DB_SCHEMA:fleet}
+
+  # ------------------------------------------------------------------
+  # DATABASE — Datasource JDBC
+  # ------------------------------------------------------------------
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT:5432}/${DB_NAME:yowyob}?currentSchema=${DB_SCHEMA:fleet}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  # ------------------------------------------------------------------
+  # DATABASE — R2DBC réactif
+  # ------------------------------------------------------------------
   r2dbc:
-    url: r2dbc:postgresql://${DB_HOST:168.119.122.86}:${DB_PORT:5432}/${DB_NAME:yowyob}
-    username: ${DB_USERNAME:master}
-    password: ${DB_PASSWORD:Azerty1234*}
+    url: r2dbc:postgresql://${DB_HOST}:${DB_PORT:5432}/${DB_NAME:yowyob}?schema=${DB_SCHEMA:fleet}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     pool:
       enabled: true
       initial-size: 5
       max-size: 20
+      max-idle-time: 30m
       validation-query: SELECT 1
-
-  # 2. JDBC (Migration - Bloquant pour Liquibase)
-  datasource:
-    url: jdbc:postgresql://${DB_HOST:168.119.122.86}:${DB_PORT:5432}/${DB_NAME:yowyob}
-    username: ${DB_USERNAME:master}
-    password: ${DB_PASSWORD:Azerty1234*}
-    driver-class-name: org.postgresql.Driver
-
-  # 3. LIQUIBASE
-  liquibase:
-    change-log: classpath:db/changelog/db.changelog-master.yaml
-    default-schema: public
-    liquibase-schema: public
-    enabled: true
-    contexts: prod 
 
   sql:
     init:
       mode: never
 
-  # REDIS CLUSTER 
+  # ------------------------------------------------------------------
+  # REDIS CLUSTER
+  # ------------------------------------------------------------------
   data:
     redis:
-      password: ${REDIS_PASSWORD:Azerty1234*}
+      username: ${REDIS_USERNAME}
+      password: ${REDIS_PASSWORD}
       cluster:
         nodes:
-          - ${REDIS_HOST:168.119.122.86}:7001
-          - ${REDIS_HOST:168.119.122.86}:7002
-          - ${REDIS_HOST:168.119.122.86}:7003
-          - ${REDIS_HOST:168.119.122.86}:7004
-          - ${REDIS_HOST:168.119.122.86}:7005
-          - ${REDIS_HOST:168.119.122.86}:7006
+          - ${REDIS_HOST}:7001
+          - ${REDIS_HOST}:7002
+          - ${REDIS_HOST}:7003
+          - ${REDIS_HOST}:7004
+          - ${REDIS_HOST}:7005
+          - ${REDIS_HOST}:7006
+        max-redirects: 3
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+        cluster:
+          refresh:
+            adaptive: true
+            period: 30s
+            dynamic-refresh-sources: false
 
-  # KAFKA 
+  # ------------------------------------------------------------------
+  # KAFKA — Connexion sécurisée SASL/SCRAM-SHA-256
+  # ------------------------------------------------------------------
   kafka:
-    bootstrap-servers: ${KAFKA_HOST:168.119.122.86}:${KAFKA_PORT:9092}
+    bootstrap-servers: ${KAFKA_HOST}:${KAFKA_PORT:29092}
+
+    # ── Authentification SASL/SCRAM-SHA-256 ────────────────────────
+    properties:
+      security.protocol: SASL_PLAINTEXT
+      sasl.mechanism: SCRAM-SHA-256
+      sasl.jaas.config: >
+        org.apache.kafka.common.security.scram.ScramLoginModule required
+        username="${KAFKA_BACKEND_USER}"
+        password="${KAFKA_BACKEND_PASSWORD}";
     consumer:
       group-id: ${KAFKA_GROUP_ID:fleet-management-group}
       auto-offset-reset: earliest
