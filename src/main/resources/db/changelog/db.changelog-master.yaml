@@ -2,8 +2,8 @@ databaseChangeLog:
   - changeSet:
       id: 000-initial-setup
       author: gabriel
-      changes:
-        - sql: CREATE SCHEMA IF NOT EXISTS fleet;
+      #changes:
+      #  - sql: CREATE SCHEMA IF NOT EXISTS fleet;
 
   # 1. Création des schémas de base
   - include:
