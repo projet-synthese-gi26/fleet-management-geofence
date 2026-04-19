@@ -9,7 +9,7 @@ services:
       POSTGRES_USER: fleet_admin
       POSTGRES_PASSWORD: fleet_password
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -25,7 +25,7 @@ services:
     image: redis:alpine
     container_name: fleet-management-redis
     ports:
-      - "6379:6379"
+      - "6380:6379"
     networks:
       - fleet-network
 
