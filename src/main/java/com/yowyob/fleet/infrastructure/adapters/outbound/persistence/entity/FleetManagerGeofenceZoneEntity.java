@@ -27,6 +27,7 @@ public class FleetManagerGeofenceZoneEntity implements Persistable<UUID> {
     private UUID zoneId;
     
     @Transient
+    @Builder.Default
     private boolean isNew = true;
     
     @Override

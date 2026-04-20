@@ -10,6 +10,7 @@ import org.mapstruct.Named;
 public interface DriverMapper {
 
     @Mapping(target = "status", source = "status", qualifiedByName = "booleanToStatusString")
+    @Mapping(target = "new", ignore = true)
     DriverEntity toEntity(Driver domain);
 
     @Mapping(target = "status", source = "status", qualifiedByName = "statusStringToBoolean")
