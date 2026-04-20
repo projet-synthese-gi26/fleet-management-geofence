@@ -1,12 +1,17 @@
 server:
   port: 8080
   # INDISPENSABLE EN PROD : Permet à Spring de gérer correctement les redirections HTTPS derrière Nginx
-  forward-headers-strategy: framework 
+  forward-headers-strategy: framework
+
+# Config Swagger
+app:
+  swagger:
+    server-url: ${FLEET_SERVER_URL:https://traefikdev.yowyob.com/fleet-management}
 
 spring:
   application:
     name: fleet-management
-    
+
   docker:
     compose:
       enabled: false
@@ -81,8 +86,7 @@ spring:
       sasl.mechanism: SCRAM-SHA-256
       sasl.jaas.config: >
         org.apache.kafka.common.security.scram.ScramLoginModule required
-        username="${KAFKA_BACKEND_USER}"
-        password="${KAFKA_BACKEND_PASSWORD}";
+        username="${KAFKA_BACKEND_USER}" password="${KAFKA_BACKEND_PASSWORD}";
     consumer:
       group-id: ${KAFKA_GROUP_ID:fleet-management-group}
       auto-offset-reset: earliest
@@ -108,36 +112,36 @@ springdoc:
 # CONFIG METIER
 application:
   external:
-    vehicle-service-url:  https://traefikdev.yowyob.com/vehicule
+    vehicle-service-url: https://traefikdev.yowyob.com/vehicule
     geofence-service-url: https://traefikdev.yowyob.com/geofence-service
-    payment-service-url:  https://traefikdev.yowyob.com/payment
+    payment-service-url: https://traefikdev.yowyob.com/payment
   auth:
-    mode: remote 
+    mode: remote
     url: https://traefikdev.yowyob.com/auth
 
   notification:
     mode: http # 'http' ou 'kafka'
     url: https://traefikdev.yowyob.com/notification
- # URL du Swagger fourni
+    # URL du Swagger fourni
     service-token: "a77599d3-8de7-4d52-b9d0-2202b2e13a9e" # Token récupéré après enregistrement du service
     templates:
-      new-offer: 1        # ID template: Nouvelle offre pour les chauffeurs
-      driver-applied: 2   # ID template: Un chauffeur a postulé (pour le client)
-      driver-selected: 3  # ID template: Vous avez été choisi (pour le chauffeur)
-      ride-confirmed: 4   # ID template: Le chauffeur arrive (pour le client)
-      ride-cancelled: 5   # ID template: Course annulée
+      new-offer: 1 # ID template: Nouvelle offre pour les chauffeurs
+      driver-applied: 2 # ID template: Un chauffeur a postulé (pour le client)
+      driver-selected: 3 # ID template: Vous avez été choisi (pour le chauffeur)
+      ride-confirmed: 4 # ID template: Le chauffeur arrive (pour le client)
+      ride-cancelled: 5 # ID template: Course annulée
       admin-validation: 7 # ID template: admin a validé le profil du driver
- 
+
   geofence-system-user:
     username: "yowyob_fleet_internal_admin"
-    password: "system_password_secure_2026" 
+    password: "system_password_secure_2026"
     organization-id: "723e4567-e89b-12d3-a456-426614174000" # UUID de notre application dans
- 
+
   bootstrap:
     admin:
       username: "superadmin123"
       email: "superadmin@transens.com"
-      password: "password123" 
+      password: "password123"
       phone: "+23761213141516"
       firstname: "System"
       lastname: "Administrator"
@@ -150,7 +154,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: ["health","info","prometheus", "liveness", "readiness"]
+        include: [ "health", "info", "prometheus", "liveness", "readiness" ]
   endpoint:
     health:
       show-details: "always"

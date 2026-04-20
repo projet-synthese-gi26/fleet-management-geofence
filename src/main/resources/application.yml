@@ -1,6 +1,11 @@
 server:
   port: 8080
 
+# Config Swagger
+app:
+  swagger:
+    server-url: ${FLEET_SERVER_URL:https://traefikdev.yowyob.com/fleet-management}
+
 spring:
   application:
     name: fleet-management

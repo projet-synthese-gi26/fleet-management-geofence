@@ -17,6 +17,10 @@ import java.util.stream.Collectors;
 @Configuration
 public class OpenApiConfig {
 
+    // Injection de l'URL définie dans le YAML
+    @Value("${app.swagger.server-url}")
+    private String serverUrl;
+
     // --- 1. DÉFINITION DES CONSTANTES (SPOF: Single Point Of Failure) ---
     public static final String TAG_MONITORING = "01. Monitoring";
     public static final String TAG_AUTH = "02. Auth";
@@ -64,6 +68,11 @@ public class OpenApiConfig {
                         .version("1.0.0")
                         .description("API Réactive pour la gestion de flottes et le géorepérage.")
                         .contact(new Contact().name("Gabriel Nomo").email("g.nomo@yowyob.com")))
+                // Configuration dynamique des serveurs pour Swagger UI
+                .servers(List.of(
+                        new Server().url(serverUrl).description("Serveur de Production (Proxy)"),
+                        new Server().url("http://localhost:8080").description("Localhost")
+                ))
                 .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
                 .components(new Components()
                         .addSecuritySchemes(securitySchemeName,
