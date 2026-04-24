@@ -56,12 +56,12 @@ spring:
       password: ${REDIS_PASSWORD}
       cluster:
         nodes:
-          - ${REDIS_HOST}:7001
-          - ${REDIS_HOST}:7002
-          - ${REDIS_HOST}:7003
-          - ${REDIS_HOST}:7004
-          - ${REDIS_HOST}:7005
-          - ${REDIS_HOST}:7006
+          - redis-node-1:6379
+          - redis-node-2:6379
+          - redis-node-3:6379
+          - redis-node-4:6379
+          - redis-node-5:6379
+          - redis-node-6:6379
         max-redirects: 3
       lettuce:
         pool:
